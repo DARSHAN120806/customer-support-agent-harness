@@ -249,6 +249,12 @@ class Agent:
                         self._log.log(
                             event_log.REPLY_REWRITE, step=step, rules=rules, details=details
                         )
+                        for number, violation in enumerate(violations):
+                            if violation.run_tool:
+                                self._run_tool_for_model(
+                                    violation.run_tool, f"harness_{step}_{number}", step, messages
+                                )
+                                tools_used.append(violation.run_tool[0])
                         continue
                     if any(v.blocks_reply for v in violations):
                         self._log.log(
@@ -308,6 +314,21 @@ class Agent:
         policy before ending with a short closing line.
         """
         return any(not self._tools.is_read_only(call.name) for call in calls)
+
+    def _run_tool_for_model(
+        self, tool: tuple[str, dict[str, Any]], call_id: str, step: int, messages: list[dict[str, Any]]
+    ) -> None:
+        """Run a tool the model should have used, and add the call and its
+        result to the conversation exactly as if the model had asked for it."""
+        name, tool_input = tool
+        messages.append(
+            {
+                "role": "assistant",
+                "content": [{"type": "tool_use", "id": call_id, "name": name, "input": tool_input}],
+            }
+        )
+        result = self._run_tool(ToolCall(id=call_id, name=name, input=tool_input), step)
+        messages.append({"role": "user", "content": [result]})
 
     def _run_tool(self, call: ToolCall, step: int) -> dict[str, Any]:
         started = time.perf_counter()

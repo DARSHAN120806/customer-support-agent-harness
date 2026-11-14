@@ -48,6 +48,8 @@ REFUND_CLAIM_PATTERNS = [
 
 # A dollar amount, such as "$6.99" or "$1,200".
 MONEY_PATTERN = re.compile(r"\$\s?(\d[\d,]*(?:\.\d+)?)")
+# A number written with a decimal point, such as "42.0" in order data.
+DECIMAL_PATTERN = re.compile(r"(?<![\d.])\d[\d,]*\.\d+(?![\d.])")
 # A percentage, such as "20%".
 PERCENT_PATTERN = re.compile(r"(\d+(?:\.\d+)?)\s?%")
 # Any number, used to collect the figures that appear in the sources.
@@ -90,6 +92,9 @@ class Violation:
     # A fixed reply to show instead, for rules where the customer's question
     # needs no ticket (for example "which AI are you?").
     safe_reply: str | None = None
+    # A tool (name, input) the harness runs itself before the rewrite, so the
+    # model has the facts in front of it on its second attempt.
+    run_tool: tuple[str, dict[str, Any]] | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -145,6 +150,76 @@ HUMAN_CLAIM_PATTERNS = [
     ),
     re.compile(r"\byou(?:'re| are) (?:talking|speaking|chatting) (?:to|with) a (?:real )?(?:human|person)\b", re.IGNORECASE),
 ]
+
+
+# ---------------------------------------------------------------------------
+# Words in a customer's message that show they are upset. An upset customer
+# must reach a human, so these trigger a ticket. Edit the list here.
+UPSET_SIGNALS = [
+    r"useless",
+    r"ridiculous",
+    r"unacceptable",
+    r"outrageous",
+    r"disgrace(?:ful)?",
+    r"disgust(?:ed|ing)",
+    r"furious",
+    r"livid",
+    r"fed up",
+    r"sick of",
+    r"worst",
+    r"terrible",
+    r"awful",
+    r"appalling",
+    r"pathetic",
+    r"incompetent",
+    r"scam(?:mers?)?",
+    r"rip[- ]?off",
+    r"waste of (?:time|money)",
+    r"never (?:again|ordering|buying|shopping)",
+    r"i(?:'m| am) done with",
+    r"(?:nobody|no one) (?:ever )?(?:answers|helps|replies|responds|cares)",
+    r"chargeback",
+]
+_UPSET = re.compile(r"\b(?:" + "|".join(UPSET_SIGNALS) + r")\b|!{2,}", re.IGNORECASE)
+
+# Subjects that are shop policy. A reply about one of these must be based on
+# something that was looked up, never on the model's general knowledge.
+POLICY_TOPICS = re.compile(
+    r"\b(?:polic(?:y|ies)|price[- ]match\w*|match(?:ing)? [^.]{0,25}prices?|refunds?|refunded|"
+    r"returns?|returned|shipping|deliver(?:y|ies)|warrant(?:y|ies)|discounts?|cancel\w*|"
+    r"payment|exchanges?|gift cards?|compensation)\b",
+    re.IGNORECASE,
+)
+# Sentences that only offer help, such as "I can help with orders, shipping and
+# returns", list topics without stating any policy, so they are skipped.
+_OFFER_OF_HELP = re.compile(r"\b(?:help|assist)\w*\b", re.IGNORECASE)
+
+
+def is_upset(customer_message: str) -> bool:
+    return bool(_UPSET.search(customer_message))
+
+
+def states_policy_without_sources(reply: str, shop_text: str) -> bool:
+    """True when nothing has been looked up in this conversation (`shop_text` is
+    empty) and the reply still makes a statement about a policy subject.
+    Questions and offers of help are not statements."""
+    if shop_text.strip():
+        return False
+    for sentence in re.split(r"(?<=[.!?])\s+|\n+", reply):
+        if sentence.rstrip().endswith("?") or _OFFER_OF_HELP.search(sentence):
+            continue
+        if POLICY_TOPICS.search(sentence):
+            return True
+    return False
+
+
+def customer_messages(messages: list[dict[str, Any]]) -> list[str]:
+    """What the customer typed in this conversation, oldest first."""
+    return [
+        message["content"]
+        for message in messages
+        if message.get("role") == "user" and isinstance(message.get("content"), str)
+    ]
 
 
 def find_hidden_tech_terms(reply: str, shop_text: str = "") -> list[str]:
@@ -236,13 +311,18 @@ def find_ungrounded_figures(reply: str, sources: str) -> list[str]:
     head, such as a total or a deadline, also counts as ungrounded. Deadlines
     are meant to come from the calculate_date tool, whose result is a source.
     """
-    source_numbers = {_to_number(match) for match in NUMBER_PATTERN.findall(sources)}
+    # A dollar amount counts as found only if the sources show it as money: with
+    # a "$" (policies, "$12.99") or with a decimal point (order data, "42.0").
+    # Matching any bare number would let "$3.00" pass because of "3-5 days".
+    source_money = {_to_number(match) for match in MONEY_PATTERN.findall(sources)} | {
+        _to_number(match) for match in DECIMAL_PATTERN.findall(sources)
+    }
     source_periods = set(_periods(sources))
 
     ungrounded = [
         f"${amount}"
         for amount in MONEY_PATTERN.findall(reply)
-        if _to_number(amount) not in source_numbers
+        if _to_number(amount) not in source_money
     ]
     source_percentages = {_to_number(match) for match in PERCENT_PATTERN.findall(sources)}
     ungrounded += [
@@ -301,7 +381,9 @@ def check_reply(
     allowed_emails: set[str],
     sources: str | None = None,
     tools_used: list[str] | None = None,
-    shop_text: str = "",
+    shop_text: str | None = None,
+    customer_message: str | None = None,
+    has_ticket: bool = False,
 ) -> list[Violation]:
     """Check a reply against the rules enforced in code. An empty list means the
     reply is fine. When `sources` is given, figures in the reply are checked
@@ -310,7 +392,56 @@ def check_reply(
     tools returned; names found there are not treated as identity leaks."""
     violations: list[Violation] = []
 
-    hidden_terms = find_hidden_tech_terms(reply, shop_text)
+    in_conversation = tools_used is not None  # False when a reply is checked on its own
+
+    if in_conversation and shop_text is not None and states_policy_without_sources(reply, shop_text):
+        violations.append(
+            Violation(
+                "unverified_policy",
+                "reply talked about shop policy although nothing had been looked up "
+                "in the shop's documents or order data",
+                correctable=True,
+                fix_hint=(
+                    "The shop's documents have now been searched for the customer's "
+                    "message, and the results are in the conversation. Answer only from "
+                    "those results. Do not describe what the shop or its support team "
+                    "does, or cannot do, from memory. If the results do not cover the "
+                    "question, say so and hand over with escalate_to_human."
+                ),
+                # Telling the model to search was not reliable, so the harness
+                # runs the search itself before the rewrite.
+                run_tool=(
+                    ("search_knowledge_base", {"query": customer_message[:500]})
+                    if customer_message
+                    else None
+                ),
+            )
+        )
+
+    if (
+        in_conversation
+        and customer_message is not None
+        and not has_ticket
+        and "escalate_to_human" not in tools_used
+        and is_upset(customer_message)
+    ):
+        violations.append(
+            Violation(
+                "upset_customer_not_escalated",
+                "the customer is upset and no ticket was created",
+                correctable=True,
+                fix_hint=(
+                    "The customer is upset. Acknowledge how they feel, then call "
+                    "escalate_to_human now with the reason upset_customer, summarising "
+                    "what they said, and give them the ticket number. You may also ask "
+                    "for details the team will need, such as an order ID."
+                ),
+                # The reply itself is fine; it is only missing the ticket.
+                blocks_reply=False,
+            )
+        )
+
+    hidden_terms = find_hidden_tech_terms(reply, shop_text or "")
     if hidden_terms:
         violations.append(
             Violation(

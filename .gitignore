@@ -11,3 +11,6 @@ __pycache__/
 logs/
 tickets/
 .cache/
+
+# Evaluation run outputs
+evals/results/

@@ -116,6 +116,8 @@ def test_figures_taken_from_the_sources_are_allowed(reply):
         ("You'll receive $35.01 back.", "$35.01"),
         ("It comes with a 2-year warranty.", "2 year"),
         ("A restocking fee of 15% applies.", "15%"),
+        ("Express shipping costs $5.00.", "$5.00"),  # "5" is only in "5–7 business days"
+        ("The fee is $30.", "$30"),  # "30" is only in "30 days"
         ("Refunds arrive within 7 days.", "7 day"),  # the policy says 7 *business* days
         ("You can return it until 7 December.", "the date 7 December"),
         ("Your warranty ends on September 18, 2026.", "the date 18 September 2026"),

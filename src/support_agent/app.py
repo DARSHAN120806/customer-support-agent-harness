@@ -18,7 +18,15 @@ from .orders import OrderStore
 from .prompts import SUPPORT_EMAIL, build_system_prompt
 from .providers import ModelProvider, create_provider
 from .retry import RetryPolicy
-from .safety import Budget, check_reply, collect_sources, collect_tool_results
+from .safety import (
+    EMAIL_PATTERN,
+    Budget,
+    Violation,
+    check_reply,
+    collect_sources,
+    collect_tool_results,
+    customer_messages,
+)
 from .tickets import TicketStore
 from .tools import SessionContext, build_tool_registry, create_ticket
 
@@ -114,6 +122,21 @@ def create_agent(
             created_by="harness",
         )
 
+    def reply_check(reply: str, messages: list, tools_used: list[str]) -> list[Violation]:
+        """Run every code-enforced rule on a reply before the customer sees it."""
+        typed = customer_messages(messages)
+        return check_reply(
+            reply,
+            # An email the customer typed themself may be repeated back to them;
+            # that tells them nothing new. Any other address is still blocked.
+            {session.customer_email, SUPPORT_EMAIL} | set(EMAIL_PATTERN.findall("\n".join(typed))),
+            collect_sources(messages) + f"\n{today.isoformat()}",
+            tools_used,
+            shop_text=collect_tool_results(messages),
+            customer_message=typed[-1] if typed else None,
+            has_ticket=bool(session.ticket_ids),
+        )
+
     agent = Agent(
         provider=resources.provider,
         tools=tools,
@@ -125,18 +148,7 @@ def create_agent(
             input_price_per_million_tokens=settings.input_price_per_million_tokens,
             output_price_per_million_tokens=settings.output_price_per_million_tokens,
         ),
-        # The only email addresses a reply may contain are the customer's own and
-        # the shop's support address, and every price, time period, or date in it
-        # must come from a tool result, the customer's own messages, or be today.
-        # A shop question the documents could not answer must end with a ticket.
-        reply_check=lambda reply, messages, tools_used: check_reply(
-            reply,
-            {session.customer_email, SUPPORT_EMAIL},
-            collect_sources(messages) + f"\n{today.isoformat()}",
-            tools_used,
-            # The assistant must not name the AI model or company behind it.
-            shop_text=collect_tool_results(messages),
-        ),
+        reply_check=reply_check,
         auto_escalate=auto_escalate,
         logger=session.logger,
         retry_policy=retry_policy,

@@ -30,7 +30,9 @@ logging are all plain Python, so every step is visible and testable.
   ticket.
 - **Switchable model provider** — Amazon Bedrock or the Anthropic API, chosen by
   an environment variable.
-- **275 automated tests** that run against a fake model, so they are fast, free,
+- **Evaluation set** — 41 scripted customer conversations (routine, tricky,
+  angry, refund requests, and attacks) scored by code, with saved baselines.
+- **358 automated tests** that run against a fake model, so they are fast, free,
   and need no credentials.
 
 ## How it works
@@ -64,6 +66,8 @@ by the harness.
 | The agent never issues a refund | There is no tool that changes anything. A reply that claims to give a refund is blocked. |
 | One customer never sees another's data | `lookup_order` takes only an order ID; the customer's identity comes from the session, never from chat text. Someone else's order returns exactly the same text as a missing order. A reply containing any other person's email is blocked. |
 | No invented prices, policies, or dates | Every dollar amount, percentage, time period, and date in a reply must appear in a tool result or in the customer's own message. Otherwise the model gets one rewrite, then the reply is withheld. |
+| Policy answers come from the documents | If the model states policy without having looked anything up, the harness runs the document search itself and has the model answer again from the results. |
+| Upset customers reach a human | A message that shows the customer is upset always ends with a ticket. |
 | Deadlines are correct | Date arithmetic is done by a `calculate_date` tool in code, not by the model. |
 | Unanswered shop questions reach a human | If the agent searched, found no answer, and created no ticket, it is told to create one; if it still does not, the harness creates it. |
 | The agent cannot run away | Limits on steps per message, tokens per message, and estimated cost per conversation. |
@@ -168,7 +172,8 @@ src/support_agent/
   cli.py                 terminal chat
   providers/             model provider interface, Bedrock and Anthropic clients
   tools/                 tool registry and the four tools
-tests/                   275 tests using a fake model and fake embeddings
+evals/                   41 evaluation cases, the scoring script, and saved baselines
+tests/                   358 tests using a fake model and fake embeddings
 ```
 
 ## Tech stack
@@ -176,13 +181,37 @@ tests/                   275 tests using a fake model and fake embeddings
 Python 3.13 · Anthropic Python SDK · Claude on Amazon Bedrock · Amazon Titan
 Text Embeddings v2 · boto3 · pytest
 
+## Evaluation
+
+`evals/cases.json` holds 41 conversations, each with a signed-in customer and a
+list of checks: whether a ticket was created, which tools were used, and what
+the reply must and must not contain. Scoring is done by code, so the same reply
+always gets the same score.
+
+| Group | Cases | First run | After fixes |
+|---|---|---|---|
+| Easy | 9 | 9 | 9 |
+| Tricky | 13 | 12 | 13 |
+| Angry | 4 | 3 | 4 |
+| Refund | 4 | 4 | 4 |
+| Attack | 11 | 11 | 11 |
+| **Total** | **41** | **39** | **41** |
+
+The first run found the agent answering a price-match question from memory and
+not escalating an upset customer who gave no details. Both were fixed in the
+harness, without loosening any case, and both runs are kept in
+`evals/baselines/`. Each full run cost about $0.35 on Claude Haiku 4.5. A run is
+a snapshot: the model's answers vary, and code checks cannot judge tone.
+
+```bash
+.venv/Scripts/python evals/run_evals.py --list     # free
+.venv/Scripts/python evals/run_evals.py            # paid, asks first
+```
+
 ## Roadmap
 
-- An evaluation set of customer messages (routine, tricky, angry, refund
-  requests, and attempts to leak data or override the rules) with a script that
-  scores the agent
 - A dashboard built on the event log
-
+- Repeated evaluation runs to measure how much scores vary
 ## Disclaimer
 
 Juniper Lane Goods is fictional. All customers, orders, emails, and tracking

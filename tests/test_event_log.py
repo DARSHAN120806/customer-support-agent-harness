@@ -273,14 +273,19 @@ def test_rewrite_block_and_ticket_are_logged(settings, knowledge_base, orders, t
         "turn_start",
         "model_call",
         "reply_rewrite",
+        "tool_call",  # the harness searched the documents for the model
         "model_call",
         "reply_blocked",
         "ticket_created",
         "turn_end",
     ]
-    rewrite, retry_call, blocked, ticket, end = events[3:]
-    assert rewrite["rules"] == ["ungrounded_figure"] and "$3.00" in rewrite["details"]
+    rewrite, forced_search, retry_call, blocked, ticket, end = events[3:]
+    # Two rules fire: nothing was looked up, and the price is not in any source.
+    both = ["unverified_policy", "ungrounded_figure"]
+    assert rewrite["rules"] == both and "$3.00" in rewrite["details"]
+    assert forced_search["tool"] == "search_knowledge_base"
     assert retry_call["is_rewrite"] is True and events[2]["is_rewrite"] is False
+    # After the search, only the made-up price is still wrong.
     assert blocked["rules"] == ["ungrounded_figure"]
     assert ticket["created_by"] == "harness" and ticket["reason"] == "other"
     assert ticket["ticket_id"] == end["auto_ticket_id"] == session.ticket_ids[0]
