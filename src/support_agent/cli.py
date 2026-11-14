@@ -9,13 +9,13 @@ import argparse
 import sys
 from typing import Any
 
-import anthropic
-from botocore.exceptions import BotoCoreError, ClientError
 from dotenv import load_dotenv
 
+from . import event_log
 from .app import create_agent, load_resources
 from .config import PROJECT_ROOT, ConfigError, Settings
-from .prompts import SHOP_NAME
+from .prompts import SHOP_NAME, fallback_reply
+from .retry import ServiceError
 
 EXIT_WORDS = {"quit", "exit"}
 
@@ -43,8 +43,10 @@ def main(argv: list[str] | None = None) -> int:
     except ConfigError as error:
         print(f"Configuration problem: {error}", file=sys.stderr)
         return 1
-    except (BotoCoreError, ClientError) as error:
-        print(f"Could not reach Amazon Bedrock for the document search: {error}", file=sys.stderr)
+    except ServiceError as error:
+        print(f"Could not prepare the document search: {error}", file=sys.stderr)
+        if not error.retryable:
+            print("Check AWS_REGION and your AWS sign-in details in .env.", file=sys.stderr)
         return 1
 
     customer_email = args.email or _ask_for_email()
@@ -72,8 +74,14 @@ def main(argv: list[str] | None = None) -> int:
         messages_before = len(history)
         try:
             result = agent.run(customer_message, history)
-        except anthropic.APIError as error:
-            print(f"\nThe model could not be reached: {error}\n", file=sys.stderr)
+        except Exception as error:
+            # The agent handles the failures it expects (model down, limits,
+            # blocked replies) itself. This is the last safety net for a bug:
+            # the customer still gets a polite reply, the problem is logged,
+            # and the chat carries on.
+            event_log.log_error(session.logger, "agent_run", error)
+            print(f"\nAgent: {fallback_reply()}")
+            print(f"       [unexpected error: {type(error).__name__}]\n", file=sys.stderr)
             # Remove everything added for the unanswered message, so the next
             # attempt starts from a clean conversation.
             del history[messages_before:]

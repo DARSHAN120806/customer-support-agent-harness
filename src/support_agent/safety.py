@@ -16,6 +16,8 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
+from .prompts import AI_NOT_HUMAN_REPLY, IDENTITY_REPLY
+
 EMAIL_PATTERN = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 
 # Sentences where the agent itself claims to give, or to have given, a refund.
@@ -85,6 +87,93 @@ class Violation:
     # True if a reply that still breaks the rule must not be shown. False if the
     # reply itself is fine and the harness only needs to add a ticket to it.
     blocks_reply: bool = True
+    # A fixed reply to show instead, for rules where the customer's question
+    # needs no ticket (for example "which AI are you?").
+    safe_reply: str | None = None
+
+
+# ---------------------------------------------------------------------------
+# Names the assistant must never say about itself: AI models, AI companies, and
+# cloud services. THIS IS THE ONE PLACE TO EDIT THE LIST. Each entry is matched
+# as a whole word, ignoring capitals, so "AWS" does not match "laws" and "Titan"
+# does not match "titanium". Plain "Amazon" is left out on purpose, because a
+# customer may fairly mention the retailer ("it's cheaper on Amazon").
+HIDDEN_TECH_TERMS = [
+    "Claude",
+    "Anthropic",
+    "Bedrock",
+    "AWS",
+    "Amazon Web Services",
+    "Titan",
+    "GPT",
+    "ChatGPT",
+    "OpenAI",
+    "Llama",
+    "Gemini",
+    "Mistral",
+    "DeepSeek",
+    "LLM",
+    "large language model",
+    "language model",
+]
+# Patterns that a plain word cannot express. Model family names such as "Haiku"
+# are ordinary words, so they only count when followed by a version number.
+HIDDEN_TECH_PATTERNS = [
+    r"gpt-?\d[\w.]*",
+    r"(?:haiku|sonnet|opus)\s*\d",
+]
+_HIDDEN_TECH = re.compile(
+    r"(?<![A-Za-z])(?:"
+    + "|".join(
+        [re.escape(term).replace(r"\ ", r"\s+") for term in HIDDEN_TECH_TERMS]
+        + HIDDEN_TECH_PATTERNS
+    )
+    + r")(?![A-Za-z])",
+    re.IGNORECASE,
+)
+
+# The assistant saying it is a human. "I'm not a real person" does not match.
+HUMAN_CLAIM_PATTERNS = [
+    re.compile(
+        r"\bI(?:'m| am)\s+(?:(?:actually|indeed|definitely|really|also)\s+)*"
+        r"(?:a |an )?(?:real |actual |live |human )*(?:human|person|human being)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bI(?:'m| am) not (?:a |an )?(?:bot|robot|chatbot|AI|machine|virtual assistant)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(r"\byou(?:'re| are) (?:talking|speaking|chatting) (?:to|with) a (?:real )?(?:human|person)\b", re.IGNORECASE),
+]
+
+
+def find_hidden_tech_terms(reply: str, shop_text: str = "") -> list[str]:
+    """Return the AI model, company, and cloud names found in the reply.
+
+    A name that appears in the shop's own documents or order data (`shop_text`)
+    is allowed, so a product that happened to be called "Titan Kettle" could
+    still be discussed.
+    """
+    allowed = {match.lower() for match in _HIDDEN_TECH.findall(shop_text)}
+    found = {match for match in _HIDDEN_TECH.findall(reply) if match.lower() not in allowed}
+    return sorted(found, key=str.lower)
+
+
+def claims_to_be_human(reply: str) -> bool:
+    return any(pattern.search(reply) for pattern in HUMAN_CLAIM_PATTERNS)
+
+
+def collect_tool_results(messages: list[dict[str, Any]]) -> str:
+    """Gather everything the tools returned in this conversation: the shop's
+    documents and the customer's order data."""
+    parts: list[str] = []
+    for message in messages:
+        content = message.get("content")
+        if message.get("role") == "user" and isinstance(content, list):
+            for block in content:
+                if isinstance(block, dict) and block.get("type") == "tool_result":
+                    parts.append(str(block.get("content", "")))
+    return "\n".join(parts)
 
 
 # Phrases that mean "the shop's documents did not answer this".
@@ -212,12 +301,47 @@ def check_reply(
     allowed_emails: set[str],
     sources: str | None = None,
     tools_used: list[str] | None = None,
+    shop_text: str = "",
 ) -> list[Violation]:
     """Check a reply against the rules enforced in code. An empty list means the
     reply is fine. When `sources` is given, figures in the reply are checked
     against it. When `tools_used` is given, the reply is also checked for a shop
-    question that went unanswered without a hand-over."""
+    question that went unanswered without a hand-over. `shop_text` is what the
+    tools returned; names found there are not treated as identity leaks."""
     violations: list[Violation] = []
+
+    hidden_terms = find_hidden_tech_terms(reply, shop_text)
+    if hidden_terms:
+        violations.append(
+            Violation(
+                "identity_leak",
+                "reply named an AI model, AI company, or cloud service: "
+                + ", ".join(hidden_terms),
+                correctable=True,
+                fix_hint=(
+                    "Do not name, confirm, or deny any AI model, AI company, or cloud "
+                    "service, and do not repeat such a name from the customer's message. "
+                    f'If asked what you are, say: "{IDENTITY_REPLY}" If asked about '
+                    "something unrelated to the shop, say you can only help with shop "
+                    "questions."
+                ),
+                safe_reply=IDENTITY_REPLY,
+            )
+        )
+
+    if claims_to_be_human(reply):
+        violations.append(
+            Violation(
+                "human_claim",
+                "reply said or implied the assistant is a human",
+                correctable=True,
+                fix_hint=(
+                    "You are an AI. Say you are an AI virtual assistant for the shop and "
+                    "offer to hand over to a human team member."
+                ),
+                safe_reply=AI_NOT_HUMAN_REPLY,
+            )
+        )
 
     if tools_used is not None and is_unanswered_shop_question(reply, tools_used):
         violations.append(

@@ -24,6 +24,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
+from .retry import RetryPolicy, call_with_retry
+
 # Sections scoring below this are left out. The value was chosen by measuring
 # real questions against the documents with Titan embeddings; a different
 # embedding model needs its own value. It only removes clearly unrelated
@@ -124,23 +126,29 @@ class KnowledgeBase:
         cache_path: Path | None = None,
         top_k: int = DEFAULT_TOP_K,
         min_score: float = DEFAULT_MIN_SCORE,
+        retry_policy: RetryPolicy | None = None,
     ) -> "KnowledgeBase":
         chunks = load_chunks(folder)
         if not chunks:
             raise ValueError(f"No documents were found in {folder}.")
+        policy = retry_policy or RetryPolicy(max_attempts=1)
 
         cache = _load_cache(cache_path, embedder.name)
         vectors: list[list[float]] = []
         cache_changed = False
-        for chunk in chunks:
-            key = hashlib.sha256(chunk.embedding_text.encode("utf-8")).hexdigest()
-            if key not in cache:
-                cache[key] = embedder.embed(chunk.embedding_text)
-                cache_changed = True
-            vectors.append(cache[key])
-
-        if cache_path is not None and cache_changed:
-            _save_cache(cache_path, embedder.name, cache)
+        try:
+            for chunk in chunks:
+                key = hashlib.sha256(chunk.embedding_text.encode("utf-8")).hexdigest()
+                if key not in cache:
+                    text = chunk.embedding_text
+                    cache[key] = call_with_retry(lambda: embedder.embed(text), policy)
+                    cache_changed = True
+                vectors.append(cache[key])
+        finally:
+            # Saved even if a later section failed, so the work already done
+            # (and paid for) is not repeated on the next start.
+            if cache_path is not None and cache_changed:
+                _save_cache(cache_path, embedder.name, cache)
         return cls(chunks, vectors, embedder, top_k, min_score)
 
     def __len__(self) -> int:
@@ -193,7 +201,10 @@ def _load_cache(path: Path | None, embedder_name: str) -> dict[str, list[float]]
 
 
 def _save_cache(path: Path, embedder_name: str, vectors: dict[str, list[float]]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps({"embedder": embedder_name, "vectors": vectors}), encoding="utf-8"
-    )
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps({"embedder": embedder_name, "vectors": vectors}), encoding="utf-8"
+        )
+    except OSError:
+        pass  # The cache only saves time. Without it, the search still works.

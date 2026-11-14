@@ -37,6 +37,10 @@ DEFAULT_MAX_COST_PER_CONVERSATION_USD = 0.50
 # pricing page and change them if you use a different model.
 DEFAULT_INPUT_PRICE_PER_MILLION_TOKENS = 1.00
 DEFAULT_OUTPUT_PRICE_PER_MILLION_TOKENS = 5.00
+# How many times a failed call to the model or the search is tried in total.
+DEFAULT_MAX_ATTEMPTS = 3
+# How long to wait for one answer from the model before giving up on it.
+DEFAULT_REQUEST_TIMEOUT_SECONDS = 60.0
 
 
 class ConfigError(Exception):
@@ -54,6 +58,8 @@ class Settings:
     max_cost_per_conversation_usd: float
     input_price_per_million_tokens: float
     output_price_per_million_tokens: float
+    max_attempts: int
+    request_timeout_seconds: float
     embedding_model: str
     knowledge_base_dir: Path
     orders_file: Path
@@ -101,6 +107,10 @@ class Settings:
             ),
             output_price_per_million_tokens=_get_positive_float(
                 "SUPPORT_AGENT_OUTPUT_PRICE_PER_MTOK", DEFAULT_OUTPUT_PRICE_PER_MILLION_TOKENS
+            ),
+            max_attempts=_get_positive_int("SUPPORT_AGENT_MAX_ATTEMPTS", DEFAULT_MAX_ATTEMPTS),
+            request_timeout_seconds=_get_positive_float(
+                "SUPPORT_AGENT_REQUEST_TIMEOUT_SECONDS", DEFAULT_REQUEST_TIMEOUT_SECONDS
             ),
             embedding_model=_get("SUPPORT_AGENT_EMBEDDING_MODEL") or DEFAULT_EMBEDDING_MODEL,
             knowledge_base_dir=PROJECT_ROOT / "data" / "knowledge_base",

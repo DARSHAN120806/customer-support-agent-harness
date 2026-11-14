@@ -21,7 +21,9 @@ from .. import event_log
 from ..event_log import EventLogger, NullLogger
 from ..knowledge_base import KnowledgeBase
 from ..orders import OrderStore, normalize_email, normalize_order_id
-from ..tickets import ESCALATION_REASONS, TicketStore
+from ..prompts import SUPPORT_EMAIL
+from ..retry import RetryPolicy, ServiceError, call_with_retry
+from ..tickets import ESCALATION_REASONS, TicketError, TicketStore
 from .registry import Tool, ToolError, ToolRegistry, require_text
 
 # More tickets than this in one conversation means something is going wrong.
@@ -44,6 +46,8 @@ class SessionContext:
     tickets_by_issue: dict[tuple[str, str | None], str] = field(default_factory=dict)
     # Where this conversation's events are recorded.
     logger: EventLogger | NullLogger = field(default_factory=NullLogger)
+    # How often, and how patiently, failed calls are tried again.
+    retry_policy: RetryPolicy = field(default_factory=RetryPolicy)
 
     def __post_init__(self) -> None:
         self.customer_email = normalize_email(self.customer_email)
@@ -60,13 +64,22 @@ def create_ticket(
 ) -> str:
     """Create a ticket, remember it for this conversation, and log it. Every
     ticket goes through here, whether the model or the harness asked for it."""
-    ticket = tickets.create(
-        customer_email=session.customer_email,
-        reason=reason,
-        summary=summary,
-        order_id=order_id,
-        conversation_id=session.logger.conversation_id or None,
-    )
+    try:
+        # A ticket file that is briefly locked is tried again after a short wait.
+        ticket = call_with_retry(
+            lambda: tickets.create(
+                customer_email=session.customer_email,
+                reason=reason,
+                summary=summary,
+                order_id=order_id,
+                conversation_id=session.logger.conversation_id or None,
+            ),
+            session.retry_policy,
+            on_retry=event_log.retry_recorder(session.logger, "ticket_write"),
+        )
+    except TicketError as error:
+        event_log.log_error(session.logger, "ticket_write", error, reason=reason)
+        raise
     session.ticket_ids.append(ticket["ticket_id"])
     session.tickets_by_issue[(reason, order_id)] = ticket["ticket_id"]
     session.logger.log(
@@ -88,17 +101,30 @@ def build_tool_registry(
     today: date | None = None,
 ) -> ToolRegistry:
     registry = ToolRegistry()
-    registry.register(make_search_tool(knowledge_base))
+    registry.register(make_search_tool(session, knowledge_base))
     registry.register(make_order_tool(session, orders))
     registry.register(make_date_tool(today or date.today()))
     registry.register(make_escalation_tool(session, tickets))
     return registry
 
 
-def make_search_tool(knowledge_base: KnowledgeBase) -> Tool:
+def make_search_tool(session: SessionContext, knowledge_base: KnowledgeBase) -> Tool:
     def search(tool_input: dict[str, Any]) -> str:
         query = require_text(tool_input, "query", max_length=500)
-        hits = knowledge_base.search(query)
+        try:
+            hits = call_with_retry(
+                lambda: knowledge_base.search(query),
+                session.retry_policy,
+                on_retry=event_log.retry_recorder(session.logger, "embedding"),
+            )
+        except ServiceError as error:
+            event_log.log_error(session.logger, "embedding", error)
+            # The model must not answer from memory when the search is down.
+            raise ToolError(
+                "The document search is temporarily unavailable, so the shop's documents "
+                "could not be checked. Do not answer from memory. Hand over with "
+                "escalate_to_human (reason unsure_of_answer)."
+            ) from error
         if not hits:
             return "No relevant information was found in the shop's documents for this query."
         return "\n\n".join(
@@ -272,9 +298,20 @@ def make_escalation_tool(session: SessionContext, tickets: TicketStore) -> Tool:
                 f"customer to their existing ticket numbers: {', '.join(session.ticket_ids)}."
             )
 
-        ticket_id = create_ticket(
-            session, tickets, reason=reason, summary=summary, order_id=order_id, created_by="model"
-        )
+        try:
+            ticket_id = create_ticket(
+                session,
+                tickets,
+                reason=reason,
+                summary=summary,
+                order_id=order_id,
+                created_by="model",
+            )
+        except TicketError as error:
+            raise ToolError(
+                "The ticket could not be saved, so no ticket exists. Apologise, do not "
+                f"give a ticket number, and ask the customer to email {SUPPORT_EMAIL}."
+            ) from error
         return (
             f"Ticket {ticket_id} was created for the human support team. "
             "Give the customer this ticket number."

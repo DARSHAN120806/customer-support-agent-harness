@@ -62,7 +62,11 @@ class FakeProvider:
             {"system": system, "messages": copy.deepcopy(messages), "tools": tools}
         )
         index = min(len(self.requests) - 1, len(self._responses) - 1)
-        return self._responses[index]
+        response = self._responses[index]
+        # An exception in the script is raised, to act out a failing service.
+        if isinstance(response, Exception):
+            raise response
+        return response
 
 
 class FakeEmbedder:

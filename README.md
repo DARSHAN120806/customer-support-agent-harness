@@ -24,9 +24,13 @@ logging are all plain Python, so every step is visible and testable.
 - **Structured event log** — every model call, tool call, rewrite, blocked reply,
   and ticket, with token counts, estimated cost, and timing, and with personal
   data masked.
+- **Error handling and retries** — temporary failures (busy service, network
+  drop, timeout) are retried with exponential backoff; permanent ones fail fast.
+  If the model stays unreachable the customer still gets a polite reply and a
+  ticket.
 - **Switchable model provider** — Amazon Bedrock or the Anthropic API, chosen by
   an environment variable.
-- **165 automated tests** that run against a fake model, so they are fast, free,
+- **275 automated tests** that run against a fake model, so they are fast, free,
   and need no credentials.
 
 ## How it works
@@ -63,6 +67,8 @@ by the harness.
 | Deadlines are correct | Date arithmetic is done by a `calculate_date` tool in code, not by the model. |
 | Unanswered shop questions reach a human | If the agent searched, found no answer, and created no ticket, it is told to create one; if it still does not, the harness creates it. |
 | The agent cannot run away | Limits on steps per message, tokens per message, and estimated cost per conversation. |
+| The assistant keeps its persona and never poses as human | It presents itself only as the shop's virtual assistant. A reply naming the underlying model, vendor, or cloud service, or claiming to be a person, is rewritten once and then replaced by a fixed reply. Asked sincerely, it says it is an AI and offers a human. |
+| Outages do not reach the customer as errors | Model, search, and ticket-file failures are retried, logged, and end in a fixed reply; a ticket number is never promised unless the ticket was saved. |
 | There is always a fallback | When a reply is blocked or a limit is hit, the harness creates a ticket itself and replies with the ticket number. |
 
 The prompt covers the rules that need judgement: escalate when the customer is
@@ -119,6 +125,8 @@ stored in code.
 | `SUPPORT_AGENT_MAX_STEPS` | `8` | Model calls allowed per customer message |
 | `SUPPORT_AGENT_MAX_TOKENS_PER_MESSAGE` | `50000` | Token limit per customer message |
 | `SUPPORT_AGENT_MAX_COST_USD` | `0.50` | Estimated cost limit per conversation |
+| `SUPPORT_AGENT_MAX_ATTEMPTS` | `3` | Total tries for a failing model or search call |
+| `SUPPORT_AGENT_REQUEST_TIMEOUT_SECONDS` | `60` | Time allowed for one model answer |
 | `SUPPORT_AGENT_LOG_FILE` | `logs/agent.jsonl` | Where the event log is written |
 
 The knowledge base search uses Amazon Titan embeddings, so AWS credentials are
@@ -156,10 +164,11 @@ src/support_agent/
   tickets.py             support tickets (JSON Lines)
   event_log.py           structured logging and masking
   config.py              settings from environment variables
+  retry.py               retry policy and service error type
   cli.py                 terminal chat
   providers/             model provider interface, Bedrock and Anthropic clients
   tools/                 tool registry and the four tools
-tests/                   165 tests using a fake model and fake embeddings
+tests/                   275 tests using a fake model and fake embeddings
 ```
 
 ## Tech stack
@@ -169,7 +178,6 @@ Text Embeddings v2 · boto3 · pytest
 
 ## Roadmap
 
-- Retries and wider error handling for model and embedding calls
 - An evaluation set of customer messages (routine, tricky, angry, refund
   requests, and attempts to leak data or override the rules) with a script that
   scores the agent

@@ -17,7 +17,8 @@ from .knowledge_base import KnowledgeBase
 from .orders import OrderStore
 from .prompts import SUPPORT_EMAIL, build_system_prompt
 from .providers import ModelProvider, create_provider
-from .safety import Budget, check_reply, collect_sources
+from .retry import RetryPolicy
+from .safety import Budget, check_reply, collect_sources, collect_tool_results
 from .tickets import TicketStore
 from .tools import SessionContext, build_tool_registry, create_ticket
 
@@ -38,15 +39,33 @@ def load_resources(settings: Settings) -> Resources:
             "AWS_REGION is not set. The knowledge base search uses Amazon Titan "
             "embeddings through Bedrock, so it needs AWS_REGION and AWS sign-in details."
         )
-    embedder = TitanEmbedder(settings.aws_region, settings.embedding_model)
-    return Resources(
-        provider=create_provider(settings),
-        knowledge_base=KnowledgeBase.build(
+    embedder = TitanEmbedder(
+        settings.aws_region, settings.embedding_model, settings.request_timeout_seconds
+    )
+    # Problems with the shop's own data files are reported in plain words
+    # instead of as a Python error trace.
+    try:
+        knowledge_base = KnowledgeBase.build(
             settings.knowledge_base_dir,
             embedder,
             cache_path=settings.cache_dir / "knowledge_base_embeddings.json",
-        ),
-        orders=OrderStore(settings.orders_file),
+            retry_policy=RetryPolicy(max_attempts=settings.max_attempts),
+        )
+    except (OSError, ValueError) as error:
+        raise ConfigError(
+            f"The shop documents in {settings.knowledge_base_dir} could not be loaded: {error}"
+        ) from error
+    try:
+        orders = OrderStore(settings.orders_file)
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        raise ConfigError(
+            f"The orders file {settings.orders_file} is missing or damaged "
+            f"({type(error).__name__}: {error})."
+        ) from error
+    return Resources(
+        provider=create_provider(settings),
+        knowledge_base=knowledge_base,
+        orders=orders,
         tickets=TicketStore(settings.tickets_file),
     )
 
@@ -56,10 +75,12 @@ def create_agent(
     resources: Resources,
     customer_email: str,
     today: date | None = None,
+    retry_policy: RetryPolicy | None = None,
 ) -> tuple[Agent, SessionContext]:
     """Create an agent for one conversation with one signed-in customer."""
     today = today or date.today()
-    session = SessionContext(customer_email=customer_email)
+    retry_policy = retry_policy or RetryPolicy(max_attempts=settings.max_attempts)
+    session = SessionContext(customer_email=customer_email, retry_policy=retry_policy)
     # The log identifies the customer by a code, never by their email.
     salt = event_log.load_or_create_salt(settings.log_file.parent / ".salt")
     session.logger = event_log.EventLogger(
@@ -113,8 +134,11 @@ def create_agent(
             {session.customer_email, SUPPORT_EMAIL},
             collect_sources(messages) + f"\n{today.isoformat()}",
             tools_used,
+            # The assistant must not name the AI model or company behind it.
+            shop_text=collect_tool_results(messages),
         ),
         auto_escalate=auto_escalate,
         logger=session.logger,
+        retry_policy=retry_policy,
     )
     return agent, session

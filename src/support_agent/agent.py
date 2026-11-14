@@ -22,6 +22,7 @@ from . import event_log
 from .event_log import EventLogger, NullLogger
 from .prompts import fallback_reply, handover_note
 from .providers.base import ModelProvider, ToolCall
+from .retry import RetryPolicy, ServiceError, call_with_retry
 from .safety import Budget, Violation
 from .tools.registry import ToolRegistry
 
@@ -31,6 +32,7 @@ STEP_LIMIT = "step_limit"  # the maximum number of steps was reached
 BUDGET_LIMIT = "budget_limit"  # the token or cost limit was reached
 MODEL_STOPPED = "model_stopped"  # the model stopped without a usable reply
 REPLY_BLOCKED = "reply_blocked"  # the reply failed a safety check
+MODEL_ERROR = "model_error"  # the model could not be reached, even after retries
 
 CORRECTION_NOTE = (
     "Automatic check: the reply you just drafted was not shown to the customer, "
@@ -82,6 +84,7 @@ class Agent:
         reply_check: ReplyCheck | None = None,
         auto_escalate: AutoEscalate | None = None,
         logger: EventLogger | NullLogger | None = None,
+        retry_policy: RetryPolicy | None = None,
     ) -> None:
         if max_steps < 1:
             raise ValueError("max_steps must be 1 or more.")
@@ -93,6 +96,8 @@ class Agent:
         self._reply_check = reply_check
         self._auto_escalate = auto_escalate
         self._log = logger or NullLogger()
+        # Without a policy, a failed model call is not tried again.
+        self._retry_policy = retry_policy or RetryPolicy(max_attempts=1)
 
     def run(
         self, customer_message: str, history: list[dict[str, Any]] | None = None
@@ -162,11 +167,8 @@ class Agent:
         def give_up(outcome: str, why: str, violations: list[Violation] | None = None) -> AgentResult:
             """End the turn with a fixed, safe reply and hand over to a human."""
             already_escalated = "escalate_to_human" in tools_used
-            ticket_id = (
-                self._auto_escalate(why, customer_message, already_escalated)
-                if self._auto_escalate
-                else None
-            )
+            ticket_id = self._safe_auto_escalate(why, customer_message, already_escalated)
+            # With no ticket, the fixed reply gives the support email instead.
             reply = fallback_reply(ticket_id)
             messages.append({"role": "assistant", "content": reply})
             return finish(reply, outcome, ticket_id, violations, gave_up_because=why)
@@ -180,11 +182,22 @@ class Agent:
 
             steps = step
             call_started = time.perf_counter()
-            response = self._provider.create_message(
-                system=self._system_prompt + (f"\n\n{correction}" if correction else ""),
-                messages=messages,
-                tools=self._tools.definitions(),
-            )
+            system = self._system_prompt + (f"\n\n{correction}" if correction else "")
+            try:
+                # A temporary failure (busy service, network blip) is tried
+                # again after a short wait; each retry is written to the log.
+                response = call_with_retry(
+                    lambda: self._provider.create_message(
+                        system=system, messages=messages, tools=self._tools.definitions()
+                    ),
+                    self._retry_policy,
+                    on_retry=event_log.retry_recorder(self._log, "model_call", step=step),
+                )
+            except ServiceError as error:
+                # Still failing, or a failure that retrying cannot fix. The
+                # customer gets the fixed reply and a ticket instead of a crash.
+                event_log.log_error(self._log, "model_call", error, step=step)
+                return give_up(MODEL_ERROR, f"the model could not be reached ({error.kind})")
             input_tokens += response.input_tokens
             output_tokens += response.output_tokens
             if self._budget:
@@ -241,13 +254,22 @@ class Agent:
                         self._log.log(
                             event_log.REPLY_BLOCKED, step=step, rules=rules, details=details
                         )
+                        safe_replies = [v.safe_reply for v in violations]
+                        if all(safe_replies) and not tools_used:
+                            # A question about the assistant itself, with no
+                            # shop work done: a fixed reply is enough, and no
+                            # ticket is needed. (If tools were used, a real
+                            # shop question is at stake, so a human gets it.)
+                            reply = safe_replies[0]
+                            messages.append({"role": "assistant", "content": reply})
+                            return finish(reply, REPLY_BLOCKED, None, violations)
                         return give_up(
                             REPLY_BLOCKED, f"reply blocked by safety check: {details}", violations
                         )
                     # The reply is fine to show but a ticket is missing, so the
                     # harness creates it and tells the customer.
-                    if self._auto_escalate:
-                        ticket_id = self._auto_escalate(details, customer_message, False)
+                    ticket_id = self._safe_auto_escalate(details, customer_message, False)
+                    if ticket_id:
                         reply = f"{reply}\n\n{handover_note(ticket_id)}"
                         messages.append({"role": "assistant", "content": reply})
                         return finish(reply, COMPLETED, ticket_id, violations)
@@ -259,6 +281,19 @@ class Agent:
             return give_up(MODEL_STOPPED, f"model stopped early ({response.stop_reason})")
 
         return give_up(STEP_LIMIT, f"step limit of {self._max_steps} reached")
+
+    def _safe_auto_escalate(
+        self, why: str, customer_message: str, already_escalated: bool
+    ) -> str | None:
+        """Ask the harness for a ticket. If even that fails (for example the
+        ticket file cannot be written), carry on without one rather than crash."""
+        if not self._auto_escalate:
+            return None
+        try:
+            return self._auto_escalate(why, customer_message, already_escalated)
+        except Exception as error:
+            event_log.log_error(self._log, "auto_escalate", error)
+            return None
 
     def _cost(self, input_tokens: int, output_tokens: int) -> float | None:
         return self._budget.cost_of(input_tokens, output_tokens) if self._budget else None

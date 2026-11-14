@@ -25,6 +25,14 @@ ESCALATION_REASONS = [
 ]
 
 
+class TicketError(Exception):
+    """Raised when a ticket could not be saved."""
+
+    kind = "ticket_write_failed"
+    # A file that is briefly locked by another program is worth trying again.
+    retryable = True
+
+
 class TicketStore:
     def __init__(self, path: Path) -> None:
         self._path = path
@@ -51,13 +59,21 @@ class TicketStore:
             "order_id": order_id,
             "summary": summary,
         }
-        self._path.parent.mkdir(parents=True, exist_ok=True)
-        with self._path.open("a", encoding="utf-8") as file:
-            file.write(json.dumps(ticket, ensure_ascii=False) + "\n")
+        try:
+            self._path.parent.mkdir(parents=True, exist_ok=True)
+            with self._path.open("a", encoding="utf-8") as file:
+                file.write(json.dumps(ticket, ensure_ascii=False) + "\n")
+        except OSError as error:
+            raise TicketError(f"The ticket file could not be written ({type(error).__name__}).") from error
         return ticket
 
     def all(self) -> list[dict[str, Any]]:
         if not self._path.exists():
             return []
-        lines = self._path.read_text(encoding="utf-8").splitlines()
-        return [json.loads(line) for line in lines if line.strip()]
+        tickets = []
+        for line in self._path.read_text(encoding="utf-8").splitlines():
+            try:
+                tickets.append(json.loads(line))
+            except ValueError:
+                continue  # A damaged or empty line is skipped, not fatal.
+        return tickets

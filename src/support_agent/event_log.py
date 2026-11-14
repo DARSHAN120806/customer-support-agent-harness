@@ -43,6 +43,8 @@ REPLY_REWRITE = "reply_rewrite"  # a draft failed a check and the model was aske
 REPLY_BLOCKED = "reply_blocked"  # a reply was withheld from the customer
 TICKET_CREATED = "ticket_created"
 TURN_END = "turn_end"  # the reply was sent
+RETRY = "retry"  # a call failed for a temporary reason and is being tried again
+ERROR = "error"  # a call failed for good (after any retries)
 
 EMAIL_MASK = "[EMAIL]"
 PHONE_MASK = "[PHONE]"
@@ -169,6 +171,37 @@ class EventLogger:
             if not self._warned:
                 print(f"Warning: could not write to the log file: {error}", file=sys.stderr)
                 self._warned = True
+
+
+def retry_recorder(logger: "EventLogger | NullLogger", operation: str, **extra: Any):
+    """Build the function that writes a `retry` event. It is handed to
+    `call_with_retry`, which calls it before each wait."""
+
+    def record(attempt: int, max_attempts: int, wait_seconds: float, error: Exception) -> None:
+        logger.log(
+            RETRY,
+            operation=operation,
+            attempt=attempt,
+            max_attempts=max_attempts,
+            wait_ms=round(wait_seconds * 1000),
+            error_kind=getattr(error, "kind", type(error).__name__),
+            error=str(error)[:300],
+            **extra,
+        )
+
+    return record
+
+
+def log_error(logger: "EventLogger | NullLogger", operation: str, error: Exception, **extra: Any) -> None:
+    """Write an `error` event for a call that failed for good."""
+    logger.log(
+        ERROR,
+        operation=operation,
+        error_kind=getattr(error, "kind", type(error).__name__),
+        retryable=bool(getattr(error, "retryable", False)),
+        error=str(error)[:300],
+        **extra,
+    )
 
 
 class NullLogger:

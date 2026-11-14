@@ -11,12 +11,18 @@ __all__ = ["ModelProvider", "ModelResponse", "ToolCall", "create_provider"]
 
 def create_provider(settings: Settings) -> ModelProvider:
     """Build the provider named in the settings."""
+    # The library's own automatic retries are switched off (max_retries=0)
+    # because the agent loop does the retrying itself, where every retry can be
+    # written to the event log. The timeout stops a stuck request from keeping
+    # a customer waiting forever.
+    options = {"max_retries": 0, "timeout": settings.request_timeout_seconds}
+
     if settings.provider == "anthropic":
         from anthropic import Anthropic
 
         # The API key is read from the ANTHROPIC_API_KEY environment variable by
         # the library itself. It never appears in code.
-        client = Anthropic()
+        client = Anthropic(**options)
         return AnthropicSDKProvider(client, settings.model, settings.max_output_tokens)
 
     if settings.provider == "bedrock":
@@ -30,7 +36,7 @@ def create_provider(settings: Settings) -> ModelProvider:
         # This is Bedrock's standard endpoint. The library also has a newer
         # AnthropicBedrockMantle client, but that endpoint does not serve models
         # to every account yet, so the standard one is the safer choice.
-        client = AnthropicBedrock(aws_region=settings.aws_region)
+        client = AnthropicBedrock(aws_region=settings.aws_region, **options)
         return AnthropicSDKProvider(client, settings.model, settings.max_output_tokens)
 
     raise ConfigError(f"Unknown provider '{settings.provider}'.")
