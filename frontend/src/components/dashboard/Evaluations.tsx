@@ -11,6 +11,7 @@ import {
 } from 'recharts'
 import { ApiError, dashboardApi, type EvaluationRun } from '../../api'
 import { RULE_LABEL, money } from '../../format'
+import { CHART, prefersReducedMotion } from './chart'
 
 const GROUPS = ['easy', 'tricky', 'angry', 'refund', 'attack']
 const VIOLATIONS = [
@@ -31,21 +32,15 @@ const VIOLATION_LABEL: Record<string, string> = {
   forbidden_content: 'Forbidden content',
   missed_ticket: 'Missed ticket',
 }
-// Flat pastel colours, one per run. No gradients.
-const COLOURS = ['#b9a9ff', '#9fdcbf', '#ffc4a8', '#a9d2ff', '#ffd98a', '#ffb3c0']
+// The first run compared gets the accent; the others neutral steps, so one leads.
+const COLOURS = [CHART.accent, ...CHART.steps]
 
 // The runs compared at first: the harness on/off comparison if it exists.
 const DEFAULT_RUNS = ['haiku45_harness_on_counted', 'haiku45_harness_off_run1', 'haiku45_harness_off_run2']
 
-// Legend names in dark text: the pastel bar colours are too light to read as text.
+// Legend names in the secondary text colour.
 function legendText(value: string) {
-  return <span style={{ color: '#2b2f3a' }}>{value}</span>
-}
-
-// Bars grow in with a short animation, unless the person's device asks for
-// reduced motion (an accessibility setting), in which case they appear at once.
-function prefersReducedMotion(): boolean {
-  return typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  return <span style={{ color: '#5e554a', fontSize: 13 }}>{value}</span>
 }
 
 function label(run: EvaluationRun): string {
@@ -69,7 +64,14 @@ export function Evaluations() {
       .catch((e: ApiError) => setError(e.message))
   }, [])
 
-  const compared = useMemo(() => (runs ?? []).filter((r) => chosen.includes(r.name)), [runs, chosen])
+  // Runs with the harness on come first, so the one that matters gets the accent.
+  const compared = useMemo(
+    () =>
+      (runs ?? [])
+        .filter((r) => chosen.includes(r.name))
+        .sort((a, b) => Number(a.harness === 'off') - Number(b.harness === 'off')),
+    [runs, chosen],
+  )
 
   // One row per group, one value per run: the share of cases passed, in percent.
   const passRows = GROUPS.map((group) => {
@@ -91,14 +93,21 @@ export function Evaluations() {
     setChosen((current) => (current.includes(name) ? current.filter((n) => n !== name) : [...current, name]))
   }
 
-  if (error) return <p className="error" role="alert">{error}</p>
-  if (!runs) return <p className="muted">Loading evaluation results…</p>
-  if (runs.length === 0) return <p className="empty">No saved evaluation runs yet.</p>
+  const head = (
+    <header className="ad-page-head">
+      <h2>Evaluations</h2>
+      <p className="ad-muted">Saved test runs of the assistant, with and without the harness</p>
+    </header>
+  )
+  if (error) return <section aria-label="Evaluations">{head}<p className="ad-error" role="alert">{error}</p></section>
+  if (!runs) return <section aria-label="Evaluations">{head}<p className="ad-muted">Loading evaluation results…</p></section>
+  if (runs.length === 0) return <section aria-label="Evaluations">{head}<p className="ad-empty">No saved evaluation runs yet</p></section>
 
   return (
-    <section aria-label="Evaluations" className="dash-section">
-      <div className="table-wrap">
-        <table>
+    <section aria-label="Evaluations">
+      {head}
+      <div className="ad-table-wrap">
+        <table className="ad-table">
           <thead>
             <tr>
               <th>Compare</th>
@@ -121,16 +130,14 @@ export function Evaluations() {
                     onChange={() => toggle(run.name)}
                   />
                 </td>
-                <td className="strong">{label(run)}</td>
-                <td>
-                  <span className={`tag ${run.harness === 'off' ? 'tag-warn' : ''}`}>{run.harness.toUpperCase()}</span>
-                </td>
-                <td className="nowrap">
+                <td>{label(run)}</td>
+                <td>{run.harness === 'off' ? <span className="ad-flag">Off</span> : 'On'}</td>
+                <td className="nowrap ad-mono">
                   {run.summary.passed} / {run.summary.total}
                 </td>
                 <td>{run.summary.violation_total ?? 'not counted'}</td>
-                <td className="nowrap">{run.summary.cost_usd != null ? money(run.summary.cost_usd) : '—'}</td>
-                <td className="nowrap">{(run.run_at ?? '').replace('T', ' ').slice(0, 16)}</td>
+                <td className="nowrap ad-mono">{run.summary.cost_usd != null ? money(run.summary.cost_usd) : '—'}</td>
+                <td className="nowrap ad-muted">{(run.run_at ?? '').replace('T', ' ').slice(0, 16)}</td>
               </tr>
             ))}
           </tbody>
@@ -138,21 +145,21 @@ export function Evaluations() {
       </div>
 
       {compared.length === 0 ? (
-        <p className="empty">Tick at least one run to compare.</p>
+        <p className="ad-empty">Tick at least one run to compare.</p>
       ) : (
-        <div className="charts">
-          <figure className="chart-card">
+        <div className="ad-two">
+          <figure className="ad-card">
             <figcaption>Cases passed per group (%)</figcaption>
-            <div className="chart-box">
+            <div className="ad-chart-box">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={passRows} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e4e0f0" />
-                  <XAxis dataKey="group" tick={{ fill: '#565d6d', fontSize: 12 }} />
-                  <YAxis domain={[0, 100]} tick={{ fill: '#565d6d', fontSize: 12 }} />
-                  <Tooltip formatter={(value) => `${value}%`} />
+                  <CartesianGrid vertical={false} stroke={CHART.grid} />
+                  <XAxis dataKey="group" tick={CHART.tick} tickLine={false} axisLine={{ stroke: CHART.grid }} />
+                  <YAxis domain={[0, 100]} tick={CHART.tick} tickLine={false} axisLine={false} />
+                  <Tooltip formatter={(value) => `${value}%`} cursor={{ fill: CHART.cursor }} contentStyle={CHART.tooltip} />
                   <Legend formatter={legendText} />
                   {compared.map((run, i) => (
-                    <Bar key={run.name} dataKey={label(run)} fill={COLOURS[i % COLOURS.length]} radius={[6, 6, 0, 0]}
+                    <Bar key={run.name} dataKey={label(run)} fill={COLOURS[i % COLOURS.length]} radius={[4, 4, 0, 0]}
                         isAnimationActive={animate} />
                   ))}
                 </BarChart>
@@ -160,25 +167,25 @@ export function Evaluations() {
             </div>
           </figure>
 
-          <figure className="chart-card">
+          <figure className="ad-card">
             <figcaption>Rule violations the customer would have seen</figcaption>
             {counted.length === 0 ? (
-              <p className="empty">The chosen runs were saved before violations were counted.</p>
+              <p className="ad-empty">The chosen runs were saved before violations were counted.</p>
             ) : (
-              <div className="chart-box">
+              <div className="ad-chart-box">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={violationRows} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e4e0f0" />
-                    <XAxis dataKey="kind" tick={{ fill: '#565d6d', fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={60} />
-                    <YAxis allowDecimals={false} tick={{ fill: '#565d6d', fontSize: 12 }} />
-                    <Tooltip />
+                    <CartesianGrid vertical={false} stroke={CHART.grid} />
+                    <XAxis dataKey="kind" tick={CHART.tick} tickLine={false} axisLine={{ stroke: CHART.grid }} interval={0} angle={-20} textAnchor="end" height={64} />
+                    <YAxis allowDecimals={false} tick={CHART.tick} tickLine={false} axisLine={false} />
+                    <Tooltip cursor={{ fill: CHART.cursor }} contentStyle={CHART.tooltip} />
                     <Legend formatter={legendText} />
                     {counted.map((run) => (
                       <Bar
                         key={run.name}
                         dataKey={label(run)}
                         fill={COLOURS[compared.indexOf(run) % COLOURS.length]}
-                        radius={[6, 6, 0, 0]}
+                        radius={[4, 4, 0, 0]}
                         isAnimationActive={animate}
                       />
                     ))}
@@ -190,7 +197,7 @@ export function Evaluations() {
         </div>
       )}
 
-      <p className="muted small">
+      <p className="ad-muted ad-note">
         One run is a snapshot: the model's answers vary between runs, so small differences in cases
         passed are not meaningful on their own. Violation counts are the clearer signal.
       </p>

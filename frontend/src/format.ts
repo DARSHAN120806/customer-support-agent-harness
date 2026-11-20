@@ -29,6 +29,43 @@ export function money(value: number | null | undefined): string {
   return value < 0.01 ? `$${value.toFixed(4)}` : `$${value.toFixed(3)}`
 }
 
+// Ticket reasons in plain words.
+export const REASON_LABEL: Record<string, string> = {
+  refund_request: 'Refund request',
+  return_request: 'Return request',
+  warranty_claim: 'Warranty claim',
+  order_problem: 'Problem with an order',
+  upset_customer: 'Upset customer',
+  unsure_of_answer: 'Assistant unsure',
+  outside_shop_documents: 'Not in the shop documents',
+  human_requested: 'Asked for a person',
+  other: 'Other',
+}
+
+const DATE_TIME = new Intl.DateTimeFormat('en-GB', {
+  day: 'numeric',
+  month: 'short',
+  hour: '2-digit',
+  minute: '2-digit',
+})
+const DAY = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' })
+
+// "2026-11-20T15:57:48+00:00" becomes "20 Nov, 15:57" in the viewer's time.
+export function dateTime(value: string): string {
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? value : DATE_TIME.format(date)
+}
+
+// "2026-11-20" becomes "20 Nov".
+export function day(value: string): string {
+  const date = new Date(`${value}T12:00:00`)
+  return Number.isNaN(date.getTime()) ? value : DAY.format(date)
+}
+
+export function percent(share: number): string {
+  return `${Math.round(share * 100)}%`
+}
+
 export function ms(value: unknown): string {
   const n = Number(value)
   if (!Number.isFinite(n)) return ''

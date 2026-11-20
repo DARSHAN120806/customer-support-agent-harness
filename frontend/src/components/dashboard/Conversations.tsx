@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { ApiError, dashboardApi, type ConversationSummary, type HarnessEvent } from '../../api'
-import { OUTCOME_LABEL, RULE_LABEL, money, ms } from '../../format'
-import { groupTurns } from '../../turns'
-import { Step } from '../BehindTheScenes'
+import { OUTCOME_LABEL, RULE_LABEL, dateTime, money, ms } from '../../format'
+import { detailsOf, groupTurns } from '../../turns'
+import { BehindTheScenes } from '../BehindTheScenes'
 import { FormattedText } from '../FormattedText'
 
 // --- The list ---------------------------------------------------------------------
@@ -19,52 +19,62 @@ export function ConversationList({ onOpen }: ListProps) {
     dashboardApi.conversations().then(setRows).catch((e: ApiError) => setError(e.message))
   }, [])
 
-  if (error) return <p className="error" role="alert">{error}</p>
-  if (!rows) return <p className="muted">Loading conversations…</p>
-  if (rows.length === 0) return <p className="empty">No conversations logged yet.</p>
-
   return (
-    <section aria-label="Conversations" className="dash-section">
-      <p className="muted small">
-        Newest first. Customers appear as codes, and emails, phone numbers, and addresses are masked.
-      </p>
-      <div className="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Last activity</th>
-              <th>Customer</th>
-              <th>First message</th>
-              <th>Messages</th>
-              <th>Checks fired</th>
-              <th>Ticket</th>
-              <th>Cost</th>
-              <th aria-label="Open" />
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((c) => (
-              <tr key={c.conversation_id}>
-                <td className="nowrap">{c.last_at.replace('T', ' ').slice(0, 16)}</td>
-                <td className="nowrap">
-                  <code>{c.customer_ref}</code>
-                  {c.harness === false && <span className="tag tag-warn">harness off</span>}
-                </td>
-                <td className="summary-cell">{c.first_message ?? '—'}</td>
-                <td>{c.turns}</td>
-                <td>{c.blocked_or_rewritten || '—'}</td>
-                <td>{c.escalated ? 'Yes' : 'No'}</td>
-                <td className="nowrap">{money(c.cost_usd)}</td>
-                <td>
-                  <button className="link-button" onClick={() => onOpen(c.conversation_id)}>
-                    Replay
-                  </button>
-                </td>
+    <section aria-label="Conversations">
+      <header className="ad-page-head">
+        <h2>Conversations</h2>
+        <p className="ad-muted">
+          Newest first. Customers appear as codes, and emails, phone numbers and addresses are masked
+        </p>
+      </header>
+
+      {error ? (
+        <p className="ad-error" role="alert">{error}</p>
+      ) : !rows ? (
+        <p className="ad-muted">Loading conversations…</p>
+      ) : rows.length === 0 ? (
+        <p className="ad-empty">No conversations logged yet</p>
+      ) : (
+        <div className="ad-table-wrap">
+          <table className="ad-table">
+            <thead>
+              <tr>
+                <th>Last activity</th>
+                <th>Customer</th>
+                <th>First message</th>
+                <th className="num">Messages</th>
+                <th className="num">Checks fired</th>
+                <th>Ticket</th>
+                <th className="num">Cost</th>
+                <th>
+                  <span className="visually-hidden">Open</span>
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {rows.map((c) => (
+                <tr key={c.conversation_id}>
+                  <td className="nowrap ad-muted">{dateTime(c.last_at)}</td>
+                  <td className="nowrap ad-mono">
+                    {c.customer_ref}
+                    {c.harness === false && <span className="ad-flag">harness off</span>}
+                  </td>
+                  <td className="ad-summary">{c.first_message ?? '—'}</td>
+                  <td className="num">{c.turns}</td>
+                  <td className="num">{c.blocked_or_rewritten || '—'}</td>
+                  <td>{c.escalated ? 'Yes' : 'No'}</td>
+                  <td className="num ad-mono">{money(c.cost_usd)}</td>
+                  <td className="nowrap">
+                    <button type="button" className="ad-link" onClick={() => onOpen(c.conversation_id)}>
+                      Replay
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </section>
   )
 }
@@ -79,65 +89,77 @@ type ReplayProps = {
 export function ConversationReplay({ conversationId, onBack }: ReplayProps) {
   const [events, setEvents] = useState<HarnessEvent[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // Which reply the panel describes; null means "the newest one".
+  const [selected, setSelected] = useState<number | null>(null)
 
   useEffect(() => {
     dashboardApi.conversation(conversationId).then(setEvents).catch((e: ApiError) => setError(e.message))
   }, [conversationId])
 
   const { start, turns } = groupTurns(events ?? [])
+  const shownTurn = turns.find((t) => t.number === selected) ?? turns.at(-1)
 
   return (
-    <section aria-label="Conversation replay" className="dash-section">
-      <button className="secondary small-button back-button" onClick={onBack}>
+    <section aria-label="Conversation replay">
+      <button type="button" className="ad-link ad-back" onClick={onBack}>
         ← All conversations
       </button>
-      <h2 className="replay-title">
-        Conversation <code>{conversationId}</code>
-      </h2>
-      {start && (
-        <p className="muted small">
-          Model {String(start.model)} · date used {String(start.date_used)}
-          {start.harness === false ? ' · harness OFF' : ''}
-        </p>
+      <header className="ad-page-head">
+        <h2>
+          Conversation <span className="ad-mono">{conversationId}</span>
+        </h2>
+        {start && (
+          <p className="ad-muted">
+            Model {String(start.model)} · date used {String(start.date_used)}
+            {start.harness === false ? ' · harness off' : ''}
+          </p>
+        )}
+      </header>
+      {error && <p className="ad-error" role="alert">{error}</p>}
+      {!events && !error && <p className="ad-muted">Loading…</p>}
+
+      {turns.length > 0 && (
+        <div className="ad-replay">
+          <div className="ad-transcript">
+            {turns.map((turn) => {
+              const end = turn.end
+              const violations = (end?.violations as string[] | undefined) ?? []
+              const current = shownTurn?.number === turn.number
+              return (
+                <article key={turn.number} className="ad-turn">
+                  <div className="ad-bubble customer">
+                    <p>{turn.message}</p>
+                  </div>
+                  <button
+                    type="button"
+                    className={current ? 'ad-reply current' : 'ad-reply'}
+                    aria-pressed={current}
+                    aria-label={`Show how reply ${turn.number} was made`}
+                    onClick={() => setSelected(turn.number)}
+                  >
+                    <span className="ad-reply-meta">
+                      Reply {turn.number}
+                      {end && ` · ${OUTCOME_LABEL[String(end.outcome)] ?? String(end.outcome)}`}
+                      {end && ` · ${money(end.cost_usd as number)} · ${ms(end.duration_ms)}`}
+                      {violations.length > 0 &&
+                        ` · checks fired: ${violations.map((v) => RULE_LABEL[v] ?? v).join(', ')}`}
+                    </span>
+                    {end ? <FormattedText text={String(end.reply ?? '')} /> : <p className="ad-muted">No reply logged</p>}
+                  </button>
+                </article>
+              )
+            })}
+          </div>
+
+          {shownTurn && (
+            <BehindTheScenes
+              details={detailsOf(shownTurn)}
+              outcome={shownTurn.end ? String(shownTurn.end.outcome) : undefined}
+              replyNumber={shownTurn.number}
+            />
+          )}
+        </div>
       )}
-      {error && <p className="error" role="alert">{error}</p>}
-      {!events && !error && <p className="muted">Loading…</p>}
-
-      {turns.map((turn) => {
-        const end = turn.end
-        const violations = (end?.violations as string[] | undefined) ?? []
-        return (
-          <article key={turn.number} className="replay-turn">
-            <div className="bubble-row customer">
-              <div className="bubble customer">
-                <p>{turn.message}</p>
-              </div>
-            </div>
-
-            <details className="replay-steps">
-              <summary>
-                {turn.steps.length} steps
-                {end && ` · ${OUTCOME_LABEL[String(end.outcome)] ?? String(end.outcome)}`}
-                {end && ` · ${money(end.cost_usd as number)} · ${ms(end.duration_ms)}`}
-                {violations.length > 0 && ` · checks fired: ${violations.map((v) => RULE_LABEL[v] ?? v).join(', ')}`}
-              </summary>
-              <ol className="timeline">
-                {turn.steps.map((event, i) => (
-                  <Step key={i} event={event} />
-                ))}
-              </ol>
-            </details>
-
-            {end && (
-              <div className="bubble-row assistant">
-                <div className="bubble assistant">
-                  <FormattedText text={String(end.reply ?? '')} />
-                </div>
-              </div>
-            )}
-          </article>
-        )
-      })}
     </section>
   )
 }

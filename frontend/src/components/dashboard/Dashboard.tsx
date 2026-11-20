@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { ConversationList, ConversationReplay } from './Conversations'
 import { Evaluations } from './Evaluations'
+import { Overview } from './Overview'
 import { Tickets } from './Tickets'
 
-type Tab = 'tickets' | 'conversations' | 'evaluations'
+type Section = 'overview' | 'tickets' | 'conversations' | 'evaluations'
 
-const TABS: { id: Tab; label: string }[] = [
+const SECTIONS: { id: Section; label: string }[] = [
+  { id: 'overview', label: 'Overview' },
   { id: 'tickets', label: 'Tickets' },
   { id: 'conversations', label: 'Conversations' },
   { id: 'evaluations', label: 'Evaluations' },
@@ -15,57 +17,58 @@ type Props = {
   onSignOut: () => void
 }
 
-// The support team's view: tickets to answer, chats to review, and how well
-// the assistant scored in testing.
+// The admin panel: how the assistant is doing, the tickets it handed over,
+// every conversation step by step, and the saved evaluation runs.
 export function Dashboard({ onSignOut }: Props) {
-  const [tab, setTab] = useState<Tab>('tickets')
+  const [section, setSection] = useState<Section>('overview')
   const [openConversation, setOpenConversation] = useState<string | null>(null)
 
+  function go(next: Section) {
+    setSection(next)
+    setOpenConversation(null)
+  }
+
   function showConversation(id: string) {
-    setTab('conversations')
+    setSection('conversations')
     setOpenConversation(id)
   }
 
   return (
-    <div className="dashboard">
-      <header className="topbar glass">
-        <div className="brand">
-          <span className="brand-mark" aria-hidden="true">JL</span>
-          <div>
-            <h1>Support dashboard</h1>
-            <p className="muted small">Juniper Lane Goods</p>
-          </div>
+    <div className="admin">
+      <aside className="ad-sidebar">
+        <div className="ad-brand">
+          <p className="wordmark">Juniper Lane Goods</p>
+          <p className="ad-muted">Support admin</p>
         </div>
-        <button className="secondary" onClick={onSignOut}>
+        <nav aria-label="Admin sections">
+          {SECTIONS.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              className={section === s.id ? 'ad-nav active' : 'ad-nav'}
+              aria-current={section === s.id ? 'page' : undefined}
+              onClick={() => go(s.id)}
+            >
+              {s.label}
+            </button>
+          ))}
+        </nav>
+        <button type="button" className="ad-signout" onClick={onSignOut}>
           Sign out
         </button>
-      </header>
+      </aside>
 
-      <nav className="tabs glass" aria-label="Dashboard sections">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            className={tab === t.id ? 'tab active' : 'tab'}
-            aria-current={tab === t.id ? 'page' : undefined}
-            onClick={() => {
-              setTab(t.id)
-              setOpenConversation(null)
-            }}
-          >
-            {t.label}
-          </button>
-        ))}
-      </nav>
-
-      <main className="dash-body glass">
-        {tab === 'tickets' && <Tickets onOpenConversation={showConversation} />}
-        {tab === 'conversations' &&
+      <main className="ad-main">
+        <h1 className="visually-hidden">Support dashboard</h1>
+        {section === 'overview' && <Overview onOpenTickets={() => go('tickets')} onOpenConversation={showConversation} />}
+        {section === 'tickets' && <Tickets onOpenConversation={showConversation} />}
+        {section === 'conversations' &&
           (openConversation ? (
             <ConversationReplay conversationId={openConversation} onBack={() => setOpenConversation(null)} />
           ) : (
             <ConversationList onOpen={setOpenConversation} />
           ))}
-        {tab === 'evaluations' && <Evaluations />}
+        {section === 'evaluations' && <Evaluations />}
       </main>
     </div>
   )

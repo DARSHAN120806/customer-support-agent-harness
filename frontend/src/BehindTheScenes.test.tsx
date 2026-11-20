@@ -1,4 +1,4 @@
-// Tests for the "behind the scenes" panel. The API is a fake, so nothing is paid.
+// Tests for the "behind the scenes" panel, now shown to the admin only.
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
@@ -81,7 +81,7 @@ describe('customers', () => {
 describe('the panel on its own', () => {
   it('shows checks that fired and a ticket the harness created', () => {
     render(
-      <BehindTheScenes details={BLOCKED} outcome="reply_blocked" conversationId="conv_x" replyNumber={2} onClose={() => {}} />,
+      <BehindTheScenes details={BLOCKED} outcome="reply_blocked" replyNumber={2} />,
     )
 
     expect(screen.getByText('Reply replaced by a safe one')).toBeInTheDocument()
@@ -92,16 +92,10 @@ describe('the panel on its own', () => {
     expect(screen.getByText('Yes')).toBeInTheDocument()
   })
 
-  it('explains why a reply restored after a refresh has no details', () => {
-    render(<BehindTheScenes details={null} outcome={undefined} conversationId="conv_x" replyNumber={1} onClose={() => {}} />)
+  it('says when a reply has no end line in the log yet', () => {
+    render(<BehindTheScenes details={null} outcome={undefined} replyNumber={1} />)
 
-    expect(screen.getByText(/only kept for replies sent during this visit/)).toBeInTheDocument()
-  })
-
-  it('invites a first message when nothing has been sent yet', () => {
-    render(<BehindTheScenes details={undefined} outcome={undefined} conversationId="conv_x" replyNumber={null} onClose={() => {}} />)
-
-    expect(screen.getByText(/Send a message to see each step here/)).toBeInTheDocument()
+    expect(screen.getByText(/has no end line in the log yet/)).toBeInTheDocument()
   })
 
   it('shows retries and rewrites in plain words', () => {
@@ -114,7 +108,7 @@ describe('the panel on its own', () => {
         { event: 'model_call', step: 2, duration_ms: 800, input_tokens: 10, output_tokens: 5, tools_requested: [], is_rewrite: true },
       ],
     }
-    render(<BehindTheScenes details={details} outcome="completed" conversationId="conv_x" replyNumber={1} onClose={() => {}} />)
+    render(<BehindTheScenes details={details} outcome="completed" replyNumber={1} />)
 
     expect(screen.getByText('Retried after a temporary failure')).toBeInTheDocument()
     expect(screen.getByText(/attempt 1 of 3 · waited 1.2 s/)).toBeInTheDocument()

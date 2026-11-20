@@ -26,9 +26,10 @@ customer's data.
   a person.
 - **Built-in safety checks:** every reply is checked before the customer sees
   it, to catch made-up figures, refund promises, and other customers' details.
-- **Support dashboard (admin only):** lists every ticket and lets staff replay
-  any conversation step by step, with the tools the assistant used and the time
-  and cost. Customers never see these details.
+- **Admin panel:** an overview of conversations, hand-overs, reply time, cost
+  and the safety checks that fired; every ticket; and a step-by-step replay of
+  any conversation showing what happened behind the scenes for each reply.
+  Customers never see these details.
 - **Private logs:** every step is recorded, with emails, phone numbers, and
   addresses hidden.
 - **Terminal chat:** you can also chat with the assistant from the command line.
@@ -39,6 +40,12 @@ customer's data.
 <p align="center">
   <img src="docs/images/02-chat.png" alt="The support chat open on the shop page" width="900"><br>
   <sub>The support chat on the shop page, answering from the shop's own return policy</sub>
+</p>
+
+<p align="center">
+  <img src="docs/images/03-admin-replay.png" alt="The admin panel replaying a conversation" width="900"><br>
+  <sub>The admin panel: a replayed conversation, with each step the assistant took,
+  the tools it used, the checks it passed, and the time and cost</sub>
 </p>
 
 <p align="center">

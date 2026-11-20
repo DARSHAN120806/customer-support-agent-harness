@@ -8,19 +8,6 @@ import { SignIn } from './components/SignIn'
 // lose the conversation, and closing the tab forgets it.
 const STORAGE_KEY = 'juniper-lane-session'
 
-// Flat pastel shapes behind the glass panels of the dashboard, which gets the
-// new design in a later stage.
-function Backdrop() {
-  return (
-    <div className="backdrop" aria-hidden="true">
-      <span className="shape-1" />
-      <span className="shape-2" />
-      <span className="shape-3" />
-      <span className="shape-4" />
-    </div>
-  )
-}
-
 type Page = 'shop' | 'dashboard'
 
 const ADDRESS: Record<Page, string> = { shop: '#/', dashboard: '#/dashboard' }
@@ -95,12 +82,7 @@ export default function App() {
   if (restoring) return <p className="loading">Loading…</p>
 
   if (page === 'dashboard' && isAdmin) {
-    return (
-      <>
-        <Backdrop />
-        <Dashboard onSignOut={adminSignOut} />
-      </>
-    )
+    return <Dashboard onSignOut={adminSignOut} />
   }
   if (page === 'shop' && session) {
     return <Shop session={session} onSignOut={signOut} onSessionExpired={expired} />

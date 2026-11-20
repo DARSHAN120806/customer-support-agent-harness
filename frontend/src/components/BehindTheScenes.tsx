@@ -22,12 +22,12 @@ export function Step({ event }: { event: HarnessEvent }) {
     case 'model_call': {
       const tools = (e.tools_requested as string[] | undefined) ?? []
       return (
-        <li className="step step-model">
-          <span className="step-title">
+        <li className="ad-step">
+          <span className="ad-step-title">
             {e.is_rewrite ? 'Model rewrote its reply' : 'Model thought'}
-            <span className="step-meta">{ms(e.duration_ms)}</span>
+            <span className="ad-step-meta">{ms(e.duration_ms)}</span>
           </span>
-          <span className="step-body">
+          <span className="ad-step-body">
             {tools.length ? `Asked for: ${tools.map((t) => TOOL_LABEL[t] ?? t).join(', ')}` : 'Wrote a reply'}
             {' · '}
             {Number(e.input_tokens).toLocaleString()} in / {Number(e.output_tokens).toLocaleString()} out
@@ -38,13 +38,13 @@ export function Step({ event }: { event: HarnessEvent }) {
     case 'tool_call': {
       const input = e.input && typeof e.input === 'object' ? JSON.stringify(e.input) : ''
       return (
-        <li className={`step step-tool${e.is_error ? ' step-warn' : ''}`}>
-          <span className="step-title">
+        <li className={e.is_error ? 'ad-step warn' : 'ad-step'}>
+          <span className="ad-step-title">
             {TOOL_LABEL[String(e.tool)] ?? String(e.tool)}
-            <span className="step-meta">{ms(e.duration_ms)}</span>
+            <span className="ad-step-meta">{ms(e.duration_ms)}</span>
           </span>
-          {input && <code className="step-code">{input}</code>}
-          {e.is_error ? <span className="step-body">The tool reported a problem.</span> : null}
+          {input && <code className="ad-code">{input}</code>}
+          {e.is_error ? <span className="ad-step-body">The tool reported a problem</span> : null}
           {typeof e.result_preview === 'string' && e.result_preview && (
             <details>
               <summary>What the tool returned</summary>
@@ -56,41 +56,41 @@ export function Step({ event }: { event: HarnessEvent }) {
     }
     case 'reply_rewrite':
       return (
-        <li className="step step-check">
-          <span className="step-title">Check caught the draft, asked for a rewrite</span>
-          <span className="step-body">{rules(e.rules)}</span>
+        <li className="ad-step check">
+          <span className="ad-step-title">Check caught the draft, asked for a rewrite</span>
+          <span className="ad-step-body">{rules(e.rules)}</span>
         </li>
       )
     case 'reply_blocked':
       return (
-        <li className="step step-block">
-          <span className="step-title">Check withheld the reply</span>
-          <span className="step-body">{rules(e.rules)}</span>
+        <li className="ad-step block">
+          <span className="ad-step-title">Check withheld the reply</span>
+          <span className="ad-step-body">{rules(e.rules)}</span>
         </li>
       )
     case 'ticket_created':
       return (
-        <li className="step step-ticket">
-          <span className="step-title">Ticket {String(e.ticket_id)}</span>
-          <span className="step-body">
+        <li className="ad-step ticket">
+          <span className="ad-step-title">Ticket {String(e.ticket_id)}</span>
+          <span className="ad-step-body">
             Created by {e.created_by === 'harness' ? 'the harness (automatic)' : 'the assistant'} · {String(e.reason).replace(/_/g, ' ')}
           </span>
         </li>
       )
     case 'retry':
       return (
-        <li className="step step-warn">
-          <span className="step-title">Retried after a temporary failure</span>
-          <span className="step-body">
+        <li className="ad-step warn">
+          <span className="ad-step-title">Retried after a temporary failure</span>
+          <span className="ad-step-body">
             {String(e.operation)} · attempt {String(e.attempt)} of {String(e.max_attempts)} · waited {ms(e.wait_ms)}
           </span>
         </li>
       )
     case 'error':
       return (
-        <li className="step step-block">
-          <span className="step-title">Failed: {String(e.operation)}</span>
-          <span className="step-body">{String(e.error_kind)}</span>
+        <li className="ad-step block">
+          <span className="ad-step-title">Failed: {String(e.operation)}</span>
+          <span className="ad-step-body">{String(e.error_kind)}</span>
         </li>
       )
     default:
@@ -99,37 +99,26 @@ export function Step({ event }: { event: HarnessEvent }) {
 }
 
 type Props = {
-  details: ReplyDetails | null | undefined
-  // How the reply ended, as reported by the API (for example "completed").
+  // Rebuilt from the log; null while the reply has no end line yet.
+  details: ReplyDetails | null
+  // How the reply ended, for example "completed".
   outcome: string | undefined
-  conversationId: string
-  replyNumber: number | null
-  onClose: () => void
+  replyNumber: number
 }
 
-export function BehindTheScenes({ details, outcome, conversationId, replyNumber, onClose }: Props) {
+// "Behind the scenes" for the admin: what the harness did to produce one reply.
+// Customers never see this; it is shown in the conversation replay.
+export function BehindTheScenes({ details, outcome, replyNumber }: Props) {
   return (
-    <aside className="insights glass" aria-label="Behind the scenes">
-      <div className="insights-head">
-        <h2>Behind the scenes</h2>
-        <button className="secondary small-button" onClick={onClose} aria-label="Hide behind the scenes">
-          Hide
-        </button>
-      </div>
-      <p className="muted small">
-        What the harness did for {replyNumber ? `reply ${replyNumber}` : 'a reply'}. Conversation{' '}
-        <code>{conversationId}</code>
-      </p>
+    <aside className="ad-insights" aria-label="Behind the scenes">
+      <h2>Behind the scenes</h2>
+      <p className="ad-muted">What the harness did for reply {replyNumber}</p>
 
       {!details ? (
-        <p className="insights-empty">
-          {replyNumber
-            ? 'Details are only kept for replies sent during this visit to the page.'
-            : 'Send a message to see each step here: the tools used, the checks run, and the cost.'}
-        </p>
+        <p className="ad-empty">This reply has no end line in the log yet, so its details are not complete</p>
       ) : (
         <>
-          <dl className="stats">
+          <dl className="ad-facts">
             <div>
               <dt>Result</dt>
               <dd>{OUTCOME_LABEL[outcome ?? ''] ?? outcome ?? '—'}</dd>
@@ -158,18 +147,18 @@ export function BehindTheScenes({ details, outcome, conversationId, replyNumber,
             </div>
           </dl>
 
-          <div className={`checks ${details.violations.length ? 'checks-fired' : 'checks-clear'}`}>
+          <p className={details.violations.length ? 'ad-checks fired' : 'ad-checks'}>
             {details.violations.length ? (
               <>
                 <strong>Code checks fired:</strong> {rules(details.violations)}
               </>
             ) : (
-              <>All code checks passed.</>
+              'All code checks passed'
             )}
-          </div>
+          </p>
 
           <h3>Steps</h3>
-          <ol className="timeline">
+          <ol className="ad-timeline">
             {details.events.map((event, i) => (
               <Step key={i} event={event} />
             ))}

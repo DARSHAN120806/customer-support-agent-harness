@@ -22,6 +22,7 @@ Endpoints (all under /api):
 
 Admin only (header "Authorization: Bearer <admin token>"):
 
+    GET    /stats                          numbers for the admin overview
     GET    /tickets                        support dashboard: tickets (emails masked)
     GET    /conversations                  support dashboard: logged conversations
     GET    /conversations/{id}             every event of one conversation
@@ -54,6 +55,7 @@ from ..config import PROJECT_ROOT, ConfigError, Settings
 from ..prompts import SHOP_NAME, fallback_reply
 from .accounts import ADMIN, AccountStore, AdminSessions, SignInLimiter
 from .sessions import ChatSession, SessionBusy, SessionStore
+from .stats import overview
 
 MAX_MESSAGE_LENGTH = 2000
 BASELINES_DIR = PROJECT_ROOT / "evals" / "baselines"
@@ -237,6 +239,10 @@ def create_app(
         return {"reply": result.reply, "outcome": result.outcome, "new_ticket_ids": new_tickets}
 
     # --- Support dashboard ----------------------------------------------------------
+
+    @app.get("/api/stats", dependencies=admin_only)
+    def stats() -> dict[str, Any]:
+        return overview(event_log.read_events(settings.log_file), resources.tickets.all(), today or date.today())
 
     @app.get("/api/tickets", dependencies=admin_only)
     def list_tickets() -> list[dict[str, Any]]:

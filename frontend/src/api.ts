@@ -193,7 +193,26 @@ function asAdmin<T>(path: string, options: RequestInit = {}): Promise<T> {
   return request<T>(path, { ...options, headers: { Authorization: `Bearer ${token}` } })
 }
 
+// Numbers for the admin overview (see web/stats.py).
+export type Stats = {
+  conversations: number
+  customers: number
+  messages: number
+  tickets: number
+  open_tickets: number
+  tickets_by_harness: number
+  handover_rate: number
+  cost_usd: number
+  cost_per_message_usd: number
+  average_reply_ms: number
+  outcomes: Record<string, number>
+  checks: Record<string, number>
+  tickets_by_reason: Record<string, number>
+  days: { date: string; messages: number; tickets: number }[]
+}
+
 export const dashboardApi = {
+  stats: () => asAdmin<Stats>('/stats'),
   tickets: () => asAdmin<Ticket[]>('/tickets'),
   conversations: () => asAdmin<ConversationSummary[]>('/conversations?limit=200'),
   conversation: (id: string) => asAdmin<HarnessEvent[]>(`/conversations/${encodeURIComponent(id)}`),

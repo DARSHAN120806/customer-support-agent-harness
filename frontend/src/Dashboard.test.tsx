@@ -3,8 +3,8 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
-import type { ConversationSummary, EvaluationRun, HarnessEvent, Ticket } from './api'
-import { groupTurns } from './turns'
+import type { ConversationSummary, EvaluationRun, HarnessEvent, Stats, Ticket } from './api'
+import { detailsOf, groupTurns } from './turns'
 
 const TICKETS: Ticket[] = [
   {
@@ -29,6 +29,26 @@ const TICKETS: Ticket[] = [
   },
 ]
 
+const STATS: Stats = {
+  conversations: 9,
+  customers: 4,
+  messages: 11,
+  tickets: 3,
+  open_tickets: 3,
+  tickets_by_harness: 1,
+  handover_rate: 0.333,
+  cost_usd: 0.08,
+  cost_per_message_usd: 0.0073,
+  average_reply_ms: 5400,
+  outcomes: { completed: 10, reply_blocked: 1 },
+  checks: { identity_leak: 2, unverified_policy: 1 },
+  tickets_by_reason: { refund_request: 2, upset_customer: 1 },
+  days: [
+    { date: '2026-11-19', messages: 0, tickets: 0 },
+    { date: '2026-11-20', messages: 11, tickets: 3 },
+  ],
+}
+
 const CONVERSATIONS: ConversationSummary[] = [
   {
     conversation_id: 'conv_aaaaaaaaaaaa',
@@ -51,7 +71,10 @@ const EVENTS: HarnessEvent[] = [
   { event: 'model_call', turn: 1, step: 1, duration_ms: 900, input_tokens: 100, output_tokens: 20, tools_requested: [], is_rewrite: false },
   { event: 'reply_rewrite', turn: 1, step: 1, rules: ['unverified_policy'] },
   { event: 'ticket_created', turn: 1, ticket_id: 'TCK-20261120-AAA111', reason: 'refund_request', created_by: 'model' },
-  { event: 'turn_end', turn: 1, outcome: 'completed', cost_usd: 0.0123, duration_ms: 4200, violations: ['unverified_policy'], reply: 'Your ticket is TCK-20261120-AAA111.' },
+  { event: 'turn_end', turn: 1, outcome: 'completed', steps: 1, input_tokens: 100, output_tokens: 20, cost_usd: 0.0123, duration_ms: 4200, escalated: true, tools_used: [], violations: ['unverified_policy'], reply: 'Your ticket is TCK-20261120-AAA111.' },
+  { event: 'turn_start', turn: 2, message: 'Thanks' },
+  { event: 'model_call', turn: 2, step: 1, duration_ms: 500, input_tokens: 50, output_tokens: 10, tools_requested: [], is_rewrite: false },
+  { event: 'turn_end', turn: 2, outcome: 'completed', steps: 1, input_tokens: 50, output_tokens: 10, cost_usd: 0.001, duration_ms: 600, escalated: false, tools_used: [], violations: [], reply: 'You are welcome.' },
 ]
 
 function run(name: string, harness: string, passed: number, violations?: Record<string, number>): EvaluationRun {
@@ -89,6 +112,7 @@ function fakeApi(overrides: Record<string, unknown> = {}) {
       return new Response(JSON.stringify({ detail: 'Please sign in as an admin.' }), { status: 401 })
     }
     const routes: Record<string, unknown> = {
+      '/api/stats': STATS,
       '/api/tickets': TICKETS,
       '/api/conversations?limit=200': CONVERSATIONS,
       '/api/conversations/conv_aaaaaaaaaaaa': EVENTS,
@@ -143,14 +167,40 @@ describe('getting to the dashboard', () => {
   })
 })
 
+describe('overview', () => {
+  it('opens first, with the numbers, the checks that fired and recent tickets', async () => {
+    fakeApi()
+    await openDashboard()
+
+    expect(await screen.findByRole('heading', { name: 'Overview' })).toBeInTheDocument()
+    expect(screen.getByText('Messages answered').parentElement).toHaveTextContent('11')
+    expect(screen.getByText('Handed to a person').parentElement).toHaveTextContent('33%')
+    expect(screen.getByText('5.4 s average reply time')).toBeInTheDocument()
+    const checks = screen.getByRole('region', { name: 'Checks that fired' })
+    expect(within(checks).getByText('Named the AI behind the assistant')).toBeInTheDocument()
+    expect(screen.getByText('TCK-20261120-AAA111')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Overview' })).toHaveAttribute('aria-current', 'page')
+  })
+
+  it('goes to all tickets from the recent list', async () => {
+    fakeApi()
+    const user = await openDashboard()
+
+    await user.click(await screen.findByRole('button', { name: 'All tickets' }))
+
+    expect(await screen.findByRole('heading', { name: 'Tickets' })).toBeInTheDocument()
+  })
+})
+
 describe('tickets', () => {
   it('lists tickets with masked emails, and filters them', async () => {
     fakeApi()
     const user = await openDashboard()
+    await user.click(screen.getByRole('button', { name: 'Tickets' }))
 
     const table = await screen.findByRole('table')
     expect(within(table).getByText('TCK-20261120-AAA111')).toBeInTheDocument()
-    expect(within(table).getByText('upset customer')).toBeInTheDocument()
+    expect(within(table).getByText('Upset customer')).toBeInTheDocument()
     expect(screen.getByText('2 of 2 tickets')).toBeInTheDocument()
 
     await user.selectOptions(screen.getByLabelText('Reason'), 'refund_request')
@@ -166,6 +216,7 @@ describe('tickets', () => {
     fakeApi()
     const user = await openDashboard()
 
+    await user.click(screen.getByRole('button', { name: 'Tickets' }))
     await user.click(await screen.findByRole('button', { name: 'View chat' }))
 
     expect(await screen.findByRole('region', { name: 'Conversation replay' })).toBeInTheDocument()
@@ -179,9 +230,10 @@ describe('tickets', () => {
 
   it('says so when there are no tickets yet', async () => {
     fakeApi({ '/api/tickets': [] })
-    await openDashboard()
+    const user = await openDashboard()
+    await user.click(screen.getByRole('button', { name: 'Tickets' }))
 
-    expect(await screen.findByText(/No tickets yet/)).toBeInTheDocument()
+    expect(await screen.findByText(/No tickets yet. They appear here/)).toBeInTheDocument()
   })
 })
 
@@ -199,17 +251,45 @@ describe('conversations', () => {
     const replay = await screen.findByRole('region', { name: 'Conversation replay' })
     expect(within(replay).getByText('I want a refund, my email is [EMAIL]')).toBeInTheDocument()
     expect(within(replay).getByText(/checks fired: Policy stated without looking it up/)).toBeInTheDocument()
+    await user.click(within(replay).getByRole('button', { name: 'Show how reply 1 was made' }))
     expect(within(replay).getByText('Check caught the draft, asked for a rewrite')).toBeInTheDocument()
 
     await user.click(within(replay).getByRole('button', { name: '← All conversations' }))
     expect(await screen.findByRole('region', { name: 'Conversations' })).toBeInTheDocument()
   })
 
+  it('shows behind the scenes for the newest reply, and for any reply clicked', async () => {
+    fakeApi()
+    const user = await openDashboard()
+    await user.click(screen.getByRole('button', { name: 'Conversations' }))
+    await user.click(await screen.findByRole('button', { name: 'Replay' }))
+
+    const panel = await screen.findByRole('complementary', { name: 'Behind the scenes' })
+    expect(within(panel).getByText('What the harness did for reply 2')).toBeInTheDocument()
+    expect(within(panel).getByText('All code checks passed')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Show how reply 1 was made' }))
+    expect(within(panel).getByText('What the harness did for reply 1')).toBeInTheDocument()
+    expect(within(panel).getByText(/Code checks fired:/).parentElement).toHaveTextContent('Policy stated without looking it up')
+    expect(within(panel).getByText('100 in · 20 out')).toBeInTheDocument()
+    expect(within(panel).getByText('Ticket TCK-20261120-AAA111')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Show how reply 1 was made' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('rebuilds the details of a reply from its log lines', () => {
+    const { turns } = groupTurns(EVENTS)
+    const details = detailsOf(turns[0])
+
+    expect(details).toMatchObject({ steps: 1, input_tokens: 100, cost_usd: 0.0123, escalated: true, violations: ['unverified_policy'] })
+    expect(details?.events.map((e) => e.event)).toEqual(['model_call', 'reply_rewrite', 'ticket_created'])
+    expect(detailsOf({ number: 3, message: 'Still writing', steps: [] })).toBeNull()
+  })
+
   it('groups log lines into customer messages', () => {
     const { start, turns } = groupTurns(EVENTS)
 
     expect(start?.model).toBe('test-model')
-    expect(turns).toHaveLength(1)
+    expect(turns).toHaveLength(2)
     expect(turns[0].message).toBe('I want a refund, my email is [EMAIL]')
     expect(turns[0].steps.map((e) => e.event)).toEqual(['model_call', 'reply_rewrite', 'ticket_created'])
     expect(turns[0].end?.reply).toBe('Your ticket is TCK-20261120-AAA111.')

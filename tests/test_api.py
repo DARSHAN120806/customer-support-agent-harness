@@ -343,6 +343,24 @@ def test_tickets_need_a_live_chat_session(make_client):
 # --- Dashboard ------------------------------------------------------------------------
 
 
+def test_the_overview_numbers_are_for_the_admin_only(make_client):
+    escalate = tool_response(ToolCall("c1", "escalate_to_human", {"reason": "human_requested", "summary": "Wants a person."}))
+    client, _ = make_client([escalate, text_response("Done."), text_response("Hello.")])
+    priya = sign_in(client)
+    client.post(f"/api/sessions/{priya['session_id']}/messages", json={"text": "A person please"})
+    marcus = sign_in(client, MARCUS)
+    client.post(f"/api/sessions/{marcus['session_id']}/messages", json={"text": "Hi"})
+
+    assert client.get("/api/stats").status_code == 401
+    sign_in_as_admin(client)
+    stats = client.get("/api/stats").json()
+
+    assert (stats["conversations"], stats["messages"], stats["tickets"]) == (2, 2, 1)
+    assert stats["handover_rate"] == 0.5
+    # The chart covers the 14 days up to the app's "today".
+    assert len(stats["days"]) == 14 and stats["days"][-1]["date"] == TODAY.isoformat()
+
+
 def test_tickets_are_listed_newest_first_with_emails_masked(make_client):
     escalate = tool_response(ToolCall("c1", "escalate_to_human", {"reason": "other", "summary": f"Contact {MARCUS}."}))
     client, _ = make_client([escalate, text_response("Done."), escalate, text_response("Done.")])
