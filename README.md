@@ -141,8 +141,8 @@ needed for the chat even when the Anthropic API is the model provider.
 
 ## Web API
 
-A FastAPI app wraps the same agent for a browser front end (in progress). Every
-safety check, limit, and log entry works exactly as in the terminal chat.
+A FastAPI app wraps the same agent for the browser. Every safety check, limit,
+and log entry works exactly as in the terminal chat.
 
 ```bash
 .venv/Scripts/python -m pip install -e ".[web,dev]"
@@ -153,6 +153,27 @@ Interactive documentation is then at http://localhost:8000/docs. Each chat reply
 also returns what the harness did: tools used, checks that fired, tokens, cost,
 and time. The sign-in is a demo (any customer can be chosen), so run it locally
 only.
+
+## Web chat (React)
+
+A customer chat page built with React, TypeScript, and Vite, styled with soft
+pastel colours and frosted-glass panels. A customer signs in (demo sign-in),
+sees their own orders, and chats with the agent; ticket numbers are highlighted
+and the assistant is clearly labelled as an AI.
+
+Start the API (above), then in a second terminal:
+
+```bash
+npm --prefix frontend install
+npm --prefix frontend run dev
+```
+
+Open http://localhost:5173. The front end has its own tests
+(`npm --prefix frontend test`); see `frontend/README.md`.
+
+Still to come: a "behind the scenes" panel showing what the harness did for each
+reply, and a support dashboard with tickets, conversation replay, and
+evaluation charts.
 
 ## Event log
 
@@ -191,6 +212,7 @@ src/support_agent/
   retry.py               retry policy and service error type
   cli.py                 terminal chat
   web/                   FastAPI web API for the React front end
+frontend/                React chat page (TypeScript, Vite)
   providers/             model provider interface, Bedrock and Anthropic clients
   tools/                 tool registry and the four tools
 evals/                   41 hand-written and 230 generated evaluation cases, the scoring script, and saved baselines
@@ -200,7 +222,7 @@ tests/                   443 tests using a fake model and fake embeddings
 
 ## Tech stack
 
-Python 3.13 · Anthropic Python SDK · Claude on Amazon Bedrock · Amazon Titan
+Python 3.13 · FastAPI · React · TypeScript · Vite · Anthropic Python SDK · Claude on Amazon Bedrock · Amazon Titan
 Text Embeddings v2 · boto3 · pytest
 
 ## Evaluation

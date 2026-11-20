@@ -1,0 +1,229 @@
+/* Juniper Lane Goods support page.
+   Style: soft pastel colours, flat (no gradients anywhere), and "glass" panels:
+   see-through white with a blur, so the pastel shapes behind show through softly. */
+
+:root {
+  /* Pastel palette */
+  --lavender: #e6e0ff;
+  --lavender-deep: #cfc4ff;
+  --mint: #d7f2e3;
+  --mint-deep: #b8e6cf;
+  --peach: #ffe3d6;
+  --sky: #d8ecff;
+  --butter: #fff3c4;
+  --rose: #ffdfe4;
+
+  /* Text and lines (dark enough to read easily on pastels) */
+  --ink: #2b2f3a;
+  --ink-soft: #565d6d;
+  --mint-ink: #1f5a40;
+  --lavender-ink: #3d2f8a;
+  --amber-ink: #7a5300;
+  --rose-ink: #9a2638;
+  --page: #f7f5fb;
+
+  /* Glass */
+  --glass: rgba(255, 255, 255, 0.55);
+  --glass-strong: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.8);
+  --glass-blur: blur(18px) saturate(140%);
+  --shadow: 0 8px 32px rgba(80, 70, 140, 0.12);
+
+  --radius: 18px;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color: var(--ink);
+  background: var(--page);
+  line-height: 1.5;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; }
+h1, h2, p { margin: 0; }
+
+/* --- Background: flat pastel shapes for the glass to blur ---------------- */
+.backdrop { position: fixed; inset: 0; z-index: -1; overflow: hidden; background: var(--page); }
+.backdrop span { position: absolute; border-radius: 50%; }
+.backdrop .shape-1 { width: 46vmax; height: 46vmax; background: var(--lavender); top: -14vmax; left: -10vmax; }
+.backdrop .shape-2 { width: 38vmax; height: 38vmax; background: var(--mint); bottom: -12vmax; right: -8vmax; }
+.backdrop .shape-3 { width: 24vmax; height: 24vmax; background: var(--peach); top: 30vh; right: 22vw; }
+.backdrop .shape-4 { width: 16vmax; height: 16vmax; background: var(--sky); bottom: 8vh; left: 18vw; }
+
+/* --- Glass panels -------------------------------------------------------- */
+.glass {
+  background: var(--glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow);
+}
+/* Browsers without blur get a more solid panel, so text stays readable. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass { background: rgba(255, 255, 255, 0.92); }
+}
+
+/* --- Controls ------------------------------------------------------------ */
+button {
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 0.6rem 1.1rem;
+  background: var(--mint-deep);
+  color: var(--mint-ink);
+  font-weight: 600;
+  transition: background 0.15s, transform 0.15s;
+}
+button:hover:not(:disabled) { background: #a6dcc1; }
+button:active:not(:disabled) { transform: translateY(1px); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+button.secondary { background: var(--glass-strong); color: var(--ink); border-color: var(--glass-border); font-weight: 500; }
+button.secondary:hover:not(:disabled) { background: rgba(255, 255, 255, 0.9); }
+button:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 3px solid var(--lavender-deep);
+  outline-offset: 2px;
+}
+input, textarea {
+  font: inherit;
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  color: var(--ink);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  background: var(--glass-strong);
+}
+input::placeholder, textarea::placeholder { color: #8a90a0; }
+
+.muted { color: var(--ink-soft); }
+.small { font-size: 0.85rem; }
+.error { color: var(--rose-ink); background: var(--rose); padding: 0.6rem 0.8rem; border-radius: 10px; }
+.loading { text-align: center; margin-top: 30vh; color: var(--ink-soft); }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.notice {
+  max-width: 520px; margin: 1rem auto -1rem; position: relative; z-index: 1;
+  background: var(--butter); color: var(--amber-ink); padding: 0.75rem 1rem; border-radius: 12px; text-align: center;
+}
+
+.brand { display: flex; align-items: center; gap: 0.75rem; }
+.brand h1 { font-size: 1.15rem; }
+.brand-mark {
+  display: grid; place-items: center;
+  width: 2.6rem; height: 2.6rem; border-radius: 12px;
+  background: var(--lavender-deep); color: var(--lavender-ink); font-weight: 800;
+}
+.pill { font-size: 0.8rem; background: var(--mint); color: var(--mint-ink); padding: 0.15rem 0.65rem; border-radius: 999px; }
+.ai-badge {
+  font-size: 0.7rem; font-weight: 800; background: var(--lavender); color: var(--lavender-ink);
+  padding: 0.05rem 0.45rem; border-radius: 6px; margin-right: 0.25rem;
+}
+
+/* --- Sign-in ------------------------------------------------------------- */
+.signin { display: grid; place-items: center; min-height: 100vh; padding: 1.5rem; }
+.signin-card {
+  width: min(520px, 100%);
+  border-radius: 24px;
+  padding: 2rem; display: flex; flex-direction: column; gap: 0.9rem;
+}
+.signin-card label { font-weight: 600; }
+.demo-note { background: var(--butter); color: var(--amber-ink); padding: 0.75rem 0.9rem; border-radius: 12px; font-size: 0.9rem; }
+.customer-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.45rem; }
+.customer-list button {
+  width: 100%; display: grid; grid-template-columns: 1fr auto; text-align: left; font-weight: 400;
+  background: var(--glass-strong); color: var(--ink); border-color: var(--glass-border);
+}
+.customer-list button:hover:not(:disabled) { background: var(--lavender); }
+.customer-list .customer-name { font-weight: 600; }
+.customer-list .muted { grid-column: 1; font-size: 0.85rem; }
+.customer-list .pill { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+
+/* --- Chat layout ---------------------------------------------------------- */
+.chat-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  grid-template-rows: auto 1fr;
+  gap: 1rem;
+  height: 100vh;
+  padding: 1rem;
+}
+.topbar {
+  grid-column: 1 / -1;
+  display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+  padding: 0.8rem 1.25rem; border-radius: var(--radius);
+}
+.topbar-right { display: flex; align-items: center; gap: 0.75rem; }
+
+.orders { border-radius: var(--radius); padding: 1.1rem; overflow-y: auto; }
+.orders h2 { font-size: 1rem; margin-bottom: 0.75rem; }
+.orders ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.7rem; }
+.order { background: var(--glass-strong); border: 1px solid var(--glass-border); border-radius: 14px; padding: 0.75rem; }
+.order-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem; }
+.order-id { font-weight: 700; font-variant-numeric: tabular-nums; }
+.order-items { font-size: 0.9rem; }
+.status { font-size: 0.75rem; padding: 0.1rem 0.55rem; border-radius: 999px; background: var(--sky); color: #24507a; }
+.status-delivered { background: var(--mint); color: var(--mint-ink); }
+.status-processing, .status-dispatched, .status-shipped { background: var(--butter); color: var(--amber-ink); }
+.status-lost, .status-cancelled { background: var(--rose); color: var(--rose-ink); }
+.link-button {
+  background: none; border: none; color: var(--lavender-ink); padding: 0.3rem 0 0;
+  text-decoration: underline; font-size: 0.85rem; font-weight: 500;
+}
+.link-button:hover:not(:disabled) { background: none; color: var(--ink); }
+
+.chat { display: flex; flex-direction: column; min-height: 0; border-radius: var(--radius); overflow: hidden; }
+.messages { flex: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 0.8rem; }
+.welcome { max-width: 560px; margin: 2rem auto; text-align: center; display: flex; flex-direction: column; gap: 1rem; }
+.suggestions { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
+.chip {
+  background: var(--glass-strong); color: var(--lavender-ink); border-color: var(--glass-border);
+  border-radius: 999px; font-size: 0.9rem; font-weight: 500;
+}
+.chip:hover:not(:disabled) { background: var(--lavender); }
+
+.bubble-row { display: flex; }
+.bubble-row.customer { justify-content: flex-end; }
+.bubble {
+  max-width: min(640px, 80%); padding: 0.75rem 1rem; border-radius: var(--radius);
+  display: flex; flex-direction: column; gap: 0.5rem;
+}
+.bubble.customer { background: var(--lavender); color: var(--ink); border-bottom-right-radius: 6px; }
+.bubble.assistant {
+  background: var(--glass-strong); border: 1px solid var(--glass-border);
+  border-bottom-left-radius: 6px; box-shadow: 0 2px 10px rgba(80, 70, 140, 0.06);
+}
+.bubble ul { margin: 0; padding-left: 1.2rem; }
+.error-bubble { background: var(--rose) !important; color: var(--rose-ink); border-color: #ffc9d2 !important; }
+.ticket-ref { font-weight: 700; background: var(--mint); color: var(--mint-ink); padding: 0 0.35rem; border-radius: 6px; }
+.ticket-note { font-size: 0.85rem; background: var(--mint); color: var(--mint-ink); padding: 0.45rem 0.7rem; border-radius: 10px; }
+
+.typing { flex-direction: row; gap: 0.3rem; align-items: center; }
+.typing span { width: 0.45rem; height: 0.45rem; border-radius: 50%; background: var(--lavender-deep); animation: blink 1.2s infinite; }
+.typing span:nth-child(2) { animation-delay: 0.2s; }
+.typing span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes blink { 0%, 80%, 100% { opacity: 0.35; } 40% { opacity: 1; } }
+
+.composer {
+  display: flex; gap: 0.6rem; padding: 0.9rem 1.25rem;
+  background: rgba(255, 255, 255, 0.4); border-top: 1px solid var(--glass-border);
+}
+.composer textarea { resize: none; }
+
+/* On small screens the order list moves above the chat. */
+@media (max-width: 760px) {
+  /* minmax(0, 1fr) lets the column shrink to the screen; plain 1fr would grow
+     to fit the widest line and push the panels off the right edge. */
+  .chat-layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr); gap: 0.6rem; padding: 0.6rem; }
+  .chat-layout > * { min-width: 0; }
+  .topbar { padding: 0.6rem 0.8rem; }
+  .topbar .brand h1 { font-size: 1rem; }
+  .topbar .brand p { display: none; }
+  .topbar-right .muted { display: none; }
+  .orders { max-height: 26vh; }
+  .orders ul { flex-direction: row; overflow-x: auto; }
+  .order { min-width: 220px; }
+  .bubble { max-width: 90%; }
+  .composer { padding: 0.6rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .typing span { animation: none; opacity: 0.7; }
+  button { transition: none; }
+}
