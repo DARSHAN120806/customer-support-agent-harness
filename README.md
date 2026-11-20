@@ -10,10 +10,6 @@ The assistant answers only from the shop's information. It never makes up
 policies, prices, or order details, and it never shows one customer another
 customer's data.
 
-<p align="center">
-  <img src="docs/images/02-chat-behind-the-scenes.png" alt="The customer chat with the behind-the-scenes panel open" width="900">
-</p>
-
 ## Features
 
 - **Customer chat:** answers questions about orders, shipping, returns,
@@ -35,28 +31,15 @@ customer's data.
 
 ## Screenshots
 
-<table>
-  <tr>
-    <td align="center" width="50%">
-      <img src="docs/images/01-sign-in.png" alt="Sign-in page"><br>
-      <sub>Pick a sample customer to chat as</sub>
-    </td>
-    <td align="center" width="50%">
-      <img src="docs/images/03-dashboard-tickets.png" alt="Support dashboard"><br>
-      <sub>Support dashboard with every ticket</sub>
-    </td>
-  </tr>
-  <tr>
-    <td align="center" colspan="2">
-      <img src="docs/images/04-conversation-replay.png" alt="Conversation replay" width="700"><br>
-      <sub>Replay of a past conversation</sub>
-    </td>
-  </tr>
-</table>
+<p align="center">
+  <img src="docs/images/02-chat-behind-the-scenes.png" alt="The chat with the behind-the-scenes panel open" width="900"><br>
+  <sub>The chat. The panel on the right shows how the assistant reached its reply:
+  each step it took, the tools it used, the checks it passed, and the time and cost.</sub>
+</p>
 
 <p align="center">
   <img src="docs/images/06-phone-chat.png" alt="The chat on a phone" width="260"><br>
-  <sub>The chat on a phone</sub>
+  <sub>The same chat on a phone</sub>
 </p>
 
 ## How to run it
