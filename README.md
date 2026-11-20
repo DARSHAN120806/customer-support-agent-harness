@@ -14,6 +14,8 @@ customer's data.
 
 - **Customer chat:** answers questions about orders, shipping, returns,
   refunds, and warranties.
+- **Sign-in with passwords:** customers sign in with their email and password;
+  the shop's admin signs in to a separate dashboard.
 - **Order look-up:** customers can see their own orders only.
 - **Hand-over to a human:** the assistant creates a support ticket for refunds,
   returns, upset customers, questions it can't answer, and anyone who asks for
@@ -63,7 +65,17 @@ npm --prefix frontend install
 Copy `.env.example` to a new file called `.env`, then fill in your AWS region
 and Bedrock API key. The `.env` file stays on your computer and is never shared.
 
-**3. Start the app**
+**3. Create the test passwords**
+
+```bash
+.venv/Scripts/python scripts/create_test_passwords.py
+```
+
+This gives every sample customer, and one admin account, a random password.
+They are listed in `private/test_passwords.csv`, which stays on your computer.
+The app itself stores passwords only in scrambled (hashed) form.
+
+**4. Start the app**
 
 Open two terminals in the project folder. In the first, start the server:
 
@@ -77,10 +89,9 @@ In the second, start the web page:
 npm --prefix frontend run dev
 ```
 
-Then open:
-
-- **Chat:** http://localhost:5173
-- **Support dashboard:** http://localhost:5173/#/dashboard
+Then open http://localhost:5173 and sign in with an email and password from
+`private/test_passwords.csv`. Customers go to their chat, and the admin account
+(`admin@juniperlane.example`) goes to the support dashboard.
 
 **Or chat in the terminal instead**
 
@@ -88,15 +99,15 @@ Then open:
 .venv/Scripts/python -m support_agent --email priya.nair@example.com
 ```
 
-**Things to try** (as the sample customer Priya Nair)
+**Things to try** (signed in as the sample customer Priya Nair)
 
 - `What is your return policy?`
 - `Is my speaker from JL-10198 still under warranty?`
 - `I want a refund for the coffee set in JL-10231.`
 - `Can I speak to a human?`
 
-> **Note:** the sign-in is a demo. Anyone can pick any customer, and the
-> dashboard has no password. Run it only on your own computer.
+> **Note:** this is for running on your own computer. It has no HTTPS or
+> password reset yet, so don't put it on the internet as it is.
 
 ## Built with
 

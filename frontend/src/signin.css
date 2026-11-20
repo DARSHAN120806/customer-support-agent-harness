@@ -1,0 +1,266 @@
+/* Sign-in page. Uses the tokens in theme.css; spacing is on a 4px grid. */
+
+.auth {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: 100dvh;
+  background: var(--jl-page);
+  color: var(--jl-text);
+  font-family: var(--jl-font);
+  font-size: 15px;
+  line-height: 22px;
+}
+
+/* --- The form side ---------------------------------------------------------- */
+
+.auth-form-side {
+  display: flex;
+  flex-direction: column;
+  padding: 32px;
+}
+
+.wordmark {
+  font-size: 17px;
+  line-height: 1;
+  font-weight: 500;
+  color: var(--jl-text);
+}
+
+.auth-form-block {
+  width: 100%;
+  max-width: 400px;
+  margin: auto; /* centres the block in the space under the wordmark */
+  padding: 48px 0;
+}
+
+.auth h1 {
+  font-size: 32px;
+  line-height: 1.15;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.auth-lede {
+  margin-top: 12px;
+  color: var(--jl-text-2);
+}
+
+.auth-notice {
+  margin-top: 24px;
+  padding: 12px 16px;
+  border-radius: var(--jl-radius-control);
+  background: var(--jl-raised);
+  color: var(--jl-text-2);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  margin-top: 32px;
+}
+
+.auth-form label {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.auth-form input {
+  height: 44px;
+  margin-bottom: 20px;
+  padding: 0 12px;
+  border: 1px solid var(--jl-field-line);
+  border-radius: var(--jl-radius-control);
+  background: var(--jl-card);
+  color: var(--jl-text);
+  font: inherit;
+  transition: border-color var(--jl-fast) var(--jl-ease);
+}
+
+.auth-form input:hover {
+  border-color: rgba(31, 27, 22, 0.28);
+}
+
+.auth-form input:focus-visible,
+.auth-submit:focus-visible {
+  outline: 2px solid var(--jl-accent);
+  outline-offset: 2px;
+}
+
+.auth-error {
+  margin-bottom: 20px;
+  padding: 8px 12px;
+  border-radius: var(--jl-radius-control);
+  background: var(--jl-negative-bg);
+  color: var(--jl-negative);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.auth-submit {
+  height: 44px;
+  margin-top: 4px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: var(--jl-radius-control);
+  background: var(--jl-accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color var(--jl-fast) var(--jl-ease),
+    transform var(--jl-fast) var(--jl-ease);
+}
+
+.auth-submit:hover:not(:disabled) {
+  background: var(--jl-accent-hover);
+}
+
+.auth-submit:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.auth-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* --- The visual side: a packing slip on kraft paper ------------------------- */
+
+.auth-visual-side {
+  display: grid;
+  place-items: center;
+  padding: 48px;
+  background: var(--jl-kraft);
+}
+
+.slip {
+  width: min(400px, 100%);
+  margin: 0;
+  padding: 32px 28px 24px;
+  border-radius: 4px; /* paper, not a card */
+  background: var(--jl-slip);
+  color: var(--jl-text);
+  transform: rotate(-1.5deg);
+  box-shadow:
+    0 1px 2px rgba(31, 27, 22, 0.08),
+    0 12px 32px rgba(31, 27, 22, 0.12);
+}
+
+.slip-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--jl-hairline);
+}
+
+.slip-shop {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.slip-kind,
+.slip-foot {
+  font-family: var(--jl-mono);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--jl-text-3);
+}
+
+.slip-items {
+  width: 100%;
+  margin-top: 8px;
+  border-collapse: collapse;
+  background: none; /* the old dashboard table style must not reach the slip */
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.slip-items th {
+  padding: 8px 0;
+  background: none;
+  white-space: normal;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--jl-text-3);
+  text-align: left;
+}
+
+.slip-items td {
+  padding: 8px 0;
+  border-top: 0;
+  vertical-align: baseline;
+}
+
+.slip-items th:nth-child(2),
+.slip-items td:nth-child(2) {
+  width: 40px;
+  text-align: center;
+}
+
+.slip-items th:last-child,
+.slip-items td:last-child {
+  width: 88px;
+  text-align: right;
+  font-family: var(--jl-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.slip-items tfoot td {
+  color: var(--jl-text-2);
+}
+
+.slip-items tfoot tr:first-child td {
+  padding-top: 16px;
+  border-top: 1px dashed rgba(31, 27, 22, 0.2);
+}
+
+.slip-total td {
+  color: var(--jl-text);
+  font-weight: 500;
+}
+
+.slip-foot {
+  margin-top: 24px;
+}
+
+/* --- Small screens: the form first, then a smaller slip --------------------- */
+
+@media (max-width: 860px) {
+  .auth {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-form-side {
+    padding: 24px;
+  }
+
+  .auth-form-block {
+    margin: 0;
+    padding: 40px 0 48px;
+  }
+
+  .auth h1 {
+    font-size: 28px;
+  }
+
+  .auth-visual-side {
+    padding: 40px 24px;
+  }
+
+  .slip {
+    padding: 24px 20px 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-form input,
+  .auth-submit {
+    transition: none;
+  }
+}

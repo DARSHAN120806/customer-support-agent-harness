@@ -10,6 +10,7 @@ import { FormattedText } from './components/FormattedText'
 const PRIYA = { name: 'Priya Nair', email: 'priya.nair@example.com', order_count: 2 }
 
 const SESSION: Session = {
+  role: 'customer',
   session_id: 'session-abc',
   conversation_id: 'conv_000000000001',
   customer: PRIYA,
@@ -45,7 +46,6 @@ function defaultApi(overrides: Partial<Record<string, () => { status?: number; b
     for (const [key, make] of Object.entries(overrides)) {
       if (url.includes(key) && make) return make()
     }
-    if (url.startsWith('/api/customers')) return { body: [PRIYA] }
     if (url === '/api/sessions' && method === 'POST') return { status: 201, body: SESSION }
     if (url.endsWith('/messages')) return { body: reply('Your order was delivered on 2026-11-07.') }
     if (method === 'DELETE') return { status: 204 }
@@ -54,32 +54,43 @@ function defaultApi(overrides: Partial<Record<string, () => { status?: number; b
   })
 }
 
+async function signInWithForm(user: ReturnType<typeof userEvent.setup>, email: string, password = 'test-pass') {
+  await user.type(screen.getByLabelText('Email'), email)
+  await user.type(screen.getByLabelText('Password'), password)
+  await user.click(screen.getByRole('button', { name: 'Sign in' }))
+}
+
 async function signInAsPriya() {
   const user = userEvent.setup()
   render(<App />)
-  await user.click(await screen.findByRole('button', { name: /Priya Nair/ }))
+  await signInWithForm(user, PRIYA.email)
   await screen.findByRole('heading', { name: 'Juniper Lane Goods virtual assistant' })
   return user
 }
 
 describe('sign-in', () => {
-  it('shows the demo warning and finds customers as you type', async () => {
+  it('asks for an email and a password, and lists no customers', async () => {
     const calls = defaultApi()
     const user = userEvent.setup()
     render(<App />)
 
-    expect(screen.getByRole('note')).toHaveTextContent(/Demo sign-in/)
-    await user.type(screen.getByLabelText(/Find a customer/), 'priya')
-
-    await waitFor(() => expect(calls.some((c) => c.url === '/api/customers?q=priya&limit=8')).toBe(true))
-    expect(await screen.findByRole('button', { name: /Priya Nair/ })).toHaveTextContent('2 orders')
+    expect(screen.getByRole('heading', { name: 'Sign in to see your orders and get help' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'password')
+    expect(screen.queryByText(/Find a customer/)).not.toBeInTheDocument()
+    const button = screen.getByRole('button', { name: 'Sign in' })
+    expect(button).toBeDisabled()
+    await user.type(screen.getByLabelText('Email'), PRIYA.email)
+    expect(button).toBeDisabled() // still no password
+    await user.type(screen.getByLabelText('Password'), 'x')
+    expect(button).toBeEnabled()
+    expect(calls).toEqual([]) // nothing is fetched before signing in
   })
 
   it('signs in and opens the chat with your own orders', async () => {
     const calls = defaultApi()
     await signInAsPriya()
 
-    expect(calls.find((c) => c.url === '/api/sessions')?.body).toEqual({ email: PRIYA.email })
+    expect(calls.find((c) => c.url === '/api/sessions')?.body).toEqual({ email: PRIYA.email, password: 'test-pass' })
     const orders = screen.getByRole('complementary', { name: 'Your orders' })
     expect(within(orders).getByText('JL-10231')).toBeInTheDocument()
     expect(within(orders).getByText('JL-10198')).toBeInTheDocument()
@@ -87,11 +98,31 @@ describe('sign-in', () => {
     expect(sessionStorage.getItem('juniper-lane-session')).toBe('session-abc')
   })
 
+  it('shows the reason when the password is wrong, and keeps the email', async () => {
+    defaultApi({ '/api/sessions': () => ({ status: 401, body: { detail: 'Email or password is incorrect.' } }) })
+    const user = userEvent.setup()
+    render(<App />)
+    await signInWithForm(user, PRIYA.email, 'wrong')
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Email or password is incorrect.')
+    expect(screen.getByLabelText('Email')).toHaveValue(PRIYA.email)
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeEnabled()
+  })
+
   it('says so when the server cannot be reached', async () => {
     vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Failed to fetch'))
+    const user = userEvent.setup()
     render(<App />)
+    await signInWithForm(user, PRIYA.email)
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/could not be reached/)
+  })
+
+  it('shows customers no way into the dashboard', async () => {
+    defaultApi()
+    await signInAsPriya()
+
+    expect(screen.queryByRole('button', { name: 'Dashboard' })).not.toBeInTheDocument()
   })
 })
 
@@ -168,7 +199,7 @@ describe('chatting', () => {
     await user.type(screen.getByLabelText('Your message'), 'Hello{Enter}')
 
     expect(await screen.findByRole('status')).toHaveTextContent(/idle for a while/)
-    expect(screen.getByLabelText(/Find a customer/)).toBeInTheDocument()
+    expect(screen.getByLabelText('Password')).toBeInTheDocument()
   })
 
   it('signs out and forgets the chat', async () => {
@@ -177,7 +208,7 @@ describe('chatting', () => {
 
     await user.click(screen.getByRole('button', { name: 'Sign out' }))
 
-    expect(await screen.findByLabelText(/Find a customer/)).toBeInTheDocument()
+    expect(await screen.findByLabelText('Password')).toBeInTheDocument()
     expect(calls.some((c) => c.method === 'DELETE' && c.url === '/api/sessions/session-abc')).toBe(true)
     expect(sessionStorage.getItem('juniper-lane-session')).toBeNull()
   })

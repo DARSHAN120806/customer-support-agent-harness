@@ -19,3 +19,6 @@ evals/results/
 .coverage
 coverage/
 htmlcov/
+
+# Sign-in accounts and test passwords (made by scripts/create_test_passwords.py)
+private/

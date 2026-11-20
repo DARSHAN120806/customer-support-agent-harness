@@ -1,98 +1,86 @@
-import { useEffect, useState } from 'react'
-import { api, ApiError, type Customer, type Session } from '../api'
+import { useState, type FormEvent } from 'react'
+import { api, ApiError, type SignInResult } from '../api'
+import { PackingSlip } from './PackingSlip'
 
 type Props = {
-  onSignedIn: (session: Session) => void
-  onOpenDashboard: () => void
+  onSignedIn: (result: SignInResult) => void
+  // A short message above the form, like "your chat ended".
+  notice?: string | null
 }
 
-// Demo sign-in: pick any customer from the shop's data. In a real shop the
-// customer would log in with a password, and the login would decide who they
-// are. This is why the page must only ever run on your own computer.
-export function SignIn({ onSignedIn, onOpenDashboard }: Props) {
-  const [query, setQuery] = useState('')
-  const [customers, setCustomers] = useState<Customer[]>([])
+// Sign-in for customers and for the shop's admin. The server decides which one
+// an account is: customers go to their chat, the admin to the dashboard.
+export function SignIn({ onSignedIn, notice }: Props) {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [busyEmail, setBusyEmail] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
 
-  // Search again shortly after the person stops typing.
-  useEffect(() => {
-    let cancelled = false
-    const timer = setTimeout(() => {
-      api
-        .findCustomers(query)
-        .then((found) => {
-          if (!cancelled) {
-            setCustomers(found)
-            setError(null)
-          }
-        })
-        .catch((e: ApiError) => !cancelled && setError(e.message))
-    }, 250)
-    return () => {
-      cancelled = true
-      clearTimeout(timer)
-    }
-  }, [query])
-
-  async function choose(email: string) {
-    setBusyEmail(email)
+  async function submit(event: FormEvent) {
+    event.preventDefault()
+    setBusy(true)
     setError(null)
     try {
-      onSignedIn(await api.signIn(email))
+      onSignedIn(await api.signIn(email.trim(), password))
     } catch (e) {
       setError((e as ApiError).message)
-      setBusyEmail(null)
+      setBusy(false)
     }
   }
 
   return (
-    <main className="signin">
-      <div className="signin-card glass">
-        <div className="brand">
-          <span className="brand-mark" aria-hidden="true">JL</span>
-          <div>
-            <h1>Juniper Lane Goods</h1>
-            <p className="muted">Customer support</p>
-          </div>
+    <main className="auth">
+      <section className="auth-form-side">
+        <p className="wordmark">Juniper Lane Goods</p>
+
+        <div className="auth-form-block">
+          <h1>Sign in to see your orders and get help</h1>
+          <p className="auth-lede">Use the email address from your orders</p>
+
+          {notice && (
+            <p className="auth-notice" role="status">
+              {notice}
+            </p>
+          )}
+
+          <form className="auth-form" onSubmit={submit} noValidate>
+            <label htmlFor="email">Email</label>
+            <input
+              id="email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoFocus
+            />
+
+            <label htmlFor="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+
+            {error && (
+              <p className="auth-error" role="alert">
+                {error}
+              </p>
+            )}
+
+            <button type="submit" className="auth-submit" disabled={busy || !email.trim() || !password}>
+              {busy ? 'Signing in…' : 'Sign in'}
+            </button>
+          </form>
         </div>
+      </section>
 
-        <p className="demo-note" role="note">
-          <strong>Demo sign-in.</strong> Choose a customer to chat as. A real shop would ask
-          for a password; this page is for your own computer only.
-        </p>
-
-        <label htmlFor="customer-search">Find a customer by name or email</label>
-        <input
-          id="customer-search"
-          type="search"
-          placeholder="e.g. Priya"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          autoFocus
-        />
-
-        {error && <p className="error" role="alert">{error}</p>}
-
-        <ul className="customer-list" aria-label="Customers">
-          {customers.map((c) => (
-            <li key={c.email}>
-              <button onClick={() => choose(c.email)} disabled={busyEmail !== null}>
-                <span className="customer-name">{c.name}</span>
-                <span className="muted">{c.email}</span>
-                <span className="pill">
-                  {busyEmail === c.email ? 'Signing in…' : `${c.order_count} order${c.order_count === 1 ? '' : 's'}`}
-                </span>
-              </button>
-            </li>
-          ))}
-          {!error && customers.length === 0 && query && <li className="muted">No customers match.</li>}
-        </ul>
-
-        <button className="link-button dash-link" onClick={onOpenDashboard}>
-          Open the support dashboard
-        </button>
-      </div>
+      <section className="auth-visual-side" aria-hidden="true">
+        <PackingSlip />
+      </section>
     </main>
   )
 }

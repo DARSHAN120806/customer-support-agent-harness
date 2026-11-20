@@ -66,6 +66,8 @@ class Settings:
     tickets_file: Path
     log_file: Path
     cache_dir: Path
+    # Sign-in accounts for the web app (made by scripts/create_test_passwords.py).
+    accounts_file: Path = PROJECT_ROOT / "private" / "accounts.json"
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -120,6 +122,9 @@ class Settings:
             ),
             log_file=Path(_get("SUPPORT_AGENT_LOG_FILE") or PROJECT_ROOT / "logs" / "agent.jsonl"),
             cache_dir=PROJECT_ROOT / ".cache",
+            accounts_file=Path(
+                _get("SUPPORT_AGENT_ACCOUNTS_FILE") or PROJECT_ROOT / "private" / "accounts.json"
+            ),
         )
 
 

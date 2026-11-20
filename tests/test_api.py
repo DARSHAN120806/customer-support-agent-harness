@@ -16,10 +16,27 @@ from support_agent.app import Resources
 from support_agent.config import Settings
 from support_agent.prompts import IDENTITY_REPLY, SUPPORT_EMAIL, fallback_reply
 from support_agent.providers.base import ToolCall
+from support_agent.web.accounts import ADMIN, CUSTOMER, Account, AccountStore, SignInLimiter, hash_password
 from support_agent.web.api import create_app
 from support_agent.web.sessions import ChatSession, SessionStore
 
 EMAIL = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
+
+# Test passwords. Low scrypt cost, so the tests stay fast.
+PASSWORD = "correct-horse-7"
+ADMIN_EMAIL = "admin@juniperlane.example"
+ADMIN_PASSWORD = "admin-pass-9"
+
+
+@pytest.fixture(scope="module")
+def accounts() -> AccountStore:
+    return AccountStore(
+        [
+            Account(PRIYA, CUSTOMER, hash_password(PASSWORD, n=2**4)),
+            Account(MARCUS, CUSTOMER, hash_password(PASSWORD, n=2**4)),
+            Account(ADMIN_EMAIL, ADMIN, hash_password(ADMIN_PASSWORD, n=2**4)),
+        ]
+    )
 
 
 @pytest.fixture
@@ -34,24 +51,32 @@ def settings(monkeypatch, tmp_path) -> Settings:
 
 
 @pytest.fixture
-def make_client(settings, knowledge_base, orders, tickets, tmp_path):
-    def make(responses, baselines_dir=None):
+def make_client(settings, knowledge_base, orders, tickets, tmp_path, accounts):
+    def make(responses, baselines_dir=None, limiter=None):
         provider = FakeProvider(responses)
         app = create_app(
             settings,
             Resources(provider, knowledge_base, orders, tickets),
             today=TODAY,
             baselines_dir=baselines_dir or tmp_path / "baselines",
+            accounts=accounts,
+            limiter=limiter,
         )
         return TestClient(app), provider
 
     return make
 
 
-def sign_in(client, email=PRIYA) -> dict:
-    response = client.post("/api/sessions", json={"email": email})
+def sign_in(client, email=PRIYA, password=PASSWORD) -> dict:
+    response = client.post("/api/sessions", json={"email": email, "password": password})
     assert response.status_code == 201, response.text
     return response.json()
+
+
+def sign_in_as_admin(client) -> None:
+    """Sign in as the admin and send the token with every later request."""
+    token = sign_in(client, ADMIN_EMAIL, ADMIN_PASSWORD)["admin_token"]
+    client.headers["Authorization"] = f"Bearer {token}"
 
 
 # --- Health and sign-in -----------------------------------------------------------------
@@ -63,18 +88,17 @@ def test_health(make_client):
     assert client.get("/api/health").json()["status"] == "ok"
 
 
-def test_finding_a_customer_for_the_demo_sign_in(make_client):
+def test_there_is_no_open_customer_search_any_more(make_client):
     client, _ = make_client([text_response("Hi")])
 
-    found = client.get("/api/customers", params={"q": "priya.nair"}).json()
-    assert found == [{"name": "Priya Nair", "email": PRIYA, "order_count": 2}]
-    assert len(client.get("/api/customers", params={"limit": 5}).json()) == 5
+    assert client.get("/api/customers", params={"q": "priya"}).status_code in (404, 405)
 
 
 def test_signing_in_shows_only_your_own_orders(make_client):
     client, _ = make_client([text_response("Hi")])
     session = sign_in(client)
 
+    assert session["role"] == "customer"
     assert session["customer"]["email"] == PRIYA
     assert session["conversation_id"].startswith("conv_")
     assert session["assistant_name"] == "Juniper Lane Goods virtual assistant"
@@ -82,12 +106,60 @@ def test_signing_in_shows_only_your_own_orders(make_client):
     assert session["transcript"] == []
 
 
-def test_sign_in_ignores_capitals_and_rejects_unknown_emails(make_client):
+def test_sign_in_ignores_capitals_in_the_email(make_client):
     client, _ = make_client([text_response("Hi")])
 
-    assert client.post("/api/sessions", json={"email": "  PRIYA.NAIR@example.com "}).status_code == 201
-    assert client.post("/api/sessions", json={"email": "nobody@example.com"}).status_code == 404
-    assert client.post("/api/sessions", json={}).status_code == 422
+    assert sign_in(client, "  PRIYA.NAIR@example.com ")["customer"]["email"] == PRIYA
+
+
+def test_a_wrong_password_and_an_unknown_email_get_the_same_answer(make_client):
+    client, _ = make_client([text_response("Hi")])
+
+    wrong = client.post("/api/sessions", json={"email": PRIYA, "password": "nope"})
+    unknown = client.post("/api/sessions", json={"email": "nobody@example.com", "password": PASSWORD})
+    assert wrong.status_code == unknown.status_code == 401
+    assert wrong.json() == unknown.json() == {"detail": "Email or password is incorrect."}
+    assert client.post("/api/sessions", json={"email": PRIYA}).status_code == 422  # no password
+    assert client.post("/api/sessions", json={"email": PRIYA, "password": ""}).status_code == 422
+
+
+def test_too_many_wrong_passwords_lock_the_email_for_a_while(make_client):
+    now = [0.0]
+    client, _ = make_client([text_response("Hi")], limiter=SignInLimiter(max_failures=3, clock=lambda: now[0]))
+    for _ in range(3):
+        assert client.post("/api/sessions", json={"email": PRIYA, "password": "guess"}).status_code == 401
+
+    locked = client.post("/api/sessions", json={"email": PRIYA, "password": PASSWORD})
+    assert locked.status_code == 429 and "15 minutes" in locked.json()["detail"]
+    assert sign_in(client, MARCUS)["customer"]["email"] == MARCUS  # other emails are not affected
+
+    now[0] += 16 * 60
+    assert sign_in(client)["customer"]["email"] == PRIYA
+
+
+def test_the_admin_gets_a_token_not_a_chat(make_client):
+    client, _ = make_client([text_response("Hi")])
+
+    signed_in = sign_in(client, ADMIN_EMAIL, ADMIN_PASSWORD)
+    assert signed_in["role"] == "admin" and len(signed_in["admin_token"]) > 30
+    assert "session_id" not in signed_in
+
+
+def test_the_dashboard_needs_an_admin_sign_in(make_client):
+    client, _ = make_client([text_response("Hi")])
+    customer = sign_in(client)
+    paths = ["/api/tickets", "/api/conversations", "/api/evaluations",
+             f"/api/conversations/{customer['conversation_id']}", "/api/evaluations/x"]
+
+    for path in paths:
+        assert client.get(path).status_code == 401
+        # A customer's chat id is not an admin token.
+        assert client.get(path, headers={"Authorization": f"Bearer {customer['session_id']}"}).status_code == 401
+
+    sign_in_as_admin(client)
+    assert client.get("/api/tickets").status_code == 200
+    assert client.delete("/api/admin/session").status_code == 204
+    assert client.get("/api/tickets").status_code == 401  # signed out
 
 
 def test_session_ids_cannot_be_guessed(make_client):
@@ -220,6 +292,7 @@ def test_tickets_are_listed_newest_first_with_emails_masked(make_client):
         session_id = sign_in(client, email)["session_id"]
         client.post(f"/api/sessions/{session_id}/messages", json={"text": "Help"})
 
+    sign_in_as_admin(client)
     listed = client.get("/api/tickets").json()
     assert len(listed) == 2 and listed[0]["created_at"] >= listed[1]["created_at"]
     assert not EMAIL.search(json.dumps(listed))
@@ -231,6 +304,7 @@ def test_conversations_are_summarised_and_replayed_from_the_log(make_client):
     session = sign_in(client)
     client.post(f"/api/sessions/{session['session_id']}/messages", json={"text": f"Hi, I'm {PRIYA}"})
 
+    sign_in_as_admin(client)
     (summary,) = client.get("/api/conversations").json()
     assert summary["conversation_id"] == session["conversation_id"]
     assert summary["turns"] == 1 and summary["escalated"] is False
@@ -251,6 +325,7 @@ def test_evaluation_baselines_are_listed_and_readable(make_client, tmp_path):
         encoding="utf-8",
     )
     client, _ = make_client([text_response("Hi")], baselines_dir=folder)
+    sign_in_as_admin(client)
 
     (listed,) = client.get("/api/evaluations").json()
     assert listed == {"name": "run_a", "run_at": "2026-11-20T10:00:00", "model": "m", "harness": "off", "summary": {"passed": 38}}

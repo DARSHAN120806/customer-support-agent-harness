@@ -10,21 +10,26 @@ limits, and logging run for a browser chat as for the terminal chat.
 Endpoints (all under /api):
 
     GET    /health                         is the server up
-    GET    /customers?q=priya              demo sign-in: find a customer
-    POST   /sessions                       sign in as a customer, start a chat
+    POST   /sessions                       sign in with email and password; a
+                                           customer gets a chat, the admin a token
     GET    /sessions/{id}                  the chat so far and the customer's orders
     POST   /sessions/{id}/messages         send a message, get the reply and what
                                            the harness did ("behind the scenes")
     DELETE /sessions/{id}                  sign out
+    DELETE /admin/session                  admin sign-out
+
+Admin only (header "Authorization: Bearer <admin token>"):
+
     GET    /tickets                        support dashboard: tickets (emails masked)
     GET    /conversations                  support dashboard: logged conversations
     GET    /conversations/{id}             every event of one conversation
     GET    /evaluations                    saved evaluation baselines
     GET    /evaluations/{name}             one baseline in full
 
-IMPORTANT: the sign-in is a demo. Anyone can choose any customer, and the
-dashboard has no password. Run this on your own computer only; it must not be
-put on the internet as it is.
+Accounts and passwords come from private/accounts.json, made by
+scripts/create_test_passwords.py. Passwords are stored only as scrypt hashes.
+This is still a local demo: there is no HTTPS, no password reset, and sessions
+live in memory, so do not put it on the internet as it is.
 """
 
 from __future__ import annotations
@@ -36,7 +41,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -44,6 +49,7 @@ from .. import event_log
 from ..app import Resources, create_agent, load_resources
 from ..config import PROJECT_ROOT, ConfigError, Settings
 from ..prompts import SHOP_NAME, fallback_reply
+from .accounts import ADMIN, AccountStore, AdminSessions, SignInLimiter
 from .sessions import ChatSession, SessionBusy, SessionStore
 
 MAX_MESSAGE_LENGTH = 2000
@@ -62,8 +68,13 @@ PANEL_EVENTS = {
 }
 
 
+WRONG_SIGN_IN = "Email or password is incorrect."
+TOO_MANY_TRIES = "Too many wrong passwords. Please wait 15 minutes and try again."
+
+
 class SignIn(BaseModel):
     email: str = Field(min_length=3, max_length=200)
+    password: str = Field(min_length=1, max_length=200)
 
 
 class Message(BaseModel):
@@ -76,6 +87,8 @@ def create_app(
     today: date | None = None,
     baselines_dir: Path = BASELINES_DIR,
     allowed_origins: list[str] | None = None,
+    accounts: AccountStore | None = None,
+    limiter: SignInLimiter | None = None,
 ) -> FastAPI:
     """Build the web app. With no arguments it reads .env and connects to the
     real services; tests pass in a fake model and fake data instead."""
@@ -88,6 +101,10 @@ def create_app(
         resources = load_resources(settings)
 
     customers = _load_customers(settings.orders_file)
+    if accounts is None:
+        accounts = AccountStore.load(settings.accounts_file)
+    limiter = limiter or SignInLimiter()
+    admins = AdminSessions()
     sessions = SessionStore()
     app = FastAPI(title=f"{SHOP_NAME} support API", version="1.0")
     app.state.sessions = sessions  # reachable from tests
@@ -95,7 +112,7 @@ def create_app(
         CORSMiddleware,
         allow_origins=allowed_origins or DEFAULT_ALLOWED_ORIGINS,
         allow_methods=["GET", "POST", "DELETE"],
-        allow_headers=["Content-Type"],
+        allow_headers=["Content-Type", "Authorization"],
     )
 
     def session_or_404(session_id: str) -> ChatSession:
@@ -104,27 +121,36 @@ def create_app(
             raise HTTPException(404, "This chat has ended. Please sign in again.")
         return session
 
+    def admin_token(authorization: str | None = Header(None)) -> str:
+        """Every dashboard endpoint needs a signed-in admin."""
+        token = (authorization or "").removeprefix("Bearer ").strip()
+        if not token or not admins.is_valid(token):
+            raise HTTPException(401, "Please sign in as an admin.")
+        return token
+
+    admin_only = [Depends(admin_token)]
+
     # --- Health and sign-in -------------------------------------------------------
 
     @app.get("/api/health")
     def health() -> dict[str, Any]:
         return {"status": "ok", "shop": SHOP_NAME, "provider": settings.provider, "model": settings.model}
 
-    @app.get("/api/customers")
-    def find_customers(q: str = Query("", max_length=100), limit: int = Query(20, ge=1, le=50)) -> list[dict]:
-        """Demo sign-in only: in a real shop the login decides who the customer is."""
-        needle = q.strip().lower()
-        found = [
-            c for c in customers.values()
-            if not needle or needle in c["email"] or needle in c["name"].lower()
-        ]
-        return [_public_customer(c) for c in found[:limit]]
-
     @app.post("/api/sessions", status_code=201)
     def sign_in(body: SignIn) -> dict[str, Any]:
-        customer = customers.get(body.email.strip().lower())
-        if customer is None:
-            raise HTTPException(404, "No customer has that email address.")
+        email = body.email.strip().lower()
+        if limiter.is_locked(email):
+            raise HTTPException(429, TOO_MANY_TRIES)
+        account = accounts.check(email, body.password)
+        if account is None:
+            limiter.record_failure(email)
+            raise HTTPException(401, WRONG_SIGN_IN)
+        limiter.clear(email)
+        if account.role == ADMIN:
+            return {"role": ADMIN, "admin_token": admins.start()}
+        customer = customers.get(email)
+        if customer is None:  # an account with no customer record behind it
+            raise HTTPException(401, WRONG_SIGN_IN)
 
         def make(session_id: str) -> ChatSession:
             agent, context = create_agent(settings, resources, customer["email"], today=today)
@@ -138,6 +164,10 @@ def create_app(
 
         session = sessions.add(make)
         return _session_view(session)
+
+    @app.delete("/api/admin/session", status_code=204)
+    def admin_sign_out(token: str = Depends(admin_token)) -> None:
+        admins.end(token)
 
     @app.get("/api/sessions/{session_id}")
     def get_session(session_id: str) -> dict[str, Any]:
@@ -201,7 +231,7 @@ def create_app(
 
     # --- Support dashboard ----------------------------------------------------------
 
-    @app.get("/api/tickets")
+    @app.get("/api/tickets", dependencies=admin_only)
     def list_tickets() -> list[dict[str, Any]]:
         """Newest first. Emails are masked: the dashboard has no password."""
         tickets = resources.tickets.all()
@@ -210,7 +240,7 @@ def create_app(
             for t in reversed(tickets)
         ]
 
-    @app.get("/api/conversations")
+    @app.get("/api/conversations", dependencies=admin_only)
     def list_conversations(limit: int = Query(100, ge=1, le=1000)) -> list[dict[str, Any]]:
         summaries: dict[str, dict[str, Any]] = defaultdict(
             lambda: {"turns": 0, "cost_usd": 0.0, "escalated": False, "blocked_or_rewritten": 0}
@@ -235,7 +265,7 @@ def create_app(
         newest = sorted(summaries.values(), key=lambda s: s["last_at"], reverse=True)
         return newest[:limit]
 
-    @app.get("/api/conversations/{conversation_id}")
+    @app.get("/api/conversations/{conversation_id}", dependencies=admin_only)
     def get_conversation(conversation_id: str) -> list[dict[str, Any]]:
         if not re.fullmatch(r"conv_[0-9a-f]{12}", conversation_id):
             raise HTTPException(404, "No such conversation.")
@@ -244,7 +274,7 @@ def create_app(
             raise HTTPException(404, "No such conversation.")
         return events
 
-    @app.get("/api/evaluations")
+    @app.get("/api/evaluations", dependencies=admin_only)
     def list_evaluations() -> list[dict[str, Any]]:
         runs = []
         for path in sorted(baselines_dir.glob("*.json")):
@@ -261,7 +291,7 @@ def create_app(
                 )
         return runs
 
-    @app.get("/api/evaluations/{name}")
+    @app.get("/api/evaluations/{name}", dependencies=admin_only)
     def get_evaluation(name: str) -> dict[str, Any]:
         # Only plain file names, so nothing outside the folder can be read.
         if not re.fullmatch(r"[A-Za-z0-9_.-]+", name) or name.startswith("."):
@@ -273,6 +303,7 @@ def create_app(
 
     def _session_view(session: ChatSession) -> dict[str, Any]:
         return {
+            "role": "customer",
             "session_id": session.session_id,
             "conversation_id": session.context.logger.conversation_id,
             "customer": _public_customer(session.customer),

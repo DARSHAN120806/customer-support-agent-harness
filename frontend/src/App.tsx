@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { api, type Session } from './api'
+import { ADMIN_TOKEN_KEY, api, dashboardApi, type Session, type SignInResult } from './api'
 import { Chat } from './components/Chat'
 import { Dashboard } from './components/dashboard/Dashboard'
 import { SignIn } from './components/SignIn'
@@ -8,7 +8,8 @@ import { SignIn } from './components/SignIn'
 // lose the conversation, and closing the tab forgets it.
 const STORAGE_KEY = 'juniper-lane-session'
 
-// Flat pastel shapes behind the glass panels. Purely decorative.
+// Flat pastel shapes behind the glass panels of the chat and the dashboard.
+// The sign-in page already has the new design; the other pages follow later.
 function Backdrop() {
   return (
     <div className="backdrop" aria-hidden="true">
@@ -20,17 +21,19 @@ function Backdrop() {
   )
 }
 
-// The page shown depends on the address: "#/dashboard" is the support
-// dashboard, anything else is the customer chat. Back and forward work.
-function usePage(): ['chat' | 'dashboard', (page: 'chat' | 'dashboard') => void] {
-  const read = () => (window.location.hash === '#/dashboard' ? 'dashboard' : 'chat')
-  const [page, setPage] = useState<'chat' | 'dashboard'>(read)
+type Page = 'chat' | 'dashboard'
+
+// The page shown depends on the address: "#/dashboard" is the admin's
+// dashboard, anything else is the customer side. Back and forward work.
+function usePage(): [Page, (page: Page) => void] {
+  const read = (): Page => (window.location.hash === '#/dashboard' ? 'dashboard' : 'chat')
+  const [page, setPage] = useState<Page>(read)
   useEffect(() => {
     const onChange = () => setPage(read())
     window.addEventListener('hashchange', onChange)
     return () => window.removeEventListener('hashchange', onChange)
   }, [])
-  const go = (next: 'chat' | 'dashboard') => {
+  const go = (next: Page) => {
     window.location.hash = next === 'dashboard' ? '#/dashboard' : '#/'
     setPage(next)
   }
@@ -39,20 +42,8 @@ function usePage(): ['chat' | 'dashboard', (page: 'chat' | 'dashboard') => void]
 
 export default function App() {
   const [page, go] = usePage()
-  return (
-    <>
-      <Backdrop />
-      {page === 'dashboard' ? (
-        <Dashboard onBackToChat={() => go('chat')} />
-      ) : (
-        <Screen onOpenDashboard={() => go('dashboard')} />
-      )}
-    </>
-  )
-}
-
-function Screen({ onOpenDashboard }: { onOpenDashboard: () => void }) {
   const [session, setSession] = useState<Session | null>(null)
+  const [isAdmin, setIsAdmin] = useState(() => sessionStorage.getItem(ADMIN_TOKEN_KEY) !== null)
   const [restoring, setRestoring] = useState(() => sessionStorage.getItem(STORAGE_KEY) !== null)
   const [notice, setNotice] = useState<string | null>(null)
 
@@ -67,10 +58,17 @@ function Screen({ onOpenDashboard }: { onOpenDashboard: () => void }) {
       .finally(() => setRestoring(false))
   }, [])
 
-  function signedIn(newSession: Session) {
-    sessionStorage.setItem(STORAGE_KEY, newSession.session_id)
+  function signedIn(result: SignInResult) {
     setNotice(null)
-    setSession(newSession)
+    if (result.role === 'admin') {
+      sessionStorage.setItem(ADMIN_TOKEN_KEY, result.admin_token)
+      setIsAdmin(true)
+      go('dashboard')
+      return
+    }
+    sessionStorage.setItem(STORAGE_KEY, result.session_id)
+    setSession(result)
+    go('chat')
   }
 
   function signOut() {
@@ -79,20 +77,41 @@ function Screen({ onOpenDashboard }: { onOpenDashboard: () => void }) {
     setSession(null)
   }
 
+  function adminSignOut() {
+    dashboardApi.signOut().catch(() => undefined)
+    sessionStorage.removeItem(ADMIN_TOKEN_KEY)
+    setIsAdmin(false)
+    go('chat')
+  }
+
   function expired() {
     sessionStorage.removeItem(STORAGE_KEY)
     setSession(null)
-    setNotice('Your chat ended because it was idle for a while. Please sign in again.')
+    setNotice('Your chat ended because it was idle for a while. Please sign in again')
   }
 
   if (restoring) return <p className="loading">Loading…</p>
-  if (!session) {
+
+  if (page === 'dashboard' && isAdmin) {
     return (
       <>
-        {notice && <p className="notice" role="status">{notice}</p>}
-        <SignIn onSignedIn={signedIn} onOpenDashboard={onOpenDashboard} />
+        <Backdrop />
+        <Dashboard onSignOut={adminSignOut} />
       </>
     )
   }
-  return <Chat session={session} onSignOut={signOut} onSessionExpired={expired} onOpenDashboard={onOpenDashboard} />
+  if (page === 'chat' && session) {
+    return (
+      <>
+        <Backdrop />
+        <Chat session={session} onSignOut={signOut} onSessionExpired={expired} />
+      </>
+    )
+  }
+  return (
+    <SignIn
+      onSignedIn={signedIn}
+      notice={notice ?? (page === 'dashboard' ? 'Sign in with the admin account to open the dashboard' : null)}
+    />
+  )
 }

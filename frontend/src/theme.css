@@ -1,0 +1,39 @@
+/* Juniper Lane Goods design system (unslop pass, 21 Nov 2026).
+   Direction: warm, plain-spoken, tidy. The world is a small shop's packing
+   table: kraft paper, linen, oak and parcel labels. Surfaces stay quiet and
+   warm-neutral; one juniper-green accent marks the main action; the colour
+   and material live in one "moment" per screen (here, the packing slip).
+   Design approach from unslop by Damir Sokolovsky (@heydamir), CC BY 4.0. */
+
+:root {
+  /* Warm neutral ramp: every surface, line and text colour comes from here. */
+  --jl-page: #f7f4ee;
+  --jl-card: #fdfbf7;
+  --jl-raised: #efe9df;
+  --jl-hairline: rgba(31, 27, 22, 0.08);
+  --jl-field-line: rgba(31, 27, 22, 0.18); /* inputs need a clearer edge */
+  --jl-text: #1f1b16;
+  --jl-text-2: #5e554a;
+  --jl-text-3: #6f665a; /* muted, still 4.5:1 on the page */
+
+  /* The one accent: juniper green. White text on it is about 7.6:1. */
+  --jl-accent: #2f5d4e;
+  --jl-accent-hover: #264d40;
+
+  /* Meaning only. */
+  --jl-negative: #b42318;
+  --jl-negative-bg: rgba(220, 38, 38, 0.06);
+
+  /* The moment's materials. */
+  --jl-kraft: #d9c4a3;
+  --jl-slip: #fffdf8;
+
+  --jl-font: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --jl-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', monospace;
+
+  --jl-radius-control: 8px;
+  --jl-radius-card: 12px;
+
+  --jl-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --jl-fast: 150ms;
+}

@@ -77,14 +77,22 @@ const RUNS = [
 ]
 
 function fakeApi(overrides: Record<string, unknown> = {}) {
-  return vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+  return vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
     const url = String(input)
+    if (url === '/api/sessions') {
+      return new Response(JSON.stringify({ role: 'admin', admin_token: 'admin-token-1' }), { status: 201 })
+    }
+    if (url === '/api/admin/session') return new Response(null, { status: 204 })
+    // Every dashboard request must carry the admin's key.
+    const auth = new Headers(init?.headers).get('Authorization')
+    if (auth !== 'Bearer admin-token-1') {
+      return new Response(JSON.stringify({ detail: 'Please sign in as an admin.' }), { status: 401 })
+    }
     const routes: Record<string, unknown> = {
       '/api/tickets': TICKETS,
       '/api/conversations?limit=200': CONVERSATIONS,
       '/api/conversations/conv_aaaaaaaaaaaa': EVENTS,
       '/api/evaluations': RUNS,
-      '/api/customers?q=&limit=8': [],
       ...overrides,
     }
     if (url in routes) return new Response(JSON.stringify(routes[url]), { status: 200 })
@@ -93,6 +101,7 @@ function fakeApi(overrides: Record<string, unknown> = {}) {
 }
 
 async function openDashboard() {
+  sessionStorage.setItem('juniper-lane-admin', 'admin-token-1')
   window.location.hash = '#/dashboard'
   const user = userEvent.setup()
   render(<App />)
@@ -105,18 +114,32 @@ afterEach(() => {
 })
 
 describe('getting to the dashboard', () => {
-  it('opens from the sign-in page and goes back to the chat', async () => {
-    fakeApi()
+  it('opens when the admin signs in, and signing out closes it', async () => {
+    const fetchSpy = fakeApi()
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(screen.getByRole('button', { name: 'Open the support dashboard' }))
+    await user.type(screen.getByLabelText('Email'), 'admin@juniperlane.example')
+    await user.type(screen.getByLabelText('Password'), 'admin-pass')
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
     expect(await screen.findByRole('heading', { name: 'Support dashboard' })).toBeInTheDocument()
     expect(window.location.hash).toBe('#/dashboard')
-    expect(screen.getByRole('note')).toHaveTextContent(/no password/)
+    expect(sessionStorage.getItem('juniper-lane-admin')).toBe('admin-token-1')
+    expect(await screen.findByText(TICKETS[0].ticket_id)).toBeInTheDocument() // the key was accepted
 
-    await user.click(screen.getByRole('button', { name: 'Customer chat' }))
-    expect(await screen.findByLabelText(/Find a customer/)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Sign out' }))
+    expect(await screen.findByRole('button', { name: 'Sign in' })).toBeInTheDocument()
+    expect(sessionStorage.getItem('juniper-lane-admin')).toBeNull()
+    expect(fetchSpy.mock.calls.some(([url, init]) => url === '/api/admin/session' && init?.method === 'DELETE')).toBe(true)
+  })
+
+  it('asks for the admin sign-in when the dashboard is opened without it', async () => {
+    fakeApi()
+    window.location.hash = '#/dashboard'
+    render(<App />)
+
+    expect(screen.getByRole('status')).toHaveTextContent('Sign in with the admin account to open the dashboard')
+    expect(screen.queryByRole('heading', { name: 'Support dashboard' })).not.toBeInTheDocument()
   })
 })
 
@@ -232,6 +255,7 @@ describe('evaluations', () => {
 
 describe('errors', () => {
   it('shows a message when the API cannot be reached', async () => {
+    sessionStorage.setItem('juniper-lane-admin', 'admin-token-1')
     window.location.hash = '#/dashboard'
     vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Failed to fetch'))
     render(<App />)

@@ -22,6 +22,7 @@ export type TranscriptEntry = {
 }
 
 export type Session = {
+  role: 'customer'
   session_id: string
   conversation_id: string
   customer: Customer
@@ -91,11 +92,13 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return response.status === 204 ? (undefined as T) : ((await response.json()) as T)
 }
 
+// A customer gets their chat; the admin gets a key for the dashboard.
+export type AdminSignIn = { role: 'admin'; admin_token: string }
+export type SignInResult = Session | AdminSignIn
+
 export const api = {
-  findCustomers: (query: string) =>
-    request<Customer[]>(`/customers?q=${encodeURIComponent(query)}&limit=8`),
-  signIn: (email: string) =>
-    request<Session>('/sessions', { method: 'POST', body: JSON.stringify({ email }) }),
+  signIn: (email: string, password: string) =>
+    request<SignInResult>('/sessions', { method: 'POST', body: JSON.stringify({ email, password }) }),
   getSession: (sessionId: string) => request<Session>(`/sessions/${encodeURIComponent(sessionId)}`),
   signOut: (sessionId: string) =>
     request<void>(`/sessions/${encodeURIComponent(sessionId)}`, { method: 'DELETE' }),
@@ -157,9 +160,18 @@ export type EvaluationRun = {
   summary: EvaluationSummary
 }
 
+// The admin's key is kept for this browser tab only, like the customer's chat.
+export const ADMIN_TOKEN_KEY = 'juniper-lane-admin'
+
+function asAdmin<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const token = sessionStorage.getItem(ADMIN_TOKEN_KEY) ?? ''
+  return request<T>(path, { ...options, headers: { Authorization: `Bearer ${token}` } })
+}
+
 export const dashboardApi = {
-  tickets: () => request<Ticket[]>('/tickets'),
-  conversations: () => request<ConversationSummary[]>('/conversations?limit=200'),
-  conversation: (id: string) => request<HarnessEvent[]>(`/conversations/${encodeURIComponent(id)}`),
-  evaluations: () => request<EvaluationRun[]>('/evaluations'),
+  tickets: () => asAdmin<Ticket[]>('/tickets'),
+  conversations: () => asAdmin<ConversationSummary[]>('/conversations?limit=200'),
+  conversation: (id: string) => asAdmin<HarnessEvent[]>(`/conversations/${encodeURIComponent(id)}`),
+  evaluations: () => asAdmin<EvaluationRun[]>('/evaluations'),
+  signOut: () => asAdmin<void>('/admin/session', { method: 'DELETE' }),
 }

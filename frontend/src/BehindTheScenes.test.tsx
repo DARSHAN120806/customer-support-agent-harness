@@ -7,6 +7,7 @@ import type { Reply, ReplyDetails, Session } from './api'
 import { BehindTheScenes } from './components/BehindTheScenes'
 
 const SESSION: Session = {
+  role: 'customer',
   session_id: 'session-abc',
   conversation_id: 'conv_000000000001',
   customer: { name: 'Priya Nair', email: 'priya.nair@example.com', order_count: 0 },
@@ -57,8 +58,7 @@ function fakeApi(replies: Reply[]) {
     const method = init?.method ?? 'GET'
     let body: unknown = SESSION
     let status = 200
-    if (url.startsWith('/api/customers')) body = [SESSION.customer]
-    else if (url === '/api/sessions' && method === 'POST') status = 201
+    if (url === '/api/sessions' && method === 'POST') status = 201
     else if (url.endsWith('/messages')) body = replies[Math.min(next++, replies.length - 1)]
     return new Response(JSON.stringify(body), { status })
   })
@@ -68,7 +68,9 @@ async function chatAndSend(messages: string[], replies: Reply[]) {
   fakeApi(replies)
   const user = userEvent.setup()
   render(<App />)
-  await user.click(await screen.findByRole('button', { name: /Priya Nair/ }))
+  await user.type(screen.getByLabelText('Email'), 'priya.nair@example.com')
+  await user.type(screen.getByLabelText('Password'), 'test-pass')
+  await user.click(screen.getByRole('button', { name: 'Sign in' }))
   for (const message of messages) {
     await user.type(await screen.findByLabelText('Your message'), `${message}{Enter}`)
     await screen.findAllByText(/Reply /)

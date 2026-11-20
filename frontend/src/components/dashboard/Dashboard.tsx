@@ -12,12 +12,12 @@ const TABS: { id: Tab; label: string }[] = [
 ]
 
 type Props = {
-  onBackToChat: () => void
+  onSignOut: () => void
 }
 
 // The support team's view: tickets to answer, chats to review, and how well
 // the assistant scored in testing.
-export function Dashboard({ onBackToChat }: Props) {
+export function Dashboard({ onSignOut }: Props) {
   const [tab, setTab] = useState<Tab>('tickets')
   const [openConversation, setOpenConversation] = useState<string | null>(null)
 
@@ -36,15 +36,10 @@ export function Dashboard({ onBackToChat }: Props) {
             <p className="muted small">Juniper Lane Goods</p>
           </div>
         </div>
-        <button className="secondary" onClick={onBackToChat}>
-          Customer chat
+        <button className="secondary" onClick={onSignOut}>
+          Sign out
         </button>
       </header>
-
-      <p className="demo-note dash-note" role="note">
-        <strong>Demo dashboard.</strong> It has no password, so it is for your own computer only.
-        Customer emails are masked.
-      </p>
 
       <nav className="tabs glass" aria-label="Dashboard sections">
         {TABS.map((t) => (
