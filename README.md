@@ -47,16 +47,17 @@ customer's data.
     </td>
   </tr>
   <tr>
-    <td align="center" width="50%">
-      <img src="docs/images/04-conversation-replay.png" alt="Conversation replay"><br>
+    <td align="center" colspan="2">
+      <img src="docs/images/04-conversation-replay.png" alt="Conversation replay" width="700"><br>
       <sub>Replay of a past conversation</sub>
-    </td>
-    <td align="center" width="50%">
-      <img src="docs/images/06-phone-chat.png" alt="The chat on a phone" width="240"><br>
-      <sub>The chat on a phone</sub>
     </td>
   </tr>
 </table>
+
+<p align="center">
+  <img src="docs/images/06-phone-chat.png" alt="The chat on a phone" width="260"><br>
+  <sub>The chat on a phone</sub>
+</p>
 
 ## How to run it
 
