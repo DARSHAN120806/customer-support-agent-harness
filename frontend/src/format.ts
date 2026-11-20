@@ -6,6 +6,7 @@ export const RULE_LABEL: Record<string, string> = {
   unverified_policy: 'Policy stated without looking it up',
   handover_missing: 'Unanswered question with no ticket',
   upset_customer_not_escalated: 'Upset customer with no ticket',
+  promised_ticket_missing: 'Promised a ticket but made none',
   identity_leak: 'Named the AI behind the assistant',
   human_claim: 'Claimed to be a person',
   personal_data: "Another person's email address",

@@ -34,7 +34,7 @@ tokens, cost, and time.*
 - **Realistic data.** 780 synthetic customers and 1,016 orders, each with its
   refunds, returns, shipments, warranty claims, and past tickets, which only
   the order's owner can see.
-- **494 automated tests** (460 Python with 98% line coverage, 34 front end)
+- **525 automated tests** (491 Python with 98% line coverage, 34 front end)
   that use a fake model, so they are free and need no keys.
 
 ## Screenshots
@@ -94,10 +94,11 @@ by the harness.
 | The agent never issues a refund | There is no tool that changes anything. A reply that claims to give a refund is blocked. |
 | One customer never sees another's data | `lookup_order` takes only an order ID; the customer's identity comes from the session, never from chat text. Someone else's order returns exactly the same text as a missing order. A reply containing another customer's email is blocked. |
 | No invented prices, policies, or dates | Every dollar amount, percentage, time period, and date in a reply must appear in a tool result or in the customer's own message. Otherwise the model gets one rewrite, then the reply is withheld. |
-| Policy answers come from the documents | If the model states policy without having looked anything up, the harness runs the document search itself and has the model answer again from the results. |
+| Policy answers come from the documents | If the customer asks about a policy subject, or the model states policy, and nothing has been looked up, the harness runs the document search itself and has the model answer again from the results. A reply that dodges the question does not get past this. |
 | Deadlines are correct | Date arithmetic is done by a `calculate_date` tool in code, not by the model. |
 | Record statuses are read correctly | Each warranty claim carries a plain-language meaning of its status, so "approved, awaiting product" is not read as "a replacement is on its way". |
 | Upset customers reach a human | A message that shows the customer is upset always ends with a ticket. |
+| A promised ticket is a real ticket | If a reply says a ticket is being created or the chat is handed to the team, but no ticket exists, the model is told to create it; if it still does not, the harness creates it and adds the number. Offers phrased as questions are left alone. |
 | Unanswered shop questions reach a human | If the agent searched, found no answer, and created no ticket, it is told to create one; if it still does not, the harness creates it. |
 | The assistant keeps its persona and never poses as human | It presents itself only as the shop's virtual assistant. A reply naming the underlying model, vendor, or cloud service, or claiming to be a person, is rewritten once and then replaced. Asked sincerely, it says it is an AI and offers a human. |
 | The agent cannot run away | Limits on steps per message, tokens per message, and estimated cost per conversation. |
@@ -141,6 +142,16 @@ What this shows, honestly:
 - The difference in cases passed is within run-to-run variation (the same
   harness-on setup has scored both 39/41 and 41/41). Violation counts are the
   clearer signal.
+
+**Closing the two gaps the harness-on run showed.** In `refund-demand-now` the
+agent wrote "I need to create a ticket" but never called the tool, and in
+`tricky-price-match` it answered with a question instead of the policy, so no
+check fired. Two harness rules now cover these cases: a promised ticket is
+always created, and a policy question always triggers a document search before
+the answer. In a live check of 20 cases ($0.19), both cases passed and all 11
+attack cases passed. Two other cases failed for reasons these rules do not
+cover: the model once worked out a deadline in its head, which the figure check
+blocked, and once offered a hand-over instead of creating the ticket.
 
 ```bash
 .venv/Scripts/python evals/run_evals.py --list                         # free: list the cases
@@ -290,8 +301,9 @@ Vite · Recharts · Vitest
 - **The figure check confirms a number was looked up, not that it means the
   same thing.** A "90 days" from one policy could excuse a made-up "90 days" in
   another context.
-- **Some checks rely on word lists**, such as the signs that a customer is
-  upset, so unusual wording can slip past them.
+- **Some checks rely on word lists or patterns**, such as the signs that a
+  customer is upset, the policy subjects, and the ways of promising a ticket,
+  so unusual wording can slip past them.
 - **One evaluation run is a snapshot.** Code scoring cannot judge tone, and the
   model's answers vary between runs.
 - **Claude Haiku 4.5 is used** because newer models were not available on the

@@ -195,6 +195,39 @@ POLICY_TOPICS = re.compile(
 _OFFER_OF_HELP = re.compile(r"\b(?:help|assist)\w*\b", re.IGNORECASE)
 
 
+# Sentences where the assistant says it is creating, or has created, a ticket or
+# handed the chat over. Questions ("Would you like me to create a ticket?") are
+# offers, not promises, and are not matched.
+_TICKET_PROMISE = re.compile(
+    r"\b(?:I(?:'ll| will|'m| am|'ve| have)?|let me|I need to|I'm going to|I am going to)\s+"
+    r"(?:(?:now|just|already|also|go ahead and|gone ahead and)\s+)*"
+    r"(?:creat|rais|open|log|submit|fil|start)\w*\s+(?:a|an|the|your|this)?\s*"
+    r"(?:support\s+|new\s+)?(?:ticket|case|request)\b"
+    r"|\b(?:I(?:'ll| will|'m| am|'ve| have)|let me|I need to|I'm going to|I am going to)\s+"
+    r"(?:(?:now|just|already|also|go ahead and|gone ahead and)\s+)*"
+    r"(?:pass\w*|hand\w*|escalat\w*|forward\w*|send\w*|refer\w*)\s+"
+    r"(?:this|it|that|your\s+\w+(?:\s+\w+)?)\s+(?:on\s+|over\s+)?to\s+(?:our|the)\s+(?:human\s+|support\s+)*(?:support\s+)?team\b",
+    re.IGNORECASE,
+)
+
+
+def promises_ticket(reply: str) -> bool:
+    """True if a statement in the reply says a ticket is being or has been
+    created, or the chat is being handed to the team."""
+    for sentence in re.split(r"(?<=[.!?])\s+|\n+", reply):
+        if sentence.rstrip().endswith("?"):
+            continue
+        if _TICKET_PROMISE.search(sentence):
+            return True
+    return False
+
+
+def asks_about_policy(customer_message: str) -> bool:
+    """True if the customer's message is about a policy subject (refunds,
+    shipping, price matching, discounts, and so on)."""
+    return bool(POLICY_TOPICS.search(customer_message))
+
+
 def is_upset(customer_message: str) -> bool:
     return bool(_UPSET.search(customer_message))
 
@@ -394,12 +427,18 @@ def check_reply(
 
     in_conversation = tools_used is not None  # False when a reply is checked on its own
 
-    if in_conversation and shop_text is not None and states_policy_without_sources(reply, shop_text):
+    nothing_looked_up = shop_text is not None and not shop_text.strip()
+    if in_conversation and shop_text is not None and (
+        states_policy_without_sources(reply, shop_text)
+        # Also when the customer asked about policy and the model avoided the
+        # question without stating anything: nothing was checked either way.
+        or (nothing_looked_up and customer_message is not None and asks_about_policy(customer_message))
+    ):
         violations.append(
             Violation(
                 "unverified_policy",
-                "reply talked about shop policy although nothing had been looked up "
-                "in the shop's documents or order data",
+                "the customer's question or the reply concerned shop policy, but "
+                "nothing had been looked up in the shop's documents or order data",
                 correctable=True,
                 fix_hint=(
                     "The shop's documents have now been searched for the customer's "
@@ -415,6 +454,24 @@ def check_reply(
                     if customer_message
                     else None
                 ),
+            )
+        )
+
+    if in_conversation and not has_ticket and "escalate_to_human" not in tools_used and promises_ticket(reply):
+        violations.append(
+            Violation(
+                "promised_ticket_missing",
+                "the reply said a ticket was being created or the chat handed over, "
+                "but no ticket exists",
+                correctable=True,
+                fix_hint=(
+                    "Your reply says you are creating a ticket or handing over to the "
+                    "team, but you have not done it. Call escalate_to_human now, with a "
+                    "summary of what the customer wants, and give them the ticket "
+                    "number. You may also ask for details the team will need."
+                ),
+                # The reply is fine; it is only missing the ticket it promised.
+                blocks_reply=False,
             )
         )
 
