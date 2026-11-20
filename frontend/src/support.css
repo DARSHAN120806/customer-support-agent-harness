@@ -1,0 +1,399 @@
+/* The support chat: a button at the bottom right and the chat window it opens.
+   Tokens in theme.css. Every button here resets the old global button style. */
+
+/* --- The button that opens the chat ------------------------------------------ */
+
+.sc-launcher {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 20px 0 16px;
+  border: 0;
+  border-radius: 24px;
+  background: var(--jl-accent);
+  color: #fff;
+  font-family: var(--jl-font);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow:
+    0 1px 2px rgba(31, 27, 22, 0.12),
+    0 8px 24px rgba(31, 27, 22, 0.14);
+  transition:
+    background-color var(--jl-fast) var(--jl-ease),
+    transform var(--jl-fast) var(--jl-ease);
+}
+
+.sc-launcher:hover:not(:disabled) {
+  background: var(--jl-accent-hover);
+}
+
+.sc-launcher:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.sc-launcher:focus-visible,
+.sc-panel button:focus-visible,
+.sc-panel textarea:focus-visible {
+  outline: 2px solid var(--jl-accent);
+  outline-offset: 2px;
+}
+
+/* --- The chat window -------------------------------------------------------- */
+
+.sc-panel {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  width: 400px;
+  height: min(640px, calc(100dvh - 48px));
+  overflow: hidden;
+  border: 1px solid var(--jl-hairline);
+  border-radius: 16px;
+  background: var(--jl-card);
+  color: var(--jl-text);
+  font-family: var(--jl-font);
+  font-size: 15px;
+  line-height: 22px;
+  box-shadow:
+    0 1px 2px rgba(31, 27, 22, 0.08),
+    0 12px 32px rgba(31, 27, 22, 0.14);
+  transform-origin: bottom right;
+  animation: sc-open 300ms var(--jl-ease);
+}
+
+.sc-panel[hidden] {
+  display: none;
+}
+
+.sc-panel p {
+  margin: 0;
+}
+
+.sc-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 16px 16px 20px;
+  border-bottom: 1px solid var(--jl-hairline);
+}
+
+.sc-head h2 {
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 500;
+}
+
+.sc-sub {
+  margin-top: 4px !important;
+  color: var(--jl-text-3);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+/* A quiet label that says the assistant is an AI. */
+.sc-ai {
+  display: inline-block;
+  margin-right: 4px;
+  padding: 0 4px;
+  border: 1px solid var(--jl-field-line);
+  border-radius: 4px;
+  font-family: var(--jl-mono);
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--jl-text-2);
+}
+
+.sc-panel .sc-close {
+  height: 32px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--jl-radius-control);
+  background: none;
+  color: var(--jl-text-2);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+  transform: none;
+}
+
+.sc-panel .sc-close:hover:not(:disabled) {
+  background: var(--jl-raised);
+  color: var(--jl-text);
+}
+
+/* --- Messages ------------------------------------------------------------------ */
+
+.sc-messages {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+}
+
+.sc-welcome {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: var(--jl-text-2);
+}
+
+.sc-suggestions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.sc-panel .sc-chip {
+  padding: 8px 12px;
+  border: 1px solid var(--jl-field-line);
+  border-radius: var(--jl-radius-control);
+  background: var(--jl-card);
+  color: var(--jl-text);
+  font: inherit;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+  text-align: left;
+  cursor: pointer;
+  transform: none;
+  transition: background-color var(--jl-fast) var(--jl-ease);
+}
+
+.sc-panel .sc-chip:hover:not(:disabled) {
+  background: var(--jl-raised);
+}
+
+.sc-row {
+  display: flex;
+}
+
+.sc-row.customer {
+  justify-content: flex-end;
+}
+
+.sc-bubble {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  overflow-wrap: anywhere;
+}
+
+.sc-bubble.customer {
+  border-bottom-right-radius: 4px;
+  background: var(--jl-raised);
+}
+
+.sc-bubble.assistant {
+  border: 1px solid var(--jl-hairline);
+  border-bottom-left-radius: 4px;
+  background: var(--jl-page);
+}
+
+.sc-bubble.error {
+  border-color: transparent;
+  background: var(--jl-negative-bg);
+  color: var(--jl-negative);
+}
+
+.sc-bubble p + p,
+.sc-bubble p + ul,
+.sc-bubble ul + p {
+  margin-top: 8px;
+}
+
+.sc-bubble ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+/* A ticket number inside a reply: the same quiet parcel-label look. */
+.sc-bubble .ticket-ref {
+  padding: 0 4px;
+  border: 1px solid var(--jl-field-line);
+  border-radius: 4px;
+  background: var(--jl-card);
+  color: var(--jl-text);
+  font-family: var(--jl-mono);
+  font-size: 13px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.sc-ticket {
+  margin-top: 8px !important;
+  color: var(--jl-text-2);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+/* The assistant is typing: three dots that fade in turn (a live status). */
+.sc-typing {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  height: 44px;
+}
+
+.sc-typing span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--jl-text-3);
+  animation: sc-dot 1.2s infinite var(--jl-ease);
+}
+
+.sc-typing span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.sc-typing span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+/* --- Writing a message ----------------------------------------------------------- */
+
+.sc-composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid var(--jl-hairline);
+}
+
+.sc-composer textarea {
+  flex: 1;
+  min-height: 44px;
+  max-height: 160px;
+  padding: 10px 12px;
+  border: 1px solid var(--jl-field-line);
+  border-radius: var(--jl-radius-control);
+  background: var(--jl-card);
+  color: var(--jl-text);
+  font: inherit;
+  resize: none;
+}
+
+.sc-composer textarea::placeholder {
+  color: var(--jl-text-3);
+}
+
+.sc-panel .sc-send {
+  height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--jl-radius-control);
+  background: var(--jl-accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transform: none;
+  transition:
+    background-color var(--jl-fast) var(--jl-ease),
+    transform var(--jl-fast) var(--jl-ease);
+}
+
+.sc-panel .sc-send:hover:not(:disabled) {
+  background: var(--jl-accent-hover);
+}
+
+.sc-panel .sc-send:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.sc-panel .sc-send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* The order list's "Ask about this order" link. */
+.shop .row-link {
+  margin-top: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--jl-text-2);
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 400;
+  text-decoration: underline;
+  text-decoration-color: var(--jl-field-line);
+  text-underline-offset: 4px;
+  cursor: pointer;
+  transform: none;
+}
+
+.shop .row-link:hover:not(:disabled) {
+  background: none;
+  color: var(--jl-text);
+  text-decoration-color: currentColor;
+}
+
+@keyframes sc-open {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes sc-dot {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+/* --- Phones: the chat fills the screen ------------------------------------------ */
+
+@media (max-width: 640px) {
+  .sc-launcher {
+    right: 16px;
+    bottom: 16px;
+  }
+
+  .sc-panel {
+    inset: 0;
+    width: 100%;
+    height: 100dvh;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .sc-bubble {
+    max-width: 90%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-panel,
+  .sc-typing span {
+    animation: none;
+  }
+
+  .sc-typing span {
+    opacity: 0.6;
+  }
+
+  .sc-launcher,
+  .sc-panel * {
+    transition: none !important;
+  }
+}

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { ADMIN_TOKEN_KEY, api, dashboardApi, type Session, type SignInResult } from './api'
-import { Chat } from './components/Chat'
 import { Dashboard } from './components/dashboard/Dashboard'
 import { Shop } from './components/shop/Shop'
 import { SignIn } from './components/SignIn'
@@ -9,8 +8,8 @@ import { SignIn } from './components/SignIn'
 // lose the conversation, and closing the tab forgets it.
 const STORAGE_KEY = 'juniper-lane-session'
 
-// Flat pastel shapes behind the glass panels of the chat and the dashboard.
-// The sign-in page already has the new design; the other pages follow later.
+// Flat pastel shapes behind the glass panels of the dashboard, which gets the
+// new design in a later stage.
 function Backdrop() {
   return (
     <div className="backdrop" aria-hidden="true">
@@ -22,16 +21,14 @@ function Backdrop() {
   )
 }
 
-type Page = 'shop' | 'help' | 'dashboard'
+type Page = 'shop' | 'dashboard'
 
-const ADDRESS: Record<Page, string> = { shop: '#/', help: '#/help', dashboard: '#/dashboard' }
+const ADDRESS: Record<Page, string> = { shop: '#/', dashboard: '#/dashboard' }
 
 // The page shown depends on the address: "#/dashboard" is the admin's
-// dashboard, "#/help" the support chat, anything else the shop. Back and
-// forward work.
+// dashboard, anything else the shop (with its chat window). Back and forward work.
 function usePage(): [Page, (page: Page) => void] {
-  const read = (): Page =>
-    window.location.hash === '#/dashboard' ? 'dashboard' : window.location.hash === '#/help' ? 'help' : 'shop'
+  const read = (): Page => (window.location.hash === '#/dashboard' ? 'dashboard' : 'shop')
   const [page, setPage] = useState<Page>(read)
   useEffect(() => {
     const onChange = () => setPage(read())
@@ -105,16 +102,8 @@ export default function App() {
       </>
     )
   }
-  if (page === 'help' && session) {
-    return (
-      <>
-        <Backdrop />
-        <Chat session={session} onSignOut={signOut} onSessionExpired={expired} onBack={() => go('shop')} />
-      </>
-    )
-  }
-  if (page !== 'dashboard' && session) {
-    return <Shop session={session} onOpenHelp={() => go('help')} onSignOut={signOut} onSessionExpired={expired} />
+  if (page === 'shop' && session) {
+    return <Shop session={session} onSignOut={signOut} onSessionExpired={expired} />
   }
   return (
     <SignIn

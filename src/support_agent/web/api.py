@@ -15,8 +15,8 @@ Endpoints (all under /api):
     GET    /products                       the shop's products, prices and stock
     GET    /sessions/{id}                  the chat so far and the customer's orders
     GET    /sessions/{id}/tickets          the customer's own support tickets
-    POST   /sessions/{id}/messages         send a message, get the reply and what
-                                           the harness did ("behind the scenes")
+    POST   /sessions/{id}/messages         send a message, get the reply (what the
+                                           harness did goes to the log, for the admin)
     DELETE /sessions/{id}                  sign out
     DELETE /admin/session                  admin sign-out
 
@@ -59,16 +59,6 @@ MAX_MESSAGE_LENGTH = 2000
 BASELINES_DIR = PROJECT_ROOT / "evals" / "baselines"
 # The React development server. Only pages from here may call the API.
 DEFAULT_ALLOWED_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
-# Events shown in the "behind the scenes" panel.
-PANEL_EVENTS = {
-    event_log.MODEL_CALL,
-    event_log.TOOL_CALL,
-    event_log.REPLY_REWRITE,
-    event_log.REPLY_BLOCKED,
-    event_log.TICKET_CREATED,
-    event_log.RETRY,
-    event_log.ERROR,
-}
 
 
 WRONG_SIGN_IN = "Email or password is incorrect."
@@ -175,13 +165,7 @@ def create_app(
 
         def make(session_id: str) -> ChatSession:
             agent, context = create_agent(settings, resources, customer["email"], today=today)
-            session = ChatSession(session_id, agent, context, customer)
-            context.logger.subscribe(
-                lambda event: session.current_events.append(event)
-                if event["event"] in PANEL_EVENTS
-                else None
-            )
-            return session
+            return ChatSession(session_id, agent, context, customer)
 
         session = sessions.add(make)
         return _session_view(session)
@@ -232,7 +216,6 @@ def create_app(
     def _answer(session: ChatSession, text: str) -> dict[str, Any]:
         if not text:
             raise HTTPException(422, "The message is empty.")
-        session.current_events = []
         tickets_before = len(session.context.ticket_ids)
         history_before = len(session.history)
         try:
@@ -242,32 +225,16 @@ def create_app(
             del session.history[history_before:]
             reply = fallback_reply()
             session.transcript += [{"role": "customer", "text": text}, {"role": "assistant", "text": reply}]
-            return {"reply": reply, "outcome": "error", "new_ticket_ids": [], "details": None}
+            return {"reply": reply, "outcome": "error", "new_ticket_ids": []}
 
         new_tickets = session.context.ticket_ids[tickets_before:]
         session.transcript.append({"role": "customer", "text": text})
         session.transcript.append(
             {"role": "assistant", "text": result.reply, "ticket_ids": new_tickets}
         )
-        return {
-            "reply": result.reply,
-            "outcome": result.outcome,
-            "new_ticket_ids": new_tickets,
-            # Everything below is for the "behind the scenes" panel.
-            "details": {
-                "turn": session.context.logger.turn,
-                "steps": result.steps,
-                "tools_used": result.tools_used,
-                "escalated": result.escalated,
-                "violations": result.violations,
-                "gave_up_because": result.gave_up_because,
-                "input_tokens": result.input_tokens,
-                "output_tokens": result.output_tokens,
-                "cost_usd": result.cost_usd,
-                "duration_ms": result.duration_ms,
-                "events": list(session.current_events),
-            },
-        }
+        # Only what the customer needs. The steps, tools, checks, tokens and cost
+        # are in the event log, where the admin can see them; customers never get them.
+        return {"reply": result.reply, "outcome": result.outcome, "new_ticket_ids": new_tickets}
 
     # --- Support dashboard ----------------------------------------------------------
 

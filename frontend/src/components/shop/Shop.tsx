@@ -1,22 +1,25 @@
 // The page a customer sees after signing in: the shop's products, a cart that
 // can never check out, and their own orders and support tickets.
-import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { api, ApiError, type CustomerTicket, type Product, type Session } from '../../api'
 import { YourOrders, YourTickets } from './Account'
 import { useCart } from './cart'
 import { CartPanel } from './CartPanel'
 import { ProductCard } from './ProductCard'
+import { SupportChat } from '../support/SupportChat'
 
 type Props = {
   session: Session
-  onOpenHelp: () => void
   onSignOut: () => void
   onSessionExpired: () => void
 }
 
 const ALL = 'All'
+// Whether the chat window is open is remembered for this tab, so a refresh
+// does not close it.
+const CHAT_OPEN_KEY = 'juniper-lane-chat-open'
 
-export function Shop({ session, onOpenHelp, onSignOut, onSessionExpired }: Props) {
+export function Shop({ session, onSignOut, onSessionExpired }: Props) {
   const [products, setProducts] = useState<Product[] | null>(null)
   const [productsError, setProductsError] = useState<string | null>(null)
   const [tickets, setTickets] = useState<CustomerTicket[] | null>(null)
@@ -24,22 +27,38 @@ export function Shop({ session, onOpenHelp, onSignOut, onSessionExpired }: Props
   const [category, setCategory] = useState(ALL)
   const [cartOpen, setCartOpen] = useState(false)
   const cart = useCart(session.customer.email)
+  const [chatOpen, setChatOpenState] = useState(() => sessionStorage.getItem(CHAT_OPEN_KEY) === 'open')
+  const [question, setQuestion] = useState<{ text: string; id: number } | null>(null)
+
+  function setChatOpen(open: boolean) {
+    sessionStorage.setItem(CHAT_OPEN_KEY, open ? 'open' : 'closed')
+    setChatOpenState(open)
+  }
+
+  function askAbout(text: string) {
+    setQuestion((current) => ({ text, id: (current?.id ?? 0) + 1 }))
+    setChatOpen(true)
+  }
   // The latest "session expired" handler, without re-running the loading below.
   const expiredRef = useRef(onSessionExpired)
   useEffect(() => {
     expiredRef.current = onSessionExpired
   })
 
-  useEffect(() => {
-    api
-      .products()
-      .then(setProducts)
-      .catch((e: ApiError) => setProductsError(e.message))
+  const loadTickets = useCallback(() => {
     api
       .myTickets(session.session_id)
       .then(setTickets)
       .catch((e: ApiError) => (e.status === 404 ? expiredRef.current() : setTicketsError(e.message)))
   }, [session.session_id])
+
+  useEffect(() => {
+    api
+      .products()
+      .then(setProducts)
+      .catch((e: ApiError) => setProductsError(e.message))
+    loadTickets()
+  }, [loadTickets])
 
   const categories = useMemo(() => {
     const counts = new Map<string, number>()
@@ -60,9 +79,6 @@ export function Shop({ session, onOpenHelp, onSignOut, onSessionExpired }: Props
           <a href="#tickets" onClick={(e) => jump(e, 'tickets')}>Tickets</a>
         </nav>
         <div className="shop-actions">
-          <button type="button" className="quiet-button" onClick={onOpenHelp}>
-            Get help
-          </button>
           <button
             type="button"
             className={cart.count > 0 ? 'cart-button filled' : 'cart-button'}
@@ -114,10 +130,19 @@ export function Shop({ session, onOpenHelp, onSignOut, onSessionExpired }: Props
         </section>
 
         <div className="account">
-          <YourOrders orders={session.orders} />
+          <YourOrders orders={session.orders} onAsk={(id) => askAbout(`What's the status of my order ${id}?`)} />
           <YourTickets tickets={tickets} error={ticketsError} />
         </div>
       </main>
+
+      <SupportChat
+        session={session}
+        open={chatOpen}
+        onOpenChange={setChatOpen}
+        question={question}
+        onTicketCreated={loadTickets}
+        onSessionExpired={onSessionExpired}
+      />
 
       {cartOpen && (
         <CartPanel

@@ -1,9 +1,9 @@
 // Tests for the "behind the scenes" panel. The API is a fake, so nothing is paid.
-import { render, screen, within } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import App from './App'
-import type { Reply, ReplyDetails, Session } from './api'
+import type { ReplyDetails, Session } from './api'
 import { BehindTheScenes } from './components/BehindTheScenes'
 
 const SESSION: Session = {
@@ -47,12 +47,7 @@ const BLOCKED: ReplyDetails = {
   ],
 }
 
-function reply(text: string, details: ReplyDetails | null, outcome = 'completed'): Reply {
-  return { reply: text, outcome, new_ticket_ids: [], details }
-}
-
-function fakeApi(replies: Reply[]) {
-  let next = 0
+function fakeApi() {
   vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
     const url = String(input)
     const method = init?.method ?? 'GET'
@@ -60,78 +55,26 @@ function fakeApi(replies: Reply[]) {
     let status = 200
     if (url === '/api/sessions' && method === 'POST') status = 201
     else if (url === '/api/products' || url.endsWith('/tickets')) body = []
-    else if (url.endsWith('/messages')) body = replies[Math.min(next++, replies.length - 1)]
+    else if (url.endsWith('/messages')) body = { reply: 'Reply one', outcome: 'completed', new_ticket_ids: [] }
     return new Response(JSON.stringify(body), { status })
   })
 }
 
-async function chatAndSend(messages: string[], replies: Reply[]) {
-  fakeApi(replies)
-  const user = userEvent.setup()
-  render(<App />)
-  await user.type(screen.getByLabelText('Email'), 'priya.nair@example.com')
-  await user.type(screen.getByLabelText('Password'), 'test-pass')
-  await user.click(screen.getByRole('button', { name: 'Sign in' }))
-  await user.click(await screen.findByRole('button', { name: 'Get help' }))
-  for (const message of messages) {
-    await user.type(await screen.findByLabelText('Your message'), `${message}{Enter}`)
-    await screen.findAllByText(/Reply /)
-  }
-  return user
-}
+describe('customers', () => {
+  it('never see the panel: it is for the admin only', async () => {
+    fakeApi()
+    const user = userEvent.setup()
+    render(<App />)
+    await user.type(screen.getByLabelText('Email'), 'priya.nair@example.com')
+    await user.type(screen.getByLabelText('Password'), 'test-pass')
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
+    await user.click(await screen.findByRole('button', { name: 'Chat with us' }))
+    await user.type(screen.getByLabelText('Your message'), 'Hi{Enter}')
+    await screen.findByText('Reply one')
 
-afterEach(() => localStorage.clear())
-
-describe('the panel in the chat', () => {
-  it('is hidden at first and opens with the button', async () => {
-    const user = await chatAndSend(['Hi'], [reply('Reply one', LOOKUP)])
-
+    expect(screen.queryByRole('button', { name: 'Behind the scenes' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'How was this answered?' })).not.toBeInTheDocument()
     expect(screen.queryByRole('complementary', { name: 'Behind the scenes' })).not.toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Behind the scenes' }))
-
-    const panel = screen.getByRole('complementary', { name: 'Behind the scenes' })
-    expect(within(panel).getByText(/reply 1/)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Behind the scenes' })).toHaveAttribute('aria-pressed', 'true')
-  })
-
-  it('shows the steps, tokens, cost, and time of the latest reply', async () => {
-    const user = await chatAndSend(['Where is JL-10231?'], [reply('Reply one', LOOKUP)])
-    await user.click(screen.getByRole('button', { name: 'Behind the scenes' }))
-    const panel = screen.getByRole('complementary', { name: 'Behind the scenes' })
-
-    expect(within(panel).getByText('Answered')).toBeInTheDocument()
-    expect(within(panel).getByText('6,417 in · 165 out')).toBeInTheDocument()
-    expect(within(panel).getByText('$0.0072')).toBeInTheDocument()
-    expect(within(panel).getByText('3.7 s')).toBeInTheDocument()
-    expect(within(panel).getByText('All code checks passed.')).toBeInTheDocument()
-    expect(within(panel).getByText('Looked up an order')).toBeInTheDocument()
-    expect(within(panel).getByText('{"order_id":"JL-10231"}')).toBeInTheDocument()
-    expect(within(panel).getAllByText(/Model thought/)).toHaveLength(2)
-  })
-
-  it('can show an earlier reply, then follows the newest one again', async () => {
-    const user = await chatAndSend(
-      ['First', 'Second'],
-      [reply('Reply one', LOOKUP), reply('Reply two', BLOCKED, 'reply_blocked')],
-    )
-    await user.click(screen.getAllByRole('button', { name: 'How was this answered?' })[0])
-    const panel = screen.getByRole('complementary', { name: 'Behind the scenes' })
-
-    expect(within(panel).getByText(/reply 1/)).toBeInTheDocument()
-    expect(within(panel).getByText('Looked up an order')).toBeInTheDocument()
-
-    await user.click(screen.getAllByRole('button', { name: 'How was this answered?' })[1])
-    expect(within(panel).getByText(/reply 2/)).toBeInTheDocument()
-  })
-
-  it('remembers whether it was open', async () => {
-    const user = await chatAndSend(['Hi'], [reply('Reply one', LOOKUP)])
-    await user.click(screen.getByRole('button', { name: 'Behind the scenes' }))
-    expect(localStorage.getItem('juniper-lane-behind-the-scenes')).toBe('open')
-
-    await user.click(screen.getByRole('button', { name: 'Hide behind the scenes' }))
-    expect(screen.queryByRole('complementary', { name: 'Behind the scenes' })).not.toBeInTheDocument()
-    expect(localStorage.getItem('juniper-lane-behind-the-scenes')).toBe('closed')
   })
 })
 

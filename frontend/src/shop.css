@@ -582,7 +582,7 @@
 }
 
 /* Very narrow phones: the bar becomes two rows, the name above the buttons. */
-@media (max-width: 440px) {
+@media (max-width: 360px) {
   .shop-bar {
     flex-wrap: wrap;
     height: auto;

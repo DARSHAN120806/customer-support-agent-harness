@@ -5,7 +5,13 @@ import { dollars } from './cart'
 import { sentence, shortDate } from './dates'
 import { Tag } from './Tag'
 
-export function YourOrders({ orders }: { orders: OrderSummary[] }) {
+type OrdersProps = {
+  orders: OrderSummary[]
+  // Opens the chat with a question about this order.
+  onAsk: (orderId: string) => void
+}
+
+export function YourOrders({ orders, onAsk }: OrdersProps) {
   const newestFirst = [...orders].sort((a, b) => b.placed_on.localeCompare(a.placed_on))
   return (
     <section className="account-block" id="orders" aria-labelledby="orders-title">
@@ -22,6 +28,9 @@ export function YourOrders({ orders }: { orders: OrderSummary[] }) {
                 <p className="row-meta">
                   Placed {shortDate(order.placed_on)} · {sentence(order.status)}
                 </p>
+                <button type="button" className="row-link" onClick={() => onAsk(order.order_id)}>
+                  Ask about this order
+                </button>
               </div>
               <span className="row-figure">{dollars(order.total)}</span>
             </li>

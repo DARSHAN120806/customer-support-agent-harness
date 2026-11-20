@@ -256,17 +256,72 @@ describe('the cart', () => {
   })
 })
 
-describe('getting help', () => {
-  it('opens the chat and comes back to the shop', async () => {
+describe('the support chat', () => {
+  it('opens from the button at the bottom right and closes again', async () => {
     fakeApi()
     const user = await openShop()
+    // Closed, the window is hidden from the page and from screen readers.
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Get help' }))
-    expect(await screen.findByRole('heading', { name: 'Juniper Lane Goods virtual assistant' })).toBeInTheDocument()
-    expect(window.location.hash).toBe('#/help')
+    await user.click(screen.getByRole('button', { name: 'Chat with us' }))
+    const chat = screen.getByRole('dialog', { name: 'Juniper Lane Goods virtual assistant' })
+    expect(chat).toBeVisible()
+    expect(screen.getByLabelText('Your message')).toHaveFocus()
+    expect(screen.queryByRole('button', { name: 'Chat with us' })).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Back to shop' }))
-    expect(await screen.findByRole('heading', { name: 'Homeware, furniture and electronics' })).toBeInTheDocument()
+    await user.click(within(chat).getByRole('button', { name: 'Close' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Chat with us' })).toHaveFocus()
+  })
+
+  it('closes with Escape and keeps the conversation', async () => {
+    fakeApi({ '/api/sessions/session-abc/messages': { body: { reply: 'Hello from the shop.', outcome: 'completed', new_ticket_ids: [] } } })
+    const user = await openShop()
+    await user.click(screen.getByRole('button', { name: 'Chat with us' }))
+    await user.type(screen.getByLabelText('Your message'), 'Hi{Enter}')
+    await screen.findByText('Hello from the shop.')
+
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Chat with us' }))
+    expect(screen.getByText('Hello from the shop.')).toBeVisible()
+    expect(sessionStorage.getItem('juniper-lane-chat-open')).toBe('open')
+  })
+
+  it('asks about an order from the orders list', async () => {
+    fakeApi()
+    const user = await openShop()
+    const orders = screen.getByRole('region', { name: 'Your orders' })
+
+    await user.click(within(orders).getAllByRole('button', { name: 'Ask about this order' })[0])
+
+    expect(screen.getByRole('dialog', { name: /virtual assistant/ })).toBeVisible()
+    expect(screen.getByLabelText('Your message')).toHaveValue("What's the status of my order JL-10231?")
+  })
+
+  it('updates your tickets when the chat creates one', async () => {
+    let ticketCalls = 0
+    const created: CustomerTicket = { ...TICKETS[0], ticket_id: 'TCK-20261121-NEW123', topic: 'Asked for a person' }
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
+      const url = String(input)
+      const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status })
+      if (url === '/api/sessions' && init?.method === 'POST') return json(SESSION, 201)
+      if (url === '/api/products') return json(PRODUCTS)
+      if (url.endsWith('/tickets')) return json(ticketCalls++ === 0 ? [] : [created])
+      if (url.endsWith('/messages')) {
+        return json({ reply: 'Your ticket is TCK-20261121-NEW123.', outcome: 'completed', new_ticket_ids: ['TCK-20261121-NEW123'] })
+      }
+      return json({ detail: 'Not found' }, 404)
+    })
+    const user = await openShop()
+    expect(await screen.findByText('No support tickets yet')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Chat with us' }))
+    await user.type(screen.getByLabelText('Your message'), 'I want a person{Enter}')
+
+    const tickets = screen.getByRole('region', { name: 'Your tickets' })
+    expect(await within(tickets).findByText('TCK-20261121-NEW123')).toBeInTheDocument()
+    expect(screen.getByText(/Our team will reply by email/)).toHaveTextContent('TCK-20261121-NEW123')
   })
 })
 

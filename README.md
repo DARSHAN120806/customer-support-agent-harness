@@ -12,7 +12,8 @@ customer's data.
 
 ## Features
 
-- **Customer chat:** answers questions about orders, shipping, returns,
+- **Support chat:** a "Chat with us" button at the bottom right of the shop
+  opens the assistant, which answers questions about orders, shipping, returns,
   refunds, and warranties.
 - **Sign-in with passwords:** customers sign in with their email and password;
   the shop's admin signs in to a separate dashboard.
@@ -25,10 +26,9 @@ customer's data.
   a person.
 - **Built-in safety checks:** every reply is checked before the customer sees
   it, to catch made-up figures, refund promises, and other customers' details.
-- **Behind-the-scenes panel:** shows what the assistant did for each reply,
-  including which tools it used and the time and cost.
-- **Support dashboard:** lists every ticket and lets staff replay any
-  conversation step by step.
+- **Support dashboard (admin only):** lists every ticket and lets staff replay
+  any conversation step by step, with the tools the assistant used and the time
+  and cost. Customers never see these details.
 - **Private logs:** every step is recorded, with emails, phone numbers, and
   addresses hidden.
 - **Terminal chat:** you can also chat with the assistant from the command line.
@@ -37,9 +37,8 @@ customer's data.
 ## Screenshots
 
 <p align="center">
-  <img src="docs/images/02-chat-behind-the-scenes.png" alt="The chat with the behind-the-scenes panel open" width="900"><br>
-  <sub>The chat. The panel on the right shows how the assistant reached its reply:
-  each step it took, the tools it used, the checks it passed, and the time and cost.</sub>
+  <img src="docs/images/02-chat.png" alt="The support chat open on the shop page" width="900"><br>
+  <sub>The support chat on the shop page, answering from the shop's own return policy</sub>
 </p>
 
 <p align="center">
@@ -93,8 +92,8 @@ npm --prefix frontend run dev
 ```
 
 Then open http://localhost:5173 and sign in with an email and password from
-`private/test_passwords.csv`. Customers go to the shop page, where **Get help**
-opens the chat. The admin account (`admin@juniperlane.example`) goes to the
+`private/test_passwords.csv`. Customers go to the shop page, where **Chat with
+us** at the bottom right opens the chat. The admin account (`admin@juniperlane.example`) goes to the
 support dashboard.
 
 **Or chat in the terminal instead**

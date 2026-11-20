@@ -7,6 +7,7 @@ import './index.css'
 import './theme.css'
 import './signin.css'
 import './shop.css'
+import './support.css'
 import App from './App.tsx'
 
 createRoot(document.getElementById('root')!).render(

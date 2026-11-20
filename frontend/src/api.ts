@@ -78,7 +78,6 @@ export type Reply = {
   reply: string
   outcome: string
   new_ticket_ids: string[]
-  details: ReplyDetails | null
 }
 
 // An error the page can show to the person using it.

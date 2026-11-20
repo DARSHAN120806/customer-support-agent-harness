@@ -30,8 +30,6 @@ class ChatSession:
     history: list[dict[str, Any]] = field(default_factory=list)
     # What the customer and the assistant said, for showing the chat again.
     transcript: list[dict[str, Any]] = field(default_factory=list)
-    # Events of the turn being answered right now (filled by the event log).
-    current_events: list[dict[str, Any]] = field(default_factory=list)
     last_used: float = field(default_factory=time.monotonic)
     lock: threading.Lock = field(default_factory=threading.Lock)
 

@@ -176,7 +176,7 @@ def test_session_ids_cannot_be_guessed(make_client):
 # --- Chatting -------------------------------------------------------------------------
 
 
-def test_a_message_gets_the_reply_and_what_happened_behind_the_scenes(make_client):
+def test_a_message_gets_only_the_reply_and_the_steps_go_to_the_admin_log(make_client):
     client, _ = make_client(
         [
             tool_response(ToolCall("c1", "lookup_order", {"order_id": "JL-10231"}), input_tokens=1000, output_tokens=50),
@@ -189,12 +189,16 @@ def test_a_message_gets_the_reply_and_what_happened_behind_the_scenes(make_clien
     body = response.json()
     assert response.status_code == 200
     assert body["reply"] == "It was delivered on 2026-11-07." and body["outcome"] == "completed"
-    details = body["details"]
-    assert details["tools_used"] == ["lookup_order"] and details["steps"] == 2
-    assert (details["input_tokens"], details["output_tokens"]) == (2200, 90)
-    assert details["cost_usd"] > 0
-    assert [e["event"] for e in details["events"]] == ["model_call", "tool_call", "model_call"]
-    assert details["events"][1]["tool"] == "lookup_order"
+    # Customers never receive the harness's internal steps, tokens or cost.
+    assert set(body) == {"reply", "outcome", "new_ticket_ids"}
+
+    # The admin can still see every step in the log.
+    sign_in_as_admin(client)
+    events = client.get(f"/api/conversations/{session['conversation_id']}").json()
+    steps = [e["event"] for e in events if e["event"] in ("model_call", "tool_call")]
+    assert steps == ["model_call", "tool_call", "model_call"]
+    (turn_end,) = [e for e in events if e["event"] == "turn_end"]
+    assert turn_end["tools_used"] == ["lookup_order"] and turn_end["input_tokens"] == 2200
 
 
 def test_the_chat_is_kept_and_continues(make_client):
@@ -216,9 +220,12 @@ def test_safety_checks_run_for_browser_chats_too(make_client):
     body = client.post(f"/api/sessions/{session_id}/messages", json={"text": "Who are you?"}).json()
 
     assert body["reply"] == IDENTITY_REPLY and body["outcome"] == "reply_blocked"
-    events = [e["event"] for e in body["details"]["events"]]
-    assert "reply_rewrite" in events and "reply_blocked" in events
-    assert body["details"]["violations"] == ["identity_leak"]
+    sign_in_as_admin(client)
+    conversation_id = client.get("/api/conversations").json()[0]["conversation_id"]
+    events = client.get(f"/api/conversations/{conversation_id}").json()
+    names = [e["event"] for e in events]
+    assert "reply_rewrite" in names and "reply_blocked" in names
+    assert [e for e in events if e["event"] == "turn_end"][0]["violations"] == ["identity_leak"]
 
 
 def test_a_new_ticket_is_reported_with_the_reply(make_client, tickets):

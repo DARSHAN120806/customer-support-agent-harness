@@ -23,7 +23,7 @@ const SESSION: Session = {
 }
 
 function reply(text: string, tickets: string[] = []): Reply {
-  return { reply: text, outcome: 'completed', new_ticket_ids: tickets, details: null }
+  return { reply: text, outcome: 'completed', new_ticket_ids: tickets }
 }
 
 type Handler = (url: string, init?: RequestInit) => { status?: number; body?: unknown }
@@ -66,8 +66,8 @@ async function signInAsPriya() {
   const user = userEvent.setup()
   render(<App />)
   await signInWithForm(user, PRIYA.email)
-  // Customers land on the shop; "Get help" opens the chat.
-  await user.click(await screen.findByRole('button', { name: 'Get help' }))
+  // Customers land on the shop; the "Chat with us" button opens the chat.
+  await user.click(await screen.findByRole('button', { name: 'Chat with us' }))
   await screen.findByRole('heading', { name: 'Juniper Lane Goods virtual assistant' })
   return user
 }
@@ -95,10 +95,10 @@ describe('sign-in', () => {
     await signInAsPriya()
 
     expect(calls.find((c) => c.url === '/api/sessions')?.body).toEqual({ email: PRIYA.email, password: 'test-pass' })
-    const orders = screen.getByRole('complementary', { name: 'Your orders' })
+    const orders = screen.getByRole('region', { name: 'Your orders' })
     expect(within(orders).getByText('JL-10231')).toBeInTheDocument()
     expect(within(orders).getByText('JL-10198')).toBeInTheDocument()
-    expect(screen.getByText(/Hi Priya!/)).toBeInTheDocument()
+    expect(screen.getByText(/Hi Priya\./)).toBeInTheDocument()
     expect(sessionStorage.getItem('juniper-lane-session')).toBe('session-abc')
   })
 
@@ -219,8 +219,9 @@ describe('chatting', () => {
 
   it('picks the chat up again after a page refresh', async () => {
     sessionStorage.setItem('juniper-lane-session', 'session-abc')
-    window.location.hash = '#/help'
+    sessionStorage.setItem('juniper-lane-chat-open', 'open')
     defaultApi({
+      '/tickets': () => ({ body: [] }),
       '/api/sessions/session-abc': () => ({
         body: { ...SESSION, transcript: [{ role: 'customer', text: 'Earlier question' }, { role: 'assistant', text: 'Earlier answer' }] },
       }),
@@ -255,6 +256,15 @@ describe('chatting', () => {
 })
 
 describe('formatting replies', () => {
+  it('turns bullet lines after a heading line into a real list', () => {
+    const { container } = render(<FormattedText text={'**Refunds:**\n- one\n- two\nAnything else?'} />)
+
+    expect(container.querySelectorAll('li')).toHaveLength(2)
+    expect(container.querySelector('strong')).toHaveTextContent('Refunds:')
+    expect(container.querySelectorAll('p')).toHaveLength(2) // the heading line, then the question
+    expect(container.textContent).not.toContain('- one')
+  })
+
   it('shows paragraphs, bullet lists, bold text, and ticket numbers', () => {
     const { container } = render(
       <FormattedText text={'First line.\n\n- one\n- **two**\n\nTicket TCK-20261120-ABC123 is open.'} />,

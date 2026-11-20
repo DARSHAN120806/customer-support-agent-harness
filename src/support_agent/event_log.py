@@ -30,7 +30,7 @@ import sys
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Iterator
+from typing import Any, Iterator
 
 SCHEMA_VERSION = 1
 
@@ -148,12 +148,6 @@ class EventLogger:
         self.customer_ref = customer_ref
         self.turn = 0
         self._warned = False
-        self._listeners: list[Callable[[dict[str, Any]], None]] = []
-
-    def subscribe(self, listener: Callable[[dict[str, Any]], None]) -> None:
-        """Also hand every event to `listener`, already masked, as it happens.
-        The web API uses this to show what the harness did for each reply."""
-        self._listeners.append(listener)
 
     def log(self, event: str, **fields: Any) -> None:
         record = {
@@ -168,13 +162,6 @@ class EventLogger:
         # A second pass over the finished line, in case personal data was hiding
         # somewhere the first pass does not look, such as a dictionary key.
         line = mask_text(json.dumps(record, ensure_ascii=False, default=str))
-        if self._listeners:
-            masked = json.loads(line)
-            for listener in self._listeners:
-                try:
-                    listener(masked)
-                except Exception:
-                    pass  # a listener problem must never stop the reply either
         try:
             self._path.parent.mkdir(parents=True, exist_ok=True)
             with self._path.open("a", encoding="utf-8") as file:
@@ -225,9 +212,6 @@ class NullLogger:
     turn = 0
 
     def log(self, event: str, **fields: Any) -> None:
-        pass
-
-    def subscribe(self, listener: Callable[[dict[str, Any]], None]) -> None:
         pass
 
 
