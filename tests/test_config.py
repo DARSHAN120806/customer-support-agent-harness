@@ -17,6 +17,8 @@ ALL_VARIABLES = [
     "ANTHROPIC_AUTH_TOKEN",
     "AWS_REGION",
     "AWS_DEFAULT_REGION",
+    "SUPPORT_AGENT_LOG_FILE",
+    "SUPPORT_AGENT_TICKETS_FILE",
 ]
 
 
@@ -85,3 +87,16 @@ def test_both_providers_can_be_built_without_contacting_anyone(monkeypatch):
     monkeypatch.setenv("SUPPORT_AGENT_PROVIDER", "anthropic")
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-not-real")
     assert isinstance(create_provider(Settings.from_env()), AnthropicSDKProvider)
+
+
+def test_log_and_ticket_files_can_be_moved(monkeypatch, tmp_path):
+    monkeypatch.setenv("AWS_REGION", "us-east-1")
+    default = Settings.from_env()
+    assert default.tickets_file.parts[-2:] == ("tickets", "tickets.jsonl")
+    assert default.log_file.parts[-2:] == ("logs", "agent.jsonl")
+
+    monkeypatch.setenv("SUPPORT_AGENT_TICKETS_FILE", str(tmp_path / "demo" / "tickets.jsonl"))
+    monkeypatch.setenv("SUPPORT_AGENT_LOG_FILE", str(tmp_path / "demo" / "agent.jsonl"))
+    moved = Settings.from_env()
+    assert moved.tickets_file == tmp_path / "demo" / "tickets.jsonl"
+    assert moved.log_file == tmp_path / "demo" / "agent.jsonl"

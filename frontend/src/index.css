@@ -106,7 +106,7 @@ input::placeholder, textarea::placeholder { color: #8a90a0; }
 .brand { display: flex; align-items: center; gap: 0.75rem; }
 .brand h1 { font-size: 1.15rem; }
 .brand-mark {
-  display: grid; place-items: center;
+  display: grid; place-items: center; flex-shrink: 0;
   width: 2.6rem; height: 2.6rem; border-radius: 12px;
   background: var(--lavender-deep); color: var(--lavender-ink); font-weight: 800;
 }
@@ -142,6 +142,7 @@ input::placeholder, textarea::placeholder { color: #8a90a0; }
   grid-template-rows: auto 1fr;
   gap: 1rem;
   height: 100vh;
+  height: 100dvh; /* phones: the visible height, without the browser bars */
   padding: 1rem;
 }
 .topbar {
@@ -212,8 +213,12 @@ input::placeholder, textarea::placeholder { color: #8a90a0; }
      to fit the widest line and push the panels off the right edge. */
   .chat-layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr); gap: 0.6rem; padding: 0.6rem; }
   .chat-layout > * { min-width: 0; }
-  .topbar { padding: 0.6rem 0.8rem; }
+  /* The top bar wraps: the name on one row, the buttons sharing the next. */
+  .topbar { padding: 0.6rem 0.8rem; flex-wrap: wrap; gap: 0.5rem; }
+  .topbar .brand { flex: 1 1 100%; }
   .topbar .brand h1 { font-size: 1rem; }
+  .topbar-right { flex: 1 1 100%; gap: 0.4rem; }
+  .topbar-right button { flex: 1; padding: 0.45rem 0.4rem; font-size: 0.85rem; white-space: nowrap; }
   .topbar .brand p { display: none; }
   .topbar-right .muted { display: none; }
   .orders { max-height: 26vh; }

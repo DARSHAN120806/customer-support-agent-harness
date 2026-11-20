@@ -28,7 +28,7 @@ export function Chat({ session, onSignOut, onSessionExpired, onOpenDashboard }: 
   const [entries, setEntries] = useState<ChatEntry[]>(session.transcript)
   const [draft, setDraft] = useState('')
   const [waiting, setWaiting] = useState(false)
-  const endRef = useRef<HTMLDivElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const firstName = session.customer.name.split(' ')[0]
   const [panelOpen, setPanelOpen] = useState(() => localStorage.getItem(PANEL_KEY) === 'open')
@@ -47,7 +47,10 @@ export function Chat({ session, onSignOut, onSessionExpired, onOpenDashboard }: 
 
   // Keep the newest message in view.
   useEffect(() => {
-    endRef.current?.scrollIntoView?.({ behavior: 'smooth' })
+    // Scroll only the message list. scrollIntoView would also scroll the whole
+    // page on phones, pushing the top bar out of sight.
+    const list = listRef.current
+    list?.scrollTo?.({ top: list.scrollHeight, behavior: 'smooth' })
   }, [entries, waiting])
 
   async function send(text: string) {
@@ -129,7 +132,7 @@ export function Chat({ session, onSignOut, onSessionExpired, onOpenDashboard }: 
       <OrdersSidebar orders={session.orders} onAsk={askAbout} />
 
       <section className="chat glass" aria-label="Chat">
-        <div className="messages" role="log" aria-live="polite">
+        <div className="messages" role="log" aria-live="polite" ref={listRef}>
           {entries.length === 0 && (
             <div className="welcome">
               <p>
@@ -176,7 +179,6 @@ export function Chat({ session, onSignOut, onSessionExpired, onOpenDashboard }: 
               </div>
             </div>
           )}
-          <div ref={endRef} />
         </div>
 
         <form className="composer" onSubmit={onSubmit}>

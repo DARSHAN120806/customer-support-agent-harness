@@ -42,6 +42,12 @@ function legendText(value: string) {
   return <span style={{ color: '#2b2f3a' }}>{value}</span>
 }
 
+// Bars grow in with a short animation, unless the person's device asks for
+// reduced motion (an accessibility setting), in which case they appear at once.
+function prefersReducedMotion(): boolean {
+  return typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
 function label(run: EvaluationRun): string {
   return run.name.replace(/^haiku45_/, '').replace(/_/g, ' ')
 }
@@ -50,6 +56,7 @@ export function Evaluations() {
   const [runs, setRuns] = useState<EvaluationRun[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [chosen, setChosen] = useState<string[]>([])
+  const [animate] = useState(() => !prefersReducedMotion())
 
   useEffect(() => {
     dashboardApi
@@ -145,7 +152,8 @@ export function Evaluations() {
                   <Tooltip formatter={(value) => `${value}%`} />
                   <Legend formatter={legendText} />
                   {compared.map((run, i) => (
-                    <Bar key={run.name} dataKey={label(run)} fill={COLOURS[i % COLOURS.length]} radius={[6, 6, 0, 0]} />
+                    <Bar key={run.name} dataKey={label(run)} fill={COLOURS[i % COLOURS.length]} radius={[6, 6, 0, 0]}
+                        isAnimationActive={animate} />
                   ))}
                 </BarChart>
               </ResponsiveContainer>
@@ -171,6 +179,7 @@ export function Evaluations() {
                         dataKey={label(run)}
                         fill={COLOURS[compared.indexOf(run) % COLOURS.length]}
                         radius={[6, 6, 0, 0]}
+                        isAnimationActive={animate}
                       />
                     ))}
                   </BarChart>

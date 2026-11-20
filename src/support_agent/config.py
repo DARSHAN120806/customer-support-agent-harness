@@ -115,7 +115,9 @@ class Settings:
             embedding_model=_get("SUPPORT_AGENT_EMBEDDING_MODEL") or DEFAULT_EMBEDDING_MODEL,
             knowledge_base_dir=PROJECT_ROOT / "data" / "knowledge_base",
             orders_file=PROJECT_ROOT / "data" / "orders.json",
-            tickets_file=PROJECT_ROOT / "tickets" / "tickets.jsonl",
+            tickets_file=Path(
+                _get("SUPPORT_AGENT_TICKETS_FILE") or PROJECT_ROOT / "tickets" / "tickets.jsonl"
+            ),
             log_file=Path(_get("SUPPORT_AGENT_LOG_FILE") or PROJECT_ROOT / "logs" / "agent.jsonl"),
             cache_dir=PROJECT_ROOT / ".cache",
         )

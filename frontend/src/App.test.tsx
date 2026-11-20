@@ -194,6 +194,21 @@ describe('chatting', () => {
     expect(await screen.findByText('Earlier answer')).toBeInTheDocument()
   })
 
+  it('scrolls only the message list, never the whole page', async () => {
+    defaultApi()
+    const listScroll = vi.fn()
+    Object.defineProperty(HTMLElement.prototype, 'scrollTo', { value: listScroll, configurable: true })
+    const pageScroll = vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined)
+    const user = await signInAsPriya()
+
+    await user.type(screen.getByLabelText('Your message'), 'Hello{Enter}')
+    await screen.findByText('Your order was delivered on 2026-11-07.')
+
+    const list = screen.getByRole('log')
+    expect(listScroll.mock.contexts).toContain(list)
+    expect(pageScroll).not.toHaveBeenCalled()
+  })
+
   it('labels the assistant as an AI', async () => {
     defaultApi()
     await signInAsPriya()
