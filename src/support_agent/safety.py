@@ -222,6 +222,30 @@ def promises_ticket(reply: str) -> bool:
     return False
 
 
+# Ways a customer asks to be passed to a person. "Am I talking to a real
+# person?" asks what the assistant is, not for a hand-over, so it is not matched
+# ("talking" is not the plain verb "talk").
+_PERSON = (
+    r"(?:a |an |the |your |one of your |some )?(?:real |actual |live )?"
+    r"(?:human|person|people|agent|someone|somebody|manager|supervisor|representative|rep|staff(?: member)?|"
+    r"team member|support team|operator)"
+)
+_ASKS_FOR_HUMAN = re.compile(
+    r"\b(?:talk|speak|chat)\s+(?:to|with)\s+" + _PERSON + r"\b"
+    r"|\b(?:get|give|put|connect|transfer|pass|send|escalate)\s+me\s+(?:to\s+|through\s+to\s+|with\s+)?" + _PERSON + r"\b"
+    r"|\b(?:want|need|like|request)\s+(?:a |an |to (?:talk|speak) to (?:a |an )?)?(?:real |actual |live )?"
+    r"(?:human|person|manager|supervisor|representative)\b"
+    r"|\bhuman,? please\b"
+    r"|\b(?:don't|do not) want (?:a |to talk to a |to speak to a )?(?:bot|robot|machine|chatbot)\b",
+    re.IGNORECASE,
+)
+
+
+def asks_for_human(customer_message: str) -> bool:
+    """True if the customer asks to be handed over to a person."""
+    return bool(_ASKS_FOR_HUMAN.search(customer_message))
+
+
 def asks_about_policy(customer_message: str) -> bool:
     """True if the customer's message is about a policy subject (refunds,
     shipping, price matching, discounts, and so on)."""
@@ -454,6 +478,29 @@ def check_reply(
                     if customer_message
                     else None
                 ),
+            )
+        )
+
+    if (
+        in_conversation
+        and customer_message is not None
+        and not has_ticket
+        and "escalate_to_human" not in tools_used
+        and asks_for_human(customer_message)
+    ):
+        violations.append(
+            Violation(
+                "human_request_not_escalated",
+                "the customer asked for a person and no ticket was created",
+                correctable=True,
+                fix_hint=(
+                    "The customer asked to be handed over to a person. Do not only "
+                    "offer it or ask what they need first: call escalate_to_human now "
+                    "with the reason human_requested, and give them the ticket number. "
+                    "You may then ask for any details the team will need."
+                ),
+                # Whatever the reply says, it is safe to show; it only lacks the ticket.
+                blocks_reply=False,
             )
         )
 

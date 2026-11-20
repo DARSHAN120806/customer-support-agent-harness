@@ -20,7 +20,7 @@ from support_agent.app import Resources, create_agent
 from support_agent.config import Settings
 from support_agent.event_log import read_events
 from support_agent.providers.base import ToolCall
-from support_agent.safety import asks_about_policy, check_reply, promises_ticket
+from support_agent.safety import asks_about_policy, asks_for_human, check_reply, promises_ticket
 
 # --- 1. A promised ticket must exist -------------------------------------------------
 
@@ -68,7 +68,7 @@ def promise_rules(reply=REFUND_PROMISE, **overrides) -> list[str]:
     details = {
         "tools_used": [],
         "shop_text": "Refunds go to the original payment method.",
-        "customer_message": "Get me a human now.",
+        "customer_message": "My parcel still has not turned up.",
         "has_ticket": False,
     } | overrides
     return [v.rule for v in check_reply(reply, {PRIYA}, **details)]
@@ -128,6 +128,68 @@ def test_no_rule_broken_when_something_was_looked_up_or_the_question_is_not_abou
     assert policy_rules(customer_message="Who are you?") == []
 
 
+# --- 3. A request for a person always gets a ticket ----------------------------------
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        "Stop. I don't want a bot. Get me a human now.",
+        "Can I speak to a human?",
+        "I want to talk to a real person.",
+        "Put me through to a manager.",
+        "Connect me with someone from your team.",
+        "human please",
+        "I need a human.",
+        "Transfer me to an agent.",
+    ],
+)
+def test_requests_for_a_person_are_recognised(message):
+    assert asks_for_human(message)
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        "Am I talking to a real person or a bot? Be honest.",  # asks what the assistant is
+        "Are you a human?",
+        "Your manager told me the return window was extended to 90 days.",
+        "I bought it for someone else.",
+        "Can someone tell me where my parcel is?",
+        "How do I contact a human?",  # a question about the FAQ, answered from it
+    ],
+)
+def test_other_messages_are_not_requests_for_a_person(message):
+    assert not asks_for_human(message)
+
+
+# The reply the real model gave in the live check: an offer, no ticket.
+OFFER = (
+    "I understand you'd like to speak with a human team member right away. I can hand you "
+    "over to the support team.\n\nCould you let me know briefly what you need help with?"
+)
+
+
+def human_rules(**overrides) -> list[str]:
+    details = {
+        "tools_used": [],
+        "shop_text": "",
+        "customer_message": "Stop. I don't want a bot. Get me a human now.",
+        "has_ticket": False,
+    } | overrides
+    return [v.rule for v in check_reply(OFFER, {PRIYA}, **details)]
+
+
+def test_an_offer_without_a_ticket_breaks_the_rule():
+    assert human_rules() == ["human_request_not_escalated"]
+
+
+def test_no_rule_broken_once_a_ticket_exists():
+    assert human_rules(tools_used=["escalate_to_human"]) == []
+    assert human_rules(has_ticket=True) == []
+    assert human_rules(customer_message="Am I talking to a real person?") == []
+
+
 # --- The whole agent -----------------------------------------------------------------
 
 
@@ -150,7 +212,7 @@ def run(settings, knowledge_base, orders, tickets, responses, messages):
     return results, provider, list(read_events(settings.log_file))
 
 
-HUMAN_PLEASE = "Get me a human now."
+PLAIN_MESSAGE = "My parcel still has not turned up."
 PROMISE = text_response("I'll pass this on to our support team.")
 
 
@@ -161,7 +223,7 @@ def test_the_model_creates_the_promised_ticket_after_one_reminder(settings, know
     )
     (result,), provider, _ = run(
         settings, knowledge_base, orders, tickets, [PROMISE, escalate, text_response("They'll reply by email.")],
-        [HUMAN_PLEASE],
+        [PLAIN_MESSAGE],
     )
 
     assert result.outcome == COMPLETED and result.escalated and result.auto_ticket_id is None
@@ -170,7 +232,7 @@ def test_the_model_creates_the_promised_ticket_after_one_reminder(settings, know
 
 
 def test_the_harness_creates_the_ticket_if_the_model_only_promises_it(settings, knowledge_base, orders, tickets):
-    (result,), _, events = run(settings, knowledge_base, orders, tickets, [PROMISE], [HUMAN_PLEASE])
+    (result,), _, events = run(settings, knowledge_base, orders, tickets, [PROMISE], [PLAIN_MESSAGE])
 
     assert result.outcome == COMPLETED
     assert result.reply.startswith("I'll pass this on to our support team.")
@@ -217,3 +279,41 @@ def test_a_question_that_is_not_about_policy_is_left_alone(settings, knowledge_b
 
     assert result.outcome == COMPLETED and result.reply == reply
     assert len(provider.requests) == 1 and tickets.all() == []
+
+
+GET_HUMAN = "Stop. I don't want a bot. Get me a human now."
+
+
+def test_the_model_creates_the_ticket_for_a_person_after_one_reminder(settings, knowledge_base, orders, tickets):
+    escalate = tool_response(
+        ToolCall("c1", "escalate_to_human", {"reason": "human_requested", "summary": "Wants a person."}),
+        text="I've passed you to our support team.",
+    )
+    (result,), provider, _ = run(
+        settings, knowledge_base, orders, tickets, [text_response(OFFER), escalate, text_response("They'll email you.")],
+        [GET_HUMAN],
+    )
+
+    assert result.outcome == COMPLETED and result.escalated and result.auto_ticket_id is None
+    assert tickets.all()[0]["reason"] == "human_requested"
+    assert "reason human_requested" in provider.requests[1]["system"]
+
+
+def test_the_harness_creates_the_ticket_if_the_model_still_only_offers(settings, knowledge_base, orders, tickets):
+    (result,), _, events = run(settings, knowledge_base, orders, tickets, [text_response(OFFER)], [GET_HUMAN])
+
+    assert result.outcome == COMPLETED and result.reply.startswith("I understand you'd like")
+    (ticket,) = tickets.all()
+    assert result.auto_ticket_id == ticket["ticket_id"] and ticket["ticket_id"] in result.reply
+    assert result.violations == ["human_request_not_escalated"]
+    assert [e["created_by"] for e in events if e["event"] == "ticket_created"] == ["harness"]
+
+
+def test_asking_if_the_assistant_is_human_gets_no_ticket(settings, knowledge_base, orders, tickets):
+    reply = "I'm an AI virtual assistant for Juniper Lane Goods. Would you like me to hand you over to a person?"
+    (result,), provider, _ = run(
+        settings, knowledge_base, orders, tickets, [text_response(reply)], ["Am I talking to a real person or a bot?"]
+    )
+
+    assert result.outcome == COMPLETED and result.reply == reply
+    assert tickets.all() == [] and len(provider.requests) == 1

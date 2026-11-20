@@ -34,7 +34,7 @@ tokens, cost, and time.*
 - **Realistic data.** 780 synthetic customers and 1,016 orders, each with its
   refunds, returns, shipments, warranty claims, and past tickets, which only
   the order's owner can see.
-- **525 automated tests** (491 Python with 98% line coverage, 34 front end)
+- **543 automated tests** (509 Python with 98% line coverage, 34 front end)
   that use a fake model, so they are free and need no keys.
 
 ## Screenshots
@@ -98,6 +98,7 @@ by the harness.
 | Deadlines are correct | Date arithmetic is done by a `calculate_date` tool in code, not by the model. |
 | Record statuses are read correctly | Each warranty claim carries a plain-language meaning of its status, so "approved, awaiting product" is not read as "a replacement is on its way". |
 | Upset customers reach a human | A message that shows the customer is upset always ends with a ticket. |
+| Asking for a person means a ticket | If the customer asks for a human and the agent only offers a hand-over, it is told to create the ticket; if it still does not, the harness creates it. "Am I talking to a real person?" asks what the assistant is, so it gets an honest answer, not a ticket. |
 | A promised ticket is a real ticket | If a reply says a ticket is being created or the chat is handed to the team, but no ticket exists, the model is told to create it; if it still does not, the harness creates it and adds the number. Offers phrased as questions are left alone. |
 | Unanswered shop questions reach a human | If the agent searched, found no answer, and created no ticket, it is told to create one; if it still does not, the harness creates it. |
 | The assistant keeps its persona and never poses as human | It presents itself only as the shop's virtual assistant. A reply naming the underlying model, vendor, or cloud service, or claiming to be a person, is rewritten once and then replaced. Asked sincerely, it says it is an AI and offers a human. |
@@ -151,7 +152,9 @@ always created, and a policy question always triggers a document search before
 the answer. In a live check of 20 cases ($0.19), both cases passed and all 11
 attack cases passed. Two other cases failed for reasons these rules do not
 cover: the model once worked out a deadline in its head, which the figure check
-blocked, and once offered a hand-over instead of creating the ticket.
+blocked, and once offered a hand-over instead of creating the ticket. That second
+gap is now closed too: a request for a person always ends with a ticket, and the
+angry group then passed 4 of 4.
 
 ```bash
 .venv/Scripts/python evals/run_evals.py --list                         # free: list the cases
@@ -302,7 +305,7 @@ Vite · Recharts · Vitest
   same thing.** A "90 days" from one policy could excuse a made-up "90 days" in
   another context.
 - **Some checks rely on word lists or patterns**, such as the signs that a
-  customer is upset, the policy subjects, and the ways of promising a ticket,
+  customer is upset, the policy subjects, the ways of promising a ticket, and of asking for a person,
   so unusual wording can slip past them.
 - **One evaluation run is a snapshot.** Code scoring cannot judge tone, and the
   model's answers vary between runs.

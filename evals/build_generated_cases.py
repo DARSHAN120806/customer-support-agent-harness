@@ -23,6 +23,8 @@ import sys
 from datetime import date
 from pathlib import Path
 
+from support_agent.safety import asks_for_human
+
 ROOT = Path(__file__).resolve().parents[1]
 CONVERSATIONS = ROOT / "data" / "source" / "synthetic_extension" / "faq.md"
 ORDERS = ROOT / "data" / "orders.json"
@@ -136,7 +138,9 @@ def build() -> str:
         elif kind in ("Policy question", "Warranty — what is covered", "Gift card return"):
             expect["tools_used"] = ["search_knowledge_base"]
             if kind == "Policy question":
-                expect["escalated"] = False
+                # The FAQ says asking for a human creates a ticket; any other
+                # policy question is answered without one.
+                expect["escalated"] = asks_for_human(message)
                 amounts = MONEY.findall(conv["example_answer"])
                 if 1 <= len(amounts) <= 2:
                     expect["reply_includes"] = amounts
