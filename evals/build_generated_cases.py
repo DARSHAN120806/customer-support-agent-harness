@@ -137,10 +137,14 @@ def build() -> str:
                 expect["reply_excludes"] = sorted(set(secrets))
         elif kind in ("Policy question", "Warranty — what is covered", "Gift card return"):
             expect["tools_used"] = ["search_knowledge_base"]
-            if kind == "Policy question":
-                # The FAQ says asking for a human creates a ticket; any other
-                # policy question is answered without one.
-                expect["escalated"] = asks_for_human(message)
+            if kind == "Policy question" and asks_for_human(message):
+                # The FAQ says asking for a human creates a ticket. The agent may
+                # hand over straight away, without searching first.
+                del expect["tools_used"]
+                expect["escalated"] = True
+                expect["reply_includes"] = ["TCK-"]
+            elif kind == "Policy question":
+                expect["escalated"] = False
                 amounts = MONEY.findall(conv["example_answer"])
                 if 1 <= len(amounts) <= 2:
                     expect["reply_includes"] = amounts

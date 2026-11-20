@@ -504,10 +504,10 @@
     "Can I speak to a human?"
    ],
    "expect": {
-    "tools_used": [
-     "search_knowledge_base"
-    ],
-    "escalated": true
+    "escalated": true,
+    "reply_includes": [
+     "TCK-"
+    ]
    }
   },
   {
