@@ -40,9 +40,10 @@ The tests replace the API with a fake, so they need no server and cost nothing.
 | `src/components/SignIn.tsx` | Demo sign-in: search for a customer and chat as them |
 | `src/components/Chat.tsx` | The chat: messages, typing indicator, ticket notes, message box |
 | `src/components/OrdersSidebar.tsx` | The signed-in customer's own orders |
+| `src/components/BehindTheScenes.tsx` | The panel showing what the harness did for a reply |
 | `src/components/FormattedText.tsx` | Safe formatting of replies (never runs HTML) |
 | `src/index.css` | All styling |
-| `src/App.test.tsx` | Tests |
+| `src/App.test.tsx`, `src/BehindTheScenes.test.tsx` | Tests (23) |
 
 The sign-in is a demo: anyone can choose any customer. Run it on your own
 computer only.

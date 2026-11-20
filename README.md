@@ -171,8 +171,13 @@ npm --prefix frontend run dev
 Open http://localhost:5173. The front end has its own tests
 (`npm --prefix frontend test`); see `frontend/README.md`.
 
-Still to come: a "behind the scenes" panel showing what the harness did for each
-reply, and a support dashboard with tickets, conversation replay, and
+A **Behind the scenes** button opens a panel that shows, for any reply, what the
+harness did to produce it: every model call and tool call with its timing,
+the exact search query or order lookup, any code check that caught a draft or
+withheld a reply, tickets created, retries, and the tokens, cost, and time. It
+makes the harness visible to anyone watching a demo.
+
+Still to come: a support dashboard with tickets, conversation replay, and
 evaluation charts.
 
 ## Event log

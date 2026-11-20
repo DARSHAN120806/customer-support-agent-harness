@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
-import { api, ApiError, MAX_MESSAGE_LENGTH, type Session, type TranscriptEntry } from '../api'
+import { api, ApiError, MAX_MESSAGE_LENGTH, type ReplyDetails, type Session, type TranscriptEntry } from '../api'
+import { BehindTheScenes } from './BehindTheScenes'
 import { FormattedText } from './FormattedText'
 import { OrdersSidebar } from './OrdersSidebar'
 
@@ -9,7 +10,12 @@ type Props = {
   onSessionExpired: () => void
 }
 
-type ChatEntry = TranscriptEntry & { isError?: boolean }
+// A message in the chat. Replies sent during this visit also keep the
+// "behind the scenes" details the API returned with them.
+type ChatEntry = TranscriptEntry & { isError?: boolean; details?: ReplyDetails | null; outcome?: string }
+
+// Whether the panel is open is remembered in this browser.
+const PANEL_KEY = 'juniper-lane-behind-the-scenes'
 
 const SUGGESTIONS = [
   'What is your return policy?',
@@ -24,6 +30,19 @@ export function Chat({ session, onSignOut, onSessionExpired }: Props) {
   const endRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const firstName = session.customer.name.split(' ')[0]
+  const [panelOpen, setPanelOpen] = useState(() => localStorage.getItem(PANEL_KEY) === 'open')
+  // Which reply the panel describes; null means "the latest one".
+  const [selected, setSelected] = useState<number | null>(null)
+
+  function setPanel(open: boolean) {
+    localStorage.setItem(PANEL_KEY, open ? 'open' : 'closed')
+    setPanelOpen(open)
+  }
+
+  const replyIndexes = entries.flatMap((entry, i) => (entry.role === 'assistant' && !entry.isError ? [i] : []))
+  const shownIndex = selected ?? replyIndexes.at(-1) ?? null
+  const shown = shownIndex === null ? undefined : entries[shownIndex]
+  const shownNumber = shownIndex === null ? null : replyIndexes.indexOf(shownIndex) + 1
 
   // Keep the newest message in view.
   useEffect(() => {
@@ -40,8 +59,15 @@ export function Chat({ session, onSignOut, onSessionExpired }: Props) {
       const reply = await api.sendMessage(session.session_id, message)
       setEntries((current) => [
         ...current,
-        { role: 'assistant', text: reply.reply, ticket_ids: reply.new_ticket_ids },
+        {
+          role: 'assistant',
+          text: reply.reply,
+          ticket_ids: reply.new_ticket_ids,
+          details: reply.details,
+          outcome: reply.outcome,
+        },
       ])
+      setSelected(null) // follow the newest reply
     } catch (e) {
       const error = e as ApiError
       if (error.status === 404) {
@@ -74,7 +100,7 @@ export function Chat({ session, onSignOut, onSessionExpired }: Props) {
   }
 
   return (
-    <div className="chat-layout">
+    <div className={`chat-layout${panelOpen ? ' with-insights' : ''}`}>
       <header className="topbar glass">
         <div className="brand">
           <span className="brand-mark" aria-hidden="true">JL</span>
@@ -87,6 +113,13 @@ export function Chat({ session, onSignOut, onSessionExpired }: Props) {
         </div>
         <div className="topbar-right">
           <span className="muted small">Signed in as {session.customer.name}</span>
+          <button
+            className={`secondary${panelOpen ? ' toggled' : ''}`}
+            aria-pressed={panelOpen}
+            onClick={() => setPanel(!panelOpen)}
+          >
+            Behind the scenes
+          </button>
           <button className="secondary" onClick={onSignOut}>Sign out</button>
         </div>
       </header>
@@ -119,6 +152,17 @@ export function Chat({ session, onSignOut, onSessionExpired }: Props) {
                     Ticket <strong>{id}</strong> created. Our team will reply by email.
                   </p>
                 ))}
+                {entry.role === 'assistant' && entry.details && (
+                  <button
+                    className={`link-button how-link${panelOpen && shownIndex === i ? ' current' : ''}`}
+                    onClick={() => {
+                      setSelected(i)
+                      setPanel(true)
+                    }}
+                  >
+                    How was this answered?
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -150,6 +194,16 @@ export function Chat({ session, onSignOut, onSessionExpired }: Props) {
           </button>
         </form>
       </section>
+
+      {panelOpen && (
+        <BehindTheScenes
+          details={shown?.details}
+          outcome={shown?.outcome}
+          conversationId={session.conversation_id}
+          replyNumber={shownNumber}
+          onClose={() => setPanel(false)}
+        />
+      )}
     </div>
   )
 }

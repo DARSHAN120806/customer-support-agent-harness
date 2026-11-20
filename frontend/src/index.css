@@ -227,3 +227,59 @@ input::placeholder, textarea::placeholder { color: #8a90a0; }
   .typing span { animation: none; opacity: 0.7; }
   button { transition: none; }
 }
+
+/* --- Behind-the-scenes panel ------------------------------------------- */
+.chat-layout.with-insights { grid-template-columns: 280px minmax(0, 1fr) 360px; }
+button.toggled { background: var(--lavender); border-color: var(--lavender-deep); color: var(--lavender-ink); }
+.small-button { padding: 0.3rem 0.7rem; font-size: 0.85rem; }
+
+.insights {
+  border-radius: var(--radius); padding: 1.1rem; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 0.8rem;
+}
+.insights-head { display: flex; justify-content: space-between; align-items: center; }
+.insights h2 { font-size: 1rem; }
+.insights h3 { font-size: 0.9rem; margin: 0.2rem 0 0; }
+.insights code { font-size: 0.8rem; background: var(--glass-strong); padding: 0 0.3rem; border-radius: 5px; word-break: break-all; }
+.insights-empty { background: var(--glass-strong); border: 1px dashed var(--lavender-deep); border-radius: 12px; padding: 0.9rem; color: var(--ink-soft); }
+
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin: 0; }
+.stats div { background: var(--glass-strong); border: 1px solid var(--glass-border); border-radius: 12px; padding: 0.5rem 0.7rem; }
+.stats dt { font-size: 0.75rem; color: var(--ink-soft); }
+.stats dd { margin: 0; font-weight: 600; font-size: 0.9rem; }
+
+.checks { border-radius: 12px; padding: 0.6rem 0.8rem; font-size: 0.9rem; }
+.checks-clear { background: var(--mint); color: var(--mint-ink); }
+.checks-fired { background: var(--butter); color: var(--amber-ink); }
+
+.timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.step {
+  background: var(--glass-strong); border: 1px solid var(--glass-border); border-left: 4px solid var(--sky);
+  border-radius: 10px; padding: 0.5rem 0.7rem; display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem;
+}
+.step-title { font-weight: 600; display: flex; justify-content: space-between; gap: 0.5rem; }
+.step-meta { font-weight: 400; color: var(--ink-soft); white-space: nowrap; }
+.step-body { color: var(--ink-soft); }
+.step-code { display: block; white-space: pre-wrap; }
+.step-model { border-left-color: var(--lavender-deep); }
+.step-tool { border-left-color: var(--mint-deep); }
+.step-check, .step-warn { border-left-color: #ffd98a; }
+.step-block { border-left-color: #ffb3c0; }
+.step-ticket { border-left-color: var(--peach); }
+.step details summary { cursor: pointer; color: var(--lavender-ink); }
+.step pre { white-space: pre-wrap; word-break: break-word; font-size: 0.75rem; max-height: 220px; overflow-y: auto; margin: 0.3rem 0 0; }
+
+.how-link { align-self: flex-start; font-size: 0.8rem; padding: 0; }
+.how-link.current { font-weight: 700; text-decoration: none; }
+
+/* Medium screens: the panel takes the order list's place. */
+@media (max-width: 1100px) and (min-width: 761px) {
+  .chat-layout.with-insights { grid-template-columns: minmax(0, 1fr) 340px; }
+  .chat-layout.with-insights .orders { display: none; }
+}
+/* Phones: the panel sits under the chat. */
+@media (max-width: 760px) {
+  .chat-layout.with-insights { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr) auto; overflow-y: auto; }
+  .chat-layout.with-insights .chat { min-height: 60vh; }
+  .insights { max-height: none; }
+}
