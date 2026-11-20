@@ -31,6 +31,29 @@ export type Session = {
   assistant_name: string
 }
 
+// A product from the shop's own document (company_overview.md).
+export type Product = {
+  slug: string
+  name: string
+  category: string
+  price: number | null // null for the gift card, which has amounts to pick from
+  price_options: number[]
+  warranty: string
+  stock_status: 'In stock' | 'Low stock' | 'Out of stock' | string
+  units_in_stock: number | null
+}
+
+// One of the signed-in customer's support tickets.
+export type CustomerTicket = {
+  ticket_id: string
+  created_at: string
+  status: string // "open" or "closed"
+  topic: string
+  summary: string
+  order_id: string | null
+  source: 'records' | 'chat'
+}
+
 // One step the harness took while answering, as written to the event log.
 export type HarnessEvent = {
   event: string
@@ -100,6 +123,9 @@ export const api = {
   signIn: (email: string, password: string) =>
     request<SignInResult>('/sessions', { method: 'POST', body: JSON.stringify({ email, password }) }),
   getSession: (sessionId: string) => request<Session>(`/sessions/${encodeURIComponent(sessionId)}`),
+  products: () => request<Product[]>('/products'),
+  myTickets: (sessionId: string) =>
+    request<CustomerTicket[]>(`/sessions/${encodeURIComponent(sessionId)}/tickets`),
   signOut: (sessionId: string) =>
     request<void>(`/sessions/${encodeURIComponent(sessionId)}`, { method: 'DELETE' }),
   sendMessage: (sessionId: string, text: string) =>

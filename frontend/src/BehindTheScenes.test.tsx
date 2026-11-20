@@ -59,6 +59,7 @@ function fakeApi(replies: Reply[]) {
     let body: unknown = SESSION
     let status = 200
     if (url === '/api/sessions' && method === 'POST') status = 201
+    else if (url === '/api/products' || url.endsWith('/tickets')) body = []
     else if (url.endsWith('/messages')) body = replies[Math.min(next++, replies.length - 1)]
     return new Response(JSON.stringify(body), { status })
   })
@@ -71,6 +72,7 @@ async function chatAndSend(messages: string[], replies: Reply[]) {
   await user.type(screen.getByLabelText('Email'), 'priya.nair@example.com')
   await user.type(screen.getByLabelText('Password'), 'test-pass')
   await user.click(screen.getByRole('button', { name: 'Sign in' }))
+  await user.click(await screen.findByRole('button', { name: 'Get help' }))
   for (const message of messages) {
     await user.type(await screen.findByLabelText('Your message'), `${message}{Enter}`)
     await screen.findAllByText(/Reply /)

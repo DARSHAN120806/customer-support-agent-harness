@@ -6,6 +6,7 @@ import '@fontsource/ibm-plex-mono/400.css'
 import './index.css'
 import './theme.css'
 import './signin.css'
+import './shop.css'
 import App from './App.tsx'
 
 createRoot(document.getElementById('root')!).render(

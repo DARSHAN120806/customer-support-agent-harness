@@ -8,6 +8,8 @@ type Props = {
   session: Session
   onSignOut: () => void
   onSessionExpired: () => void
+  // Back to the shop page (until Stage 3 turns the chat into a pop-up).
+  onBack?: () => void
 }
 
 // A message in the chat. Replies sent during this visit also keep the
@@ -23,7 +25,7 @@ const SUGGESTIONS = [
   'I want to talk to a human.',
 ]
 
-export function Chat({ session, onSignOut, onSessionExpired }: Props) {
+export function Chat({ session, onSignOut, onSessionExpired, onBack }: Props) {
   const [entries, setEntries] = useState<ChatEntry[]>(session.transcript)
   const [draft, setDraft] = useState('')
   const [waiting, setWaiting] = useState(false)
@@ -115,6 +117,11 @@ export function Chat({ session, onSignOut, onSessionExpired }: Props) {
           </div>
         </div>
         <div className="topbar-right">
+          {onBack && (
+            <button className="secondary" onClick={onBack}>
+              Back to shop
+            </button>
+          )}
           <span className="muted small">Signed in as {session.customer.name}</span>
           <button
             className={`secondary${panelOpen ? ' toggled' : ''}`}

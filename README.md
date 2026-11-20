@@ -16,6 +16,9 @@ customer's data.
   refunds, and warranties.
 - **Sign-in with passwords:** customers sign in with their email and password;
   the shop's admin signs in to a separate dashboard.
+- **Shop page:** after signing in, customers see the shop's products with
+  prices and stock, can fill a cart (checkout is switched off: nothing can be
+  bought), and see their own orders and support tickets.
 - **Order look-up:** customers can see their own orders only.
 - **Hand-over to a human:** the assistant creates a support ticket for refunds,
   returns, upset customers, questions it can't answer, and anyone who asks for
@@ -90,8 +93,9 @@ npm --prefix frontend run dev
 ```
 
 Then open http://localhost:5173 and sign in with an email and password from
-`private/test_passwords.csv`. Customers go to their chat, and the admin account
-(`admin@juniperlane.example`) goes to the support dashboard.
+`private/test_passwords.csv`. Customers go to the shop page, where **Get help**
+opens the chat. The admin account (`admin@juniperlane.example`) goes to the
+support dashboard.
 
 **Or chat in the terminal instead**
 

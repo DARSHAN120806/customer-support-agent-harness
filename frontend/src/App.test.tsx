@@ -47,6 +47,8 @@ function defaultApi(overrides: Partial<Record<string, () => { status?: number; b
       if (url.includes(key) && make) return make()
     }
     if (url === '/api/sessions' && method === 'POST') return { status: 201, body: SESSION }
+    if (url === '/api/products') return { body: [] }
+    if (url.endsWith('/tickets')) return { body: [] }
     if (url.endsWith('/messages')) return { body: reply('Your order was delivered on 2026-11-07.') }
     if (method === 'DELETE') return { status: 204 }
     if (url.startsWith('/api/sessions/')) return { body: SESSION }
@@ -64,6 +66,8 @@ async function signInAsPriya() {
   const user = userEvent.setup()
   render(<App />)
   await signInWithForm(user, PRIYA.email)
+  // Customers land on the shop; "Get help" opens the chat.
+  await user.click(await screen.findByRole('button', { name: 'Get help' }))
   await screen.findByRole('heading', { name: 'Juniper Lane Goods virtual assistant' })
   return user
 }
@@ -215,6 +219,7 @@ describe('chatting', () => {
 
   it('picks the chat up again after a page refresh', async () => {
     sessionStorage.setItem('juniper-lane-session', 'session-abc')
+    window.location.hash = '#/help'
     defaultApi({
       '/api/sessions/session-abc': () => ({
         body: { ...SESSION, transcript: [{ role: 'customer', text: 'Earlier question' }, { role: 'assistant', text: 'Earlier answer' }] },

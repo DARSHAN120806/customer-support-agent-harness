@@ -6,6 +6,7 @@ afterEach(() => {
   cleanup()
   vi.restoreAllMocks()
   sessionStorage.clear()
+  window.location.hash = ''
 })
 
 // The chart library measures its box with ResizeObserver, which the test

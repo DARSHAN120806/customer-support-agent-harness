@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { ADMIN_TOKEN_KEY, api, dashboardApi, type Session, type SignInResult } from './api'
 import { Chat } from './components/Chat'
 import { Dashboard } from './components/dashboard/Dashboard'
+import { Shop } from './components/shop/Shop'
 import { SignIn } from './components/SignIn'
 
 // The chat's ID is kept for this browser tab only, so a page refresh does not
@@ -21,12 +22,16 @@ function Backdrop() {
   )
 }
 
-type Page = 'chat' | 'dashboard'
+type Page = 'shop' | 'help' | 'dashboard'
+
+const ADDRESS: Record<Page, string> = { shop: '#/', help: '#/help', dashboard: '#/dashboard' }
 
 // The page shown depends on the address: "#/dashboard" is the admin's
-// dashboard, anything else is the customer side. Back and forward work.
+// dashboard, "#/help" the support chat, anything else the shop. Back and
+// forward work.
 function usePage(): [Page, (page: Page) => void] {
-  const read = (): Page => (window.location.hash === '#/dashboard' ? 'dashboard' : 'chat')
+  const read = (): Page =>
+    window.location.hash === '#/dashboard' ? 'dashboard' : window.location.hash === '#/help' ? 'help' : 'shop'
   const [page, setPage] = useState<Page>(read)
   useEffect(() => {
     const onChange = () => setPage(read())
@@ -34,7 +39,7 @@ function usePage(): [Page, (page: Page) => void] {
     return () => window.removeEventListener('hashchange', onChange)
   }, [])
   const go = (next: Page) => {
-    window.location.hash = next === 'dashboard' ? '#/dashboard' : '#/'
+    window.location.hash = ADDRESS[next]
     setPage(next)
   }
   return [page, go]
@@ -68,7 +73,7 @@ export default function App() {
     }
     sessionStorage.setItem(STORAGE_KEY, result.session_id)
     setSession(result)
-    go('chat')
+    go('shop')
   }
 
   function signOut() {
@@ -81,7 +86,7 @@ export default function App() {
     dashboardApi.signOut().catch(() => undefined)
     sessionStorage.removeItem(ADMIN_TOKEN_KEY)
     setIsAdmin(false)
-    go('chat')
+    go('shop')
   }
 
   function expired() {
@@ -100,13 +105,16 @@ export default function App() {
       </>
     )
   }
-  if (page === 'chat' && session) {
+  if (page === 'help' && session) {
     return (
       <>
         <Backdrop />
-        <Chat session={session} onSignOut={signOut} onSessionExpired={expired} />
+        <Chat session={session} onSignOut={signOut} onSessionExpired={expired} onBack={() => go('shop')} />
       </>
     )
+  }
+  if (page !== 'dashboard' && session) {
+    return <Shop session={session} onOpenHelp={() => go('help')} onSignOut={signOut} onSessionExpired={expired} />
   }
   return (
     <SignIn

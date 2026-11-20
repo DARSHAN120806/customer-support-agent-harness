@@ -12,7 +12,9 @@ Endpoints (all under /api):
     GET    /health                         is the server up
     POST   /sessions                       sign in with email and password; a
                                            customer gets a chat, the admin a token
+    GET    /products                       the shop's products, prices and stock
     GET    /sessions/{id}                  the chat so far and the customer's orders
+    GET    /sessions/{id}/tickets          the customer's own support tickets
     POST   /sessions/{id}/messages         send a message, get the reply and what
                                            the harness did ("behind the scenes")
     DELETE /sessions/{id}                  sign out
@@ -47,6 +49,7 @@ from pydantic import BaseModel, Field
 
 from .. import event_log
 from ..app import Resources, create_agent, load_resources
+from ..catalogue import load_catalogue
 from ..config import PROJECT_ROOT, ConfigError, Settings
 from ..prompts import SHOP_NAME, fallback_reply
 from .accounts import ADMIN, AccountStore, AdminSessions, SignInLimiter
@@ -69,6 +72,19 @@ PANEL_EVENTS = {
 
 
 WRONG_SIGN_IN = "Email or password is incorrect."
+# Ticket reasons in the words a customer would use.
+REASON_LABELS = {
+    "refund_request": "Refund request",
+    "return_request": "Return request",
+    "warranty_claim": "Warranty claim",
+    "order_problem": "Problem with an order",
+    "upset_customer": "Complaint",
+    "unsure_of_answer": "Question for the team",
+    "outside_shop_documents": "Question for the team",
+    "human_requested": "Asked for a person",
+    "other": "Other",
+}
+MAX_TICKETS_SHOWN = 20
 TOO_MANY_TRIES = "Too many wrong passwords. Please wait 15 minutes and try again."
 
 
@@ -101,6 +117,7 @@ def create_app(
         resources = load_resources(settings)
 
     customers = _load_customers(settings.orders_file)
+    products = [p.to_dict() for p in load_catalogue(settings.knowledge_base_dir)]
     if accounts is None:
         accounts = AccountStore.load(settings.accounts_file)
     limiter = limiter or SignInLimiter()
@@ -135,6 +152,10 @@ def create_app(
     @app.get("/api/health")
     def health() -> dict[str, Any]:
         return {"status": "ok", "shop": SHOP_NAME, "provider": settings.provider, "model": settings.model}
+
+    @app.get("/api/products")
+    def list_products() -> list[dict[str, Any]]:
+        return products
 
     @app.post("/api/sessions", status_code=201)
     def sign_in(body: SignIn) -> dict[str, Any]:
@@ -172,6 +193,25 @@ def create_app(
     @app.get("/api/sessions/{session_id}")
     def get_session(session_id: str) -> dict[str, Any]:
         return _session_view(session_or_404(session_id))
+
+    @app.get("/api/sessions/{session_id}/tickets")
+    def my_tickets(session_id: str) -> list[dict[str, Any]]:
+        """Only the signed-in customer's tickets: earlier ones attached to their
+        orders, and any the assistant created for them. Newest first."""
+        session = session_or_404(session_id)
+        email = session.customer["email"].lower()
+        found = [
+            _past_ticket(ticket, order["order_id"])
+            for order in session.customer["orders"]
+            for ticket in order.get("past_support_tickets", [])
+        ]
+        found += [
+            _chat_ticket(ticket)
+            for ticket in resources.tickets.all()
+            if str(ticket.get("customer_email", "")).lower() == email
+        ]
+        found.sort(key=lambda t: t["created_at"], reverse=True)
+        return found[:MAX_TICKETS_SHOWN]
 
     @app.delete("/api/sessions/{session_id}", status_code=204)
     def sign_out(session_id: str) -> None:
@@ -339,6 +379,32 @@ def _order_summary(order: dict[str, Any]) -> dict[str, Any]:
         "status": order["status"],
         "total": order["total"],
         "items": [item["name"] for item in order["items"]],
+    }
+
+
+def _past_ticket(ticket: dict[str, Any], order_id: str) -> dict[str, Any]:
+    """A ticket from the shop's records. Staff names stay internal."""
+    return {
+        "ticket_id": ticket["ticket_id"],
+        "created_at": str(ticket.get("created_at", "")).replace(" ", "T"),
+        "status": str(ticket.get("status", "")).lower(),
+        "topic": ticket.get("category") or "Support",
+        "summary": ticket.get("summary", ""),
+        "order_id": order_id,
+        "source": "records",
+    }
+
+
+def _chat_ticket(ticket: dict[str, Any]) -> dict[str, Any]:
+    """A ticket the assistant (or the harness) created in a chat."""
+    return {
+        "ticket_id": ticket["ticket_id"],
+        "created_at": ticket.get("created_at", ""),
+        "status": str(ticket.get("status", "open")).lower(),
+        "topic": REASON_LABELS.get(ticket.get("reason", ""), "Other"),
+        "summary": ticket.get("summary", ""),
+        "order_id": ticket.get("order_id"),
+        "source": "chat",
     }
 
 

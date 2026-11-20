@@ -26,6 +26,8 @@ EMAIL = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
 PASSWORD = "correct-horse-7"
 ADMIN_EMAIL = "admin@juniperlane.example"
 ADMIN_PASSWORD = "admin-pass-9"
+# A customer whose orders carry earlier support tickets in the shop's records.
+ISAAC = "isaac.garcia72@inbox.example"
 
 
 @pytest.fixture(scope="module")
@@ -34,6 +36,7 @@ def accounts() -> AccountStore:
         [
             Account(PRIYA, CUSTOMER, hash_password(PASSWORD, n=2**4)),
             Account(MARCUS, CUSTOMER, hash_password(PASSWORD, n=2**4)),
+            Account(ISAAC, CUSTOMER, hash_password(PASSWORD, n=2**4)),
             Account(ADMIN_EMAIL, ADMIN, hash_password(ADMIN_PASSWORD, n=2**4)),
         ]
     )
@@ -280,6 +283,54 @@ def test_signing_out_ends_the_chat(make_client):
 
     assert client.delete(f"/api/sessions/{session_id}").status_code == 204
     assert client.post(f"/api/sessions/{session_id}/messages", json={"text": "Hi"}).status_code == 404
+
+
+# --- Shop page: products and the customer's own tickets ------------------------------
+
+
+def test_products_come_from_the_shop_document(make_client):
+    client, _ = make_client([text_response("Hi")])
+
+    products = {p["name"]: p for p in client.get("/api/products").json()}
+    assert len(products) == 16
+    assert products["Cast Iron Skillet"]["price"] == 55.0
+    assert products["Wool Throw Blanket"]["stock_status"] == "Out of stock"
+    assert products["Juniper Lane Gift Card"]["price_options"] == [25.0, 50.0, 100.0]
+
+
+def test_earlier_tickets_from_the_shop_records_are_listed_without_staff_names(make_client):
+    client, _ = make_client([text_response("Hi")])
+    session = sign_in(client, ISAAC)
+
+    listed = client.get(f"/api/sessions/{session['session_id']}/tickets").json()
+    assert listed and all(t["source"] == "records" for t in listed)
+    first = listed[0]
+    assert set(first) == {"ticket_id", "created_at", "status", "topic", "summary", "order_id", "source"}
+    assert first["status"] in ("open", "closed")
+    assert first["order_id"] in {o["order_id"] for o in session["orders"]}
+    assert "assigned_to" not in json.dumps(listed)
+
+
+def test_a_customer_sees_only_their_own_chat_tickets_newest_first(make_client):
+    escalate = tool_response(
+        ToolCall("c1", "escalate_to_human", {"reason": "refund_request", "summary": "Wants a refund.", "order_id": "JL-10231"})
+    )
+    client, _ = make_client([escalate, text_response("Done."), escalate, text_response("Done.")])
+    priya = sign_in(client)
+    client.post(f"/api/sessions/{priya['session_id']}/messages", json={"text": "Refund please"})
+    marcus = sign_in(client, MARCUS)
+    client.post(f"/api/sessions/{marcus['session_id']}/messages", json={"text": "Refund please"})
+
+    (ticket,) = client.get(f"/api/sessions/{priya['session_id']}/tickets").json()
+    assert ticket["source"] == "chat" and ticket["topic"] == "Refund request"
+    assert ticket["order_id"] == "JL-10231" and ticket["status"] == "open"
+    assert ticket["ticket_id"] != client.get(f"/api/sessions/{marcus['session_id']}/tickets").json()[0]["ticket_id"]
+
+
+def test_tickets_need_a_live_chat_session(make_client):
+    client, _ = make_client([text_response("Hi")])
+
+    assert client.get("/api/sessions/not-a-session/tickets").status_code == 404
 
 
 # --- Dashboard ------------------------------------------------------------------------

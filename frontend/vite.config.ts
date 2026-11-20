@@ -19,6 +19,8 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     css: false,
+    // Typing into forms in a simulated browser is slow when test files run side by side.
+    testTimeout: 15000,
     coverage: {
       include: ['src/**'],
       exclude: ['src/**/*.test.tsx', 'src/test/**', 'src/main.tsx'],
