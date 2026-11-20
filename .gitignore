@@ -14,3 +14,8 @@ tickets/
 
 # Evaluation run outputs
 evals/results/
+
+# Test coverage output
+.coverage
+coverage/
+htmlcov/
