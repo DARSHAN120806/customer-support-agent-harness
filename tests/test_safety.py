@@ -282,7 +282,7 @@ def test_invented_figure_gets_one_rewrite_and_the_corrected_reply_is_shown(regis
     provider = FakeProvider(
         [
             SEARCH_RETURNS,
-            text_response("You have 90 days to return it."),
+            text_response("You have 45 days to return it."),
             text_response("You can return it within 30 days of delivery."),
         ]
     )
@@ -294,15 +294,15 @@ def test_invented_figure_gets_one_rewrite_and_the_corrected_reply_is_shown(regis
     assert result.reply == "You can return it within 30 days of delivery."
     assert recorder.calls == []
     # The model was told what was wrong through its instructions...
-    assert "90 day" in provider.requests[2]["system"]
-    assert "90 day" not in provider.requests[1]["system"]
+    assert "45 day" in provider.requests[2]["system"]
+    assert "45 day" not in provider.requests[1]["system"]
     # ...and the rejected draft was never added to the conversation.
-    assert "90 days" not in str(history)
+    assert "45 days" not in str(history)
 
 
 def test_invented_figure_twice_in_a_row_is_blocked_and_escalated(registry):
     provider = FakeProvider(
-        [SEARCH_RETURNS, text_response("You can return it within 90 days, and the fee is $2.50.")]
+        [SEARCH_RETURNS, text_response("You can return it within 45 days, and the fee is $2.50.")]
     )
     recorder = Recorder()
     result = make_agent(provider, registry, recorder).run("Can I return it?")

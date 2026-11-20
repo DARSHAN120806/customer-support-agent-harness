@@ -61,3 +61,25 @@ We do not offer wholesale pricing or bulk discounts. Orders of more than 10 unit
 ## Newsletter
 
 Newsletter subscribers occasionally receive discount codes. You can subscribe or unsubscribe at any time using the link at the bottom of any of our emails.
+
+## Stock levels
+
+Stock levels as of 20 November 2026, 9:00 am Eastern Time. Stock changes during the day, and the product page always shows the current level. Support cannot reserve stock.
+
+| Product | Status | Units in stock |
+|---|---|---|
+| Bluetooth Speaker Mini | In stock | 98 |
+| Wireless Earbuds Pro | In stock | 118 |
+| LED Desk Lamp | In stock | 201 |
+| Electric Kettle 1.7L | In stock | 165 |
+| Smart Plug (2-Pack) | In stock | 150 |
+| Oak Side Table | In stock | 60 |
+| Wool Throw Blanket | Out of stock | 0 |
+| Cast Iron Skillet | In stock | 140 |
+| Ceramic Pour-Over Coffee Set | In stock | 164 |
+| Ceramic Planter Set | Low stock | 9 |
+| Bamboo Cutting Board | In stock | 185 |
+| Linen Napkins (Set of 4) | In stock | 155 |
+| Adjustable Phone Stand | In stock | 196 |
+| Scented Soy Candle | In stock | 156 |
+| Personalised Leather Notebook | In stock | 41 |

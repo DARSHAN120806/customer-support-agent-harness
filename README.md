@@ -32,7 +32,10 @@ logging are all plain Python, so every step is visible and testable.
   an environment variable.
 - **Evaluation set** — 41 scripted customer conversations (routine, tricky,
   angry, refund requests, and attacks) scored by code, with saved baselines.
-- **358 automated tests** that run against a fake model, so they are fast, free,
+- **Realistic synthetic shop data** — 780 customers and 1,016 orders, each with
+  its refunds, returns, shipments, warranty claims, and past tickets, built by a
+  checked, repeatable import script.
+- **420 automated tests** that run against a fake model, so they are fast, free,
   and need no credentials.
 
 ## How it works
@@ -156,7 +159,9 @@ moment a line is written. The customer appears only as a keyed-hash code.
 ```
 data/
   knowledge_base/        shop documents: shipping, returns, refunds, warranty, FAQ, company overview
-  orders.json            synthetic customers and orders
+  orders.json            780 synthetic customers and 1,016 orders with their records
+  source/                the raw synthetic records the import script reads
+  internal/              shop-wide figures the assistant cannot search
 src/support_agent/
   agent.py               the agent loop, limits, automatic escalation
   app.py                 wires provider, data, tools, safety, and logging together
@@ -172,8 +177,9 @@ src/support_agent/
   cli.py                 terminal chat
   providers/             model provider interface, Bedrock and Anthropic clients
   tools/                 tool registry and the four tools
-evals/                   41 evaluation cases, the scoring script, and saved baselines
-tests/                   358 tests using a fake model and fake embeddings
+evals/                   41 hand-written and 230 generated evaluation cases, the scoring script, and saved baselines
+scripts/                 import_synthetic_data.py (builds orders.json)
+tests/                   420 tests using a fake model and fake embeddings
 ```
 
 ## Tech stack

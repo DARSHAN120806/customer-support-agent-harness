@@ -182,9 +182,15 @@ def make_order_tool(session: SessionContext, orders: OrderStore) -> Tool:
         name="lookup_order",
         description=(
             "Look up one order by its order ID. Returns the status, items, prices, "
-            "shipping and tracking details, and delivery dates. It only returns "
-            "orders that belong to the customer who is signed in to this chat; the "
-            "check is done automatically, so you do not pass an email address."
+            "shipping and tracking details, and delivery dates, plus every record "
+            "linked to that order: refunds and refund disputes, returns, warranty "
+            "claims, carrier investigations, damaged-package reports, address change "
+            "requests, and past support tickets. Use it whenever the customer asks "
+            "about the progress of any of these, such as 'where is my refund?' or "
+            "'what happened to my warranty claim?'; ask for the order ID if you don't "
+            "have it. It only returns orders that belong to the customer who is "
+            "signed in to this chat; the check is done automatically, so you do not "
+            "pass an email address."
         ),
         input_schema={
             "type": "object",

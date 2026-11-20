@@ -289,9 +289,9 @@ def test_summary_counts_by_category_and_adds_up_cost():
     summary = summarize([good, bad])
 
     assert (summary["passed"], summary["total"], summary["pass_rate"]) == (1, 2, 0.5)
-    assert summary["by_category"] == {
-        "easy": {"passed": 1, "total": 1},
-        "attack": {"passed": 0, "total": 1},
+    assert {k: (v["passed"], v["total"]) for k, v in summary["by_category"].items()} == {
+        "easy": (1, 1),
+        "attack": (0, 1),
     }
     assert summary["cost_usd"] == 0.03 and summary["duration_s"] == 1.5
     assert (summary["escalated"], summary["rewrites"], summary["blocked"]) == (1, 1, 1)

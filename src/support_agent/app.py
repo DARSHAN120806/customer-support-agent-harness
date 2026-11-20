@@ -84,8 +84,16 @@ def create_agent(
     customer_email: str,
     today: date | None = None,
     retry_policy: RetryPolicy | None = None,
+    harness: bool = True,
 ) -> tuple[Agent, SessionContext]:
-    """Create an agent for one conversation with one signed-in customer."""
+    """Create an agent for one conversation with one signed-in customer.
+
+    `harness=False` is for measuring only, never for real customers. It switches
+    off every check on the model's replies (no rewrites, no blocks, no forced
+    search) and every ticket the harness would create by itself. The prompt,
+    the tools (including the order ownership check), the step limit, and the
+    token and cost limits stay exactly the same.
+    """
     today = today or date.today()
     retry_policy = retry_policy or RetryPolicy(max_attempts=settings.max_attempts)
     session = SessionContext(customer_email=customer_email, retry_policy=retry_policy)
@@ -102,6 +110,7 @@ def create_agent(
         model=settings.model,
         max_steps=settings.max_steps,
         date_used=today.isoformat(),
+        harness=harness,
     )
     tools = build_tool_registry(
         session, resources.knowledge_base, resources.orders, resources.tickets, today
@@ -148,8 +157,8 @@ def create_agent(
             input_price_per_million_tokens=settings.input_price_per_million_tokens,
             output_price_per_million_tokens=settings.output_price_per_million_tokens,
         ),
-        reply_check=reply_check,
-        auto_escalate=auto_escalate,
+        reply_check=reply_check if harness else None,
+        auto_escalate=auto_escalate if harness else None,
         logger=session.logger,
         retry_policy=retry_policy,
     )

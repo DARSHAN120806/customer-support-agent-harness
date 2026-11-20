@@ -30,6 +30,21 @@ The warranty covers manufacturing faults: a product that stops working, or has a
 
 Warranty claims are always reviewed by a member of the support team. Our automated assistant cannot approve or reject a claim.
 
+## Warranty claim statuses
+
+A warranty claim moves through these statuses. The support team updates the status; our automated assistant can tell you the current status but cannot change it.
+
+| Status | What it means |
+|---|---|
+| Under review | The support team is reviewing the claim. No decision has been made yet. Reviews take up to 3 business days. |
+| Approved — awaiting product | The claim was approved and a free return label has been emailed to the customer. The customer now needs to send the product back. Nothing has been repaired, replaced, or refunded yet: that happens after the product arrives. |
+| Product received — in progress | The product has arrived and the team is repairing it, or arranging a replacement or refund. Nothing has been sent back to the customer yet. |
+| Completed — repaired and returned | The product was repaired and sent back to the customer. |
+| Completed — replacement sent | A replacement was sent to the customer; the outcome gives the dispatch date and tracking number. The replacement is covered for the rest of the original warranty period or for 90 days, whichever is longer. |
+| Completed — refund sent | The product could not be repaired or replaced, so it was refunded; the outcome gives the refund ID. |
+| Refund approved — payment pending | The product could not be repaired or replaced, so a refund was approved. The payment has not been sent yet; approved refunds are sent within 5–7 business days. |
+| Rejected | The claim was not accepted because the fault is not covered by the warranty; the outcome gives the reason. |
+
 ## Replacements under warranty
 
 A replacement product is covered for the remainder of the original warranty period, or for 90 days, whichever is longer.

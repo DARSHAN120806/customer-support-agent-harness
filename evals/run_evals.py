@@ -5,6 +5,9 @@
     python evals/run_evals.py --category attack
     python evals/run_evals.py --case refund-in-window --case easy-order-status
     python evals/run_evals.py --yes        skip the "are you sure" question
+    python evals/run_evals.py --harness off             code checks switched off
+    python evals/run_evals.py --save-baseline my_run    also save a read-only copy
+                                                        to evals/baselines/my_run.json
 
 Each run makes real, paid calls to the model. Results are saved in
 evals/results/<date-time>/ : results.json (scores), agent.jsonl (the event log),
@@ -16,6 +19,10 @@ from __future__ import annotations
 import argparse
 import dataclasses
 import json
+import os
+import shutil
+import stat
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -26,7 +33,9 @@ from support_agent.app import load_resources
 from support_agent.config import PROJECT_ROOT, ConfigError, Settings
 from support_agent.evaluation import (
     CaseFileError,
+    VIOLATION_TYPES,
     CaseResult,
+    count_violations,
     customer_emails,
     grade,
     load_cases,
@@ -37,6 +46,7 @@ from support_agent.evaluation import (
 from support_agent.retry import ServiceError
 
 EVALS_DIR = Path(__file__).resolve().parent
+BASELINE_NAME = re.compile(r"^[A-Za-z0-9_.-]+$")
 # A rough figure from earlier live runs, used only for the warning before a run.
 ROUGH_COST_PER_CASE_USD = 0.012
 
@@ -52,7 +62,31 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--case", action="append", help="Only run the case with this id.")
     parser.add_argument("--list", action="store_true", help="List the cases and stop.")
     parser.add_argument("--yes", action="store_true", help="Do not ask before running.")
+    parser.add_argument(
+        "--harness",
+        choices=["on", "off"],
+        default="on",
+        help="'off' switches off every code check, to measure what they prevent.",
+    )
+    parser.add_argument(
+        "--save-baseline",
+        metavar="NAME",
+        help="Also save the results, read-only, as evals/baselines/NAME.json.",
+    )
     args = parser.parse_args(argv)
+    harness = args.harness == "on"
+
+    baseline_path = None
+    if args.save_baseline:
+        if not BASELINE_NAME.match(args.save_baseline):
+            print("--save-baseline may only use letters, digits, '-', '_' and '.'.", file=sys.stderr)
+            return 2
+        baseline_path = EVALS_DIR / "baselines" / f"{args.save_baseline}.json"
+        # Checked before anything is spent: a saved baseline is never replaced.
+        if baseline_path.exists():
+            print(f"{baseline_path} already exists and is never overwritten. "
+                  "Choose another name.", file=sys.stderr)
+            return 2
 
     try:
         today, cases = load_cases(args.cases_file)
@@ -85,7 +119,11 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     rough = len(cases) * ROUGH_COST_PER_CASE_USD
-    print(f"{len(cases)} cases, model {settings.model}, date pinned to {today}.")
+    print(f"{len(cases)} cases, model {settings.model}, date pinned to {today}, "
+          f"harness {args.harness.upper()}.")
+    if not harness:
+        print("The code checks are OFF: replies reach the 'customer' unchecked. "
+              "This is for measurement only.")
     print(f"This makes real, paid model calls. Rough cost: ${rough:.2f}.")
     if not args.yes:
         try:
@@ -111,7 +149,8 @@ def main(argv: list[str] | None = None) -> int:
 
     results: list[CaseResult] = []
     for number, case in enumerate(cases, start=1):
-        run = run_case(settings, resources, case, today)
+        run = run_case(settings, resources, case, today, harness=harness)
+        run.violations = count_violations(case, run, all_emails)
         result = CaseResult(case, run, grade(case, run, all_emails))
         results.append(result)
         mark = "PASS" if result.passed else "FAIL"
@@ -127,6 +166,7 @@ def main(argv: list[str] | None = None) -> int:
                 "run_at": datetime.now().isoformat(timespec="seconds"),
                 "model": settings.model,
                 "provider": settings.provider,
+                "harness": args.harness,
                 "date_used": today.isoformat(),
                 "summary": summary,
                 "cases": [result_to_dict(result) for result in results],
@@ -137,6 +177,9 @@ def main(argv: list[str] | None = None) -> int:
         encoding="utf-8",
     )
     print_report(results, summary, run_dir)
+    if baseline_path:
+        save_baseline(run_dir / "results.json", baseline_path)
+        print(f"Baseline saved (read-only): {baseline_path}")
     return 0 if summary["passed"] == summary["total"] else 1
 
 
@@ -157,6 +200,10 @@ def print_report(results: list[CaseResult], summary: dict, run_dir: Path) -> Non
         f"Estimated cost ${summary['cost_usd']:.2f}. Model time {summary['duration_s']} s."
     )
 
+    found = {kind: n for kind, n in summary["violations"].items() if n}
+    print("  Rule violations the customer would have seen: "
+          + (", ".join(f"{kind} {n}" for kind, n in found.items()) if found else "none"))
+
     failed = [result for result in results if not result.passed]
     if failed:
         print("\nFAILED CASES")
@@ -168,6 +215,15 @@ def print_report(results: list[CaseResult], summary: dict, run_dir: Path) -> Non
             for failure in result.failures:
                 print(f"    Why:      {failure}")
     print(f"\nFull details: {run_dir / 'results.json'}")
+
+
+def save_baseline(source: Path, target: Path) -> None:
+    """Copy the results to the baselines folder and make the copy read-only."""
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if target.exists():
+        raise FileExistsError(f"{target} already exists and is never overwritten.")
+    shutil.copyfile(source, target)
+    os.chmod(target, stat.S_IREAD | stat.S_IRGRP | stat.S_IROTH)
 
 
 if __name__ == "__main__":

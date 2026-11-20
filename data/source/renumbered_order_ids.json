@@ -1,0 +1,21 @@
+{
+  "_note": "Order IDs in the uploaded records that were already used in base_orders.json were renumbered, everywhere in the records, to these new IDs.",
+  "renumbered": {
+    "JL-10160": "JL-11001",
+    "JL-10177": "JL-11002",
+    "JL-10189": "JL-11003",
+    "JL-10198": "JL-11004",
+    "JL-10201": "JL-11005",
+    "JL-10205": "JL-11006",
+    "JL-10212": "JL-11007",
+    "JL-10219": "JL-11008",
+    "JL-10228": "JL-11009",
+    "JL-10230": "JL-11010",
+    "JL-10231": "JL-11011",
+    "JL-10233": "JL-11012",
+    "JL-10238": "JL-11013",
+    "JL-10240": "JL-11014",
+    "JL-10242": "JL-11015",
+    "JL-10244": "JL-11016"
+  }
+}
