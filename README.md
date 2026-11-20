@@ -35,7 +35,7 @@ logging are all plain Python, so every step is visible and testable.
 - **Realistic synthetic shop data** — 780 customers and 1,016 orders, each with
   its refunds, returns, shipments, warranty claims, and past tickets, built by a
   checked, repeatable import script.
-- **420 automated tests** that run against a fake model, so they are fast, free,
+- **443 automated tests** that run against a fake model, so they are fast, free,
   and need no credentials.
 
 ## How it works
@@ -139,6 +139,21 @@ stored in code.
 The knowledge base search uses Amazon Titan embeddings, so AWS credentials are
 needed for the chat even when the Anthropic API is the model provider.
 
+## Web API
+
+A FastAPI app wraps the same agent for a browser front end (in progress). Every
+safety check, limit, and log entry works exactly as in the terminal chat.
+
+```bash
+.venv/Scripts/python -m pip install -e ".[web,dev]"
+.venv/Scripts/python -m uvicorn support_agent.web.api:create_app --factory --reload
+```
+
+Interactive documentation is then at http://localhost:8000/docs. Each chat reply
+also returns what the harness did: tools used, checks that fired, tokens, cost,
+and time. The sign-in is a demo (any customer can be chosen), so run it locally
+only.
+
 ## Event log
 
 `logs/agent.jsonl` holds one JSON object per line. Every line carries a
@@ -175,11 +190,12 @@ src/support_agent/
   config.py              settings from environment variables
   retry.py               retry policy and service error type
   cli.py                 terminal chat
+  web/                   FastAPI web API for the React front end
   providers/             model provider interface, Bedrock and Anthropic clients
   tools/                 tool registry and the four tools
 evals/                   41 hand-written and 230 generated evaluation cases, the scoring script, and saved baselines
 scripts/                 import_synthetic_data.py (builds orders.json)
-tests/                   420 tests using a fake model and fake embeddings
+tests/                   443 tests using a fake model and fake embeddings
 ```
 
 ## Tech stack
