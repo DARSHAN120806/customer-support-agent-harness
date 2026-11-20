@@ -3,12 +3,13 @@ import { api, ApiError, type Customer, type Session } from '../api'
 
 type Props = {
   onSignedIn: (session: Session) => void
+  onOpenDashboard: () => void
 }
 
 // Demo sign-in: pick any customer from the shop's data. In a real shop the
 // customer would log in with a password, and the login would decide who they
 // are. This is why the page must only ever run on your own computer.
-export function SignIn({ onSignedIn }: Props) {
+export function SignIn({ onSignedIn, onOpenDashboard }: Props) {
   const [query, setQuery] = useState('')
   const [customers, setCustomers] = useState<Customer[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -87,6 +88,10 @@ export function SignIn({ onSignedIn }: Props) {
           ))}
           {!error && customers.length === 0 && query && <li className="muted">No customers match.</li>}
         </ul>
+
+        <button className="link-button dash-link" onClick={onOpenDashboard}>
+          Open the support dashboard
+        </button>
       </div>
     </main>
   )

@@ -4,7 +4,11 @@ The customer chat page for the Juniper Lane Goods support agent, built with
 React, TypeScript, and Vite. It talks to the Python web API in
 `src/support_agent/web/`, which runs the same agent as the terminal chat.
 
-Style: soft pastel colours, no gradients, and frosted-glass panels.
+Style: soft pastel colours, no gradients, and frosted-glass panels. Charts use
+Recharts with flat pastel bars.
+
+Pages: the customer chat at http://localhost:5173 and the support dashboard at
+http://localhost:5173/#/dashboard.
 
 ## Run it
 
@@ -41,9 +45,11 @@ The tests replace the API with a fake, so they need no server and cost nothing.
 | `src/components/Chat.tsx` | The chat: messages, typing indicator, ticket notes, message box |
 | `src/components/OrdersSidebar.tsx` | The signed-in customer's own orders |
 | `src/components/BehindTheScenes.tsx` | The panel showing what the harness did for a reply |
+| `src/components/dashboard/` | Support dashboard: `Dashboard`, `Tickets`, `Conversations` (list and replay), `Evaluations` (charts) |
+| `src/format.ts`, `src/turns.ts` | Shared labels and formatting; grouping log lines into messages |
 | `src/components/FormattedText.tsx` | Safe formatting of replies (never runs HTML) |
 | `src/index.css` | All styling |
-| `src/App.test.tsx`, `src/BehindTheScenes.test.tsx` | Tests (23) |
+| `src/*.test.tsx` | Tests (33) |
 
 The sign-in is a demo: anyone can choose any customer. Run it on your own
 computer only.

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api, type Session } from './api'
 import { Chat } from './components/Chat'
+import { Dashboard } from './components/dashboard/Dashboard'
 import { SignIn } from './components/SignIn'
 
 // The chat's ID is kept for this browser tab only, so a page refresh does not
@@ -19,16 +20,38 @@ function Backdrop() {
   )
 }
 
+// The page shown depends on the address: "#/dashboard" is the support
+// dashboard, anything else is the customer chat. Back and forward work.
+function usePage(): ['chat' | 'dashboard', (page: 'chat' | 'dashboard') => void] {
+  const read = () => (window.location.hash === '#/dashboard' ? 'dashboard' : 'chat')
+  const [page, setPage] = useState<'chat' | 'dashboard'>(read)
+  useEffect(() => {
+    const onChange = () => setPage(read())
+    window.addEventListener('hashchange', onChange)
+    return () => window.removeEventListener('hashchange', onChange)
+  }, [])
+  const go = (next: 'chat' | 'dashboard') => {
+    window.location.hash = next === 'dashboard' ? '#/dashboard' : '#/'
+    setPage(next)
+  }
+  return [page, go]
+}
+
 export default function App() {
+  const [page, go] = usePage()
   return (
     <>
       <Backdrop />
-      <Screen />
+      {page === 'dashboard' ? (
+        <Dashboard onBackToChat={() => go('chat')} />
+      ) : (
+        <Screen onOpenDashboard={() => go('dashboard')} />
+      )}
     </>
   )
 }
 
-function Screen() {
+function Screen({ onOpenDashboard }: { onOpenDashboard: () => void }) {
   const [session, setSession] = useState<Session | null>(null)
   const [restoring, setRestoring] = useState(() => sessionStorage.getItem(STORAGE_KEY) !== null)
   const [notice, setNotice] = useState<string | null>(null)
@@ -67,9 +90,9 @@ function Screen() {
     return (
       <>
         {notice && <p className="notice" role="status">{notice}</p>}
-        <SignIn onSignedIn={signedIn} />
+        <SignIn onSignedIn={signedIn} onOpenDashboard={onOpenDashboard} />
       </>
     )
   }
-  return <Chat session={session} onSignOut={signOut} onSessionExpired={expired} />
+  return <Chat session={session} onSignOut={signOut} onSessionExpired={expired} onOpenDashboard={onOpenDashboard} />
 }

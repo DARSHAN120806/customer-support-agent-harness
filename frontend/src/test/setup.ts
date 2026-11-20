@@ -7,3 +7,12 @@ afterEach(() => {
   vi.restoreAllMocks()
   sessionStorage.clear()
 })
+
+// The chart library measures its box with ResizeObserver, which the test
+// browser does not have. A do-nothing stand-in is enough for the tests.
+class ResizeObserverStandIn {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+globalThis.ResizeObserver ??= ResizeObserverStandIn as unknown as typeof ResizeObserver

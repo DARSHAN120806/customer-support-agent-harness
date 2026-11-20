@@ -177,8 +177,17 @@ the exact search query or order lookup, any code check that caught a draft or
 withheld a reply, tickets created, retries, and the tokens, cost, and time. It
 makes the harness visible to anyone watching a demo.
 
-Still to come: a support dashboard with tickets, conversation replay, and
-evaluation charts.
+A **support dashboard** (the "Dashboard" button, or http://localhost:5173/#/dashboard)
+has three views:
+
+- **Tickets:** every hand-over, newest first, filterable by reason and
+  searchable, each linked to the conversation behind it.
+- **Conversations:** every logged chat, with a step-by-step replay showing each
+  model call, tool call, code check, and ticket, plus cost and time per message.
+- **Evaluations:** the saved evaluation runs side by side, with charts of cases
+  passed per group and rule violations, including the harness on/off comparison.
+
+The dashboard has no password and masks customer emails; it is for local use.
 
 ## Event log
 

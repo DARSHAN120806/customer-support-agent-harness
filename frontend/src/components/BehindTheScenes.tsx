@@ -1,4 +1,5 @@
 import type { HarnessEvent, ReplyDetails } from '../api'
+import { OUTCOME_LABEL, RULE_LABEL, money, ms } from '../format'
 
 // "Behind the scenes": what the harness did to produce one reply. Every value
 // comes from the agent's event log, which has personal data masked already.
@@ -10,45 +11,12 @@ const TOOL_LABEL: Record<string, string> = {
   escalate_to_human: 'Handed over to a person',
 }
 
-// The code checks, in plain words.
-export const RULE_LABEL: Record<string, string> = {
-  ungrounded_figure: 'Figure not found in any source',
-  unverified_policy: 'Policy stated without looking it up',
-  handover_missing: 'Unanswered question with no ticket',
-  upset_customer_not_escalated: 'Upset customer with no ticket',
-  identity_leak: 'Named the AI behind the assistant',
-  human_claim: 'Claimed to be a person',
-  personal_data: "Another person's email address",
-  refund_claim: 'Claimed to give a refund',
-}
-
-const OUTCOME_LABEL: Record<string, string> = {
-  completed: 'Answered',
-  reply_blocked: 'Reply replaced by a safe one',
-  step_limit: 'Stopped: step limit',
-  budget_limit: 'Stopped: token or cost limit',
-  model_stopped: 'Stopped: model gave no usable reply',
-  model_error: 'Stopped: model unreachable',
-  error: 'Stopped: unexpected error',
-}
-
-function money(value: number | null | undefined): string {
-  if (value == null) return '—'
-  return value < 0.01 ? `$${value.toFixed(4)}` : `$${value.toFixed(3)}`
-}
-
-function ms(value: unknown): string {
-  const n = Number(value)
-  if (!Number.isFinite(n)) return ''
-  return n >= 1000 ? `${(n / 1000).toFixed(1)} s` : `${n} ms`
-}
-
 function rules(value: unknown): string {
   return Array.isArray(value) ? value.map((r) => RULE_LABEL[String(r)] ?? String(r)).join(', ') : ''
 }
 
 // One line of the timeline, chosen by the kind of event.
-function Step({ event }: { event: HarnessEvent }) {
+export function Step({ event }: { event: HarnessEvent }) {
   const e = event
   switch (e.event) {
     case 'model_call': {

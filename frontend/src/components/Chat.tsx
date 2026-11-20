@@ -8,6 +8,7 @@ type Props = {
   session: Session
   onSignOut: () => void
   onSessionExpired: () => void
+  onOpenDashboard: () => void
 }
 
 // A message in the chat. Replies sent during this visit also keep the
@@ -23,7 +24,7 @@ const SUGGESTIONS = [
   'I want to talk to a human.',
 ]
 
-export function Chat({ session, onSignOut, onSessionExpired }: Props) {
+export function Chat({ session, onSignOut, onSessionExpired, onOpenDashboard }: Props) {
   const [entries, setEntries] = useState<ChatEntry[]>(session.transcript)
   const [draft, setDraft] = useState('')
   const [waiting, setWaiting] = useState(false)
@@ -120,6 +121,7 @@ export function Chat({ session, onSignOut, onSessionExpired }: Props) {
           >
             Behind the scenes
           </button>
+          <button className="secondary" onClick={onOpenDashboard}>Dashboard</button>
           <button className="secondary" onClick={onSignOut}>Sign out</button>
         </div>
       </header>

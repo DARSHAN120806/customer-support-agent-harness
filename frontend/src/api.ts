@@ -108,3 +108,58 @@ export const api = {
 
 // The longest message the API accepts.
 export const MAX_MESSAGE_LENGTH = 2000
+
+// --- Support dashboard ---------------------------------------------------------
+
+export type Ticket = {
+  ticket_id: string
+  created_at: string
+  status: string
+  conversation_id: string | null
+  customer_email: string // always masked by the API
+  reason: string
+  order_id: string | null
+  summary: string
+}
+
+export type ConversationSummary = {
+  conversation_id: string
+  started_at: string
+  last_at: string
+  customer_ref: string
+  model?: string
+  harness?: boolean
+  turns: number
+  cost_usd: number
+  escalated: boolean
+  blocked_or_rewritten: number
+  first_message?: string
+}
+
+export type CategoryResult = { passed: number; total: number; violations?: Record<string, number> }
+
+export type EvaluationSummary = {
+  passed: number
+  total: number
+  pass_rate?: number
+  by_category: Record<string, CategoryResult>
+  violations?: Record<string, number>
+  violation_total?: number
+  cost_usd?: number
+  duration_s?: number
+}
+
+export type EvaluationRun = {
+  name: string
+  run_at: string | null
+  model: string | null
+  harness: string
+  summary: EvaluationSummary
+}
+
+export const dashboardApi = {
+  tickets: () => request<Ticket[]>('/tickets'),
+  conversations: () => request<ConversationSummary[]>('/conversations?limit=200'),
+  conversation: (id: string) => request<HarnessEvent[]>(`/conversations/${encodeURIComponent(id)}`),
+  evaluations: () => request<EvaluationRun[]>('/evaluations'),
+}
