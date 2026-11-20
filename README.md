@@ -34,8 +34,8 @@ tokens, cost, and time.*
 - **Realistic data.** 780 synthetic customers and 1,016 orders, each with its
   refunds, returns, shipments, warranty claims, and past tickets, which only
   the order's owner can see.
-- **478 automated tests** (444 Python, 34 front end) that use a fake model, so
-  they are free and need no keys.
+- **494 automated tests** (460 Python with 98% line coverage, 34 front end)
+  that use a fake model, so they are free and need no keys.
 
 ## Screenshots
 
@@ -170,6 +170,13 @@ Run the tests (no keys needed):
 .venv/Scripts/python -m pytest -q
 npm --prefix frontend install
 npm --prefix frontend test
+```
+
+To see which lines the tests cover:
+
+```bash
+.venv/Scripts/python -m pytest -q --cov=support_agent --cov-report=term-missing
+npm --prefix frontend run test:coverage
 ```
 
 To use the real model, copy `.env.example` to `.env` and fill in your AWS
