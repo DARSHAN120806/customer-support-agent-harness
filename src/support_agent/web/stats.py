@@ -15,6 +15,8 @@ DAYS_SHOWN = 14
 
 
 def overview(events: Iterable[dict[str, Any]], tickets: list[dict[str, Any]], today: date) -> dict[str, Any]:
+    # Signing in starts a conversation in the log even if no message is sent.
+    # Only conversations with at least one message are counted.
     conversations: set[str] = set()
     with_ticket: set[str] = set()
     customers: set[str] = set()
@@ -32,11 +34,10 @@ def overview(events: Iterable[dict[str, Any]], tickets: list[dict[str, Any]], to
     for e in events:
         conversation = e.get("conversation_id", "")
         kind = e.get("event")
-        if kind == "conversation_start":
+        if kind == "turn_start":
             conversations.add(conversation)
             if e.get("customer_ref"):
                 customers.add(e["customer_ref"])
-        elif kind == "turn_start":
             messages += 1
             messages_by_day[str(e.get("ts", ""))[:10]] += 1
         elif kind == "turn_end":

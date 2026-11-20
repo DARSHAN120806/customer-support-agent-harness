@@ -245,7 +245,7 @@ describe('conversations', () => {
 
     const table = await screen.findByRole('table')
     expect(within(table).getByText('cust_123456789abc')).toBeInTheDocument()
-    expect(within(table).getByText('$0.012')).toBeInTheDocument()
+    expect(within(table).getByText('$0.0123')).toBeInTheDocument()
 
     await user.click(within(table).getByRole('button', { name: 'Replay' }))
     const replay = await screen.findByRole('region', { name: 'Conversation replay' })
@@ -276,6 +276,16 @@ describe('conversations', () => {
     expect(screen.getByRole('button', { name: 'Show how reply 1 was made' })).toHaveAttribute('aria-pressed', 'true')
   })
 
+  it('says so when a conversation has no messages', async () => {
+    fakeApi({ '/api/conversations/conv_aaaaaaaaaaaa': [EVENTS[0]] })
+    const user = await openDashboard()
+    await user.click(screen.getByRole('button', { name: 'Conversations' }))
+    await user.click(await screen.findByRole('button', { name: 'Replay' }))
+
+    expect(await screen.findByText('No messages in this conversation')).toBeInTheDocument()
+    expect(screen.queryByRole('complementary', { name: 'Behind the scenes' })).not.toBeInTheDocument()
+  })
+
   it('rebuilds the details of a reply from its log lines', () => {
     const { turns } = groupTurns(EVENTS)
     const details = detailsOf(turns[0])
@@ -302,7 +312,7 @@ describe('evaluations', () => {
     const user = await openDashboard()
     await user.click(screen.getByRole('button', { name: 'Evaluations' }))
 
-    const table = await screen.findByRole('table')
+    const table = await screen.findByRole('table', { name: 'Saved runs' })
     expect(within(table).getAllByRole('row')).toHaveLength(4)
     expect(within(table).getByText('not counted')).toBeInTheDocument()
     expect(screen.getByRole('checkbox', { name: 'Compare harness on' })).not.toBeChecked()
@@ -310,18 +320,24 @@ describe('evaluations', () => {
     expect(screen.getByRole('checkbox', { name: 'Compare harness off run1' })).toBeChecked()
     expect(screen.getByText('Cases passed per group (%)')).toBeInTheDocument()
     expect(screen.getByText('Rule violations the customer would have seen')).toBeInTheDocument()
+
+    // Violations are a short table, not a second chart.
+    const violations = screen.getByRole('table', { name: 'Violations per run' })
+    const missed = within(violations).getByText('Missed ticket').closest('tr')!
+    expect(missed).toHaveTextContent('Missed ticket12')
+    expect(within(violations).getByText('Total').closest('tr')).toHaveTextContent('Total13')
   })
 
   it('asks for a run to be ticked when none is chosen', async () => {
     fakeApi()
     const user = await openDashboard()
     await user.click(screen.getByRole('button', { name: 'Evaluations' }))
-    await screen.findByRole('table')
+    await screen.findByRole('table', { name: 'Saved runs' })
 
     await user.click(screen.getByRole('checkbox', { name: 'Compare harness on counted' }))
     await user.click(screen.getByRole('checkbox', { name: 'Compare harness off run1' }))
 
-    expect(screen.getByText('Tick at least one run to compare.')).toBeInTheDocument()
+    expect(screen.getByText('Tick at least one run to compare')).toBeInTheDocument()
   })
 
   it('explains when the chosen runs have no violation counts', async () => {

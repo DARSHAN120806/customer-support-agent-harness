@@ -380,6 +380,7 @@ def test_conversations_are_summarised_and_replayed_from_the_log(make_client):
     session = sign_in(client)
     client.post(f"/api/sessions/{session['session_id']}/messages", json={"text": f"Hi, I'm {PRIYA}"})
 
+    sign_in(client, MARCUS)  # signs in but sends nothing: not listed
     sign_in_as_admin(client)
     (summary,) = client.get("/api/conversations").json()
     assert summary["conversation_id"] == session["conversation_id"]

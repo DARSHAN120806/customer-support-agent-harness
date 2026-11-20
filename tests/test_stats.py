@@ -82,6 +82,15 @@ def test_a_rule_caught_then_blocked_in_one_message_counts_once():
     assert result["outcomes"] == {"reply_blocked": 1, "completed": 1}
 
 
+def test_a_sign_in_without_any_message_is_not_counted_as_a_conversation():
+    events = chat("conv_a", cost=0, ms=1) + [event("conversation_start", "conv_quiet")]
+
+    result = overview(events, [], TODAY)
+
+    assert result["conversations"] == 1
+    assert result["handover_rate"] == 0.0
+
+
 def test_messages_older_than_the_chart_are_still_counted_in_the_totals():
     events = chat("conv_old", cost=0.001, ms=1, ts="2026-10-01T10:00:00+00:00")
 

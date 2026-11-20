@@ -219,7 +219,7 @@
 .ad-legend {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   color: var(--jl-text-3);
   font-size: 12px;
   font-weight: 400;
@@ -338,7 +338,7 @@
 .ad-filters select,
 .ad-filters input {
   height: 36px;
-  padding: 0 10px;
+  padding: 0 12px;
   border: 1px solid var(--jl-field-line);
   border-radius: var(--jl-radius-control);
   background: var(--jl-card);
@@ -370,7 +370,7 @@
 }
 
 .ad-table th {
-  padding: 10px 16px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--jl-hairline);
   color: var(--jl-text-3);
   font-size: 12px;
@@ -442,6 +442,42 @@
   margin-top: 16px;
 }
 
+/* The evaluations: one main chart, then a compact table. */
+.ad-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.ad-compact {
+  margin-top: 12px;
+}
+
+.ad-compact th:first-child,
+.ad-compact td:first-child {
+  padding-left: 0;
+}
+
+.ad-compact th:last-child,
+.ad-compact td:last-child {
+  padding-right: 0;
+}
+
+.ad-compact td {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.ad-compact tfoot td {
+  border-top: 1px solid var(--jl-field-line);
+  font-weight: 500;
+}
+
+.ad-compact tbody tr:hover {
+  background: none;
+}
+
 .ad-note {
   margin-top: 16px;
   font-size: 13px;
@@ -481,7 +517,7 @@
 .ad-bubble.customer {
   align-self: flex-end;
   max-width: 80%;
-  padding: 10px 14px;
+  padding: 12px 16px;
   border-radius: 12px 12px 4px 12px;
   background: var(--jl-raised);
   font-size: 15px;

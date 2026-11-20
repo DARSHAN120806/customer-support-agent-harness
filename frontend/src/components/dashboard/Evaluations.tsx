@@ -10,7 +10,7 @@ import {
   YAxis,
 } from 'recharts'
 import { ApiError, dashboardApi, type EvaluationRun } from '../../api'
-import { RULE_LABEL, money } from '../../format'
+import { RULE_LABEL, dateTime, money } from '../../format'
 import { CHART, prefersReducedMotion } from './chart'
 
 const GROUPS = ['easy', 'tricky', 'angry', 'refund', 'attack']
@@ -83,11 +83,6 @@ export function Evaluations() {
     return row
   })
   const counted = compared.filter((r) => r.summary.violations)
-  const violationRows = VIOLATIONS.map((kind) => {
-    const row: Record<string, string | number> = { kind: VIOLATION_LABEL[kind] ?? RULE_LABEL[kind] ?? kind }
-    for (const run of counted) row[label(run)] = run.summary.violations?.[kind] ?? 0
-    return row
-  })
 
   function toggle(name: string) {
     setChosen((current) => (current.includes(name) ? current.filter((n) => n !== name) : [...current, name]))
@@ -107,7 +102,7 @@ export function Evaluations() {
     <section aria-label="Evaluations">
       {head}
       <div className="ad-table-wrap">
-        <table className="ad-table">
+        <table className="ad-table" aria-label="Saved runs">
           <thead>
             <tr>
               <th>Compare</th>
@@ -137,7 +132,7 @@ export function Evaluations() {
                 </td>
                 <td>{run.summary.violation_total ?? 'not counted'}</td>
                 <td className="nowrap ad-mono">{run.summary.cost_usd != null ? money(run.summary.cost_usd) : '—'}</td>
-                <td className="nowrap ad-muted">{(run.run_at ?? '').replace('T', ' ').slice(0, 16)}</td>
+                <td className="nowrap ad-muted">{run.run_at ? dateTime(run.run_at) : '—'}</td>
               </tr>
             ))}
           </tbody>
@@ -145,9 +140,9 @@ export function Evaluations() {
       </div>
 
       {compared.length === 0 ? (
-        <p className="ad-empty">Tick at least one run to compare.</p>
+        <p className="ad-empty">Tick at least one run to compare</p>
       ) : (
-        <div className="ad-two">
+        <div className="ad-stack">
           <figure className="ad-card">
             <figcaption>Cases passed per group (%)</figcaption>
             <div className="ad-chart-box">
@@ -167,31 +162,49 @@ export function Evaluations() {
             </div>
           </figure>
 
+          {/* A short table, not a second chart: one main chart per screen. */}
           <figure className="ad-card">
             <figcaption>Rule violations the customer would have seen</figcaption>
             {counted.length === 0 ? (
-              <p className="ad-empty">The chosen runs were saved before violations were counted.</p>
+              <p className="ad-empty">The chosen runs were saved before violations were counted</p>
             ) : (
-              <div className="ad-chart-box">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={violationRows} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
-                    <CartesianGrid vertical={false} stroke={CHART.grid} />
-                    <XAxis dataKey="kind" tick={CHART.tick} tickLine={false} axisLine={{ stroke: CHART.grid }} interval={0} angle={-20} textAnchor="end" height={64} />
-                    <YAxis allowDecimals={false} tick={CHART.tick} tickLine={false} axisLine={false} />
-                    <Tooltip cursor={{ fill: CHART.cursor }} contentStyle={CHART.tooltip} />
-                    <Legend formatter={legendText} />
+              <table className="ad-table ad-compact" aria-label="Violations per run">
+                <thead>
+                  <tr>
+                    <th>Kind</th>
                     {counted.map((run) => (
-                      <Bar
-                        key={run.name}
-                        dataKey={label(run)}
-                        fill={COLOURS[compared.indexOf(run) % COLOURS.length]}
-                        radius={[4, 4, 0, 0]}
-                        isAnimationActive={animate}
-                      />
+                      <th key={run.name} className="num">
+                        {label(run)}
+                      </th>
                     ))}
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+                  </tr>
+                </thead>
+                <tbody>
+                  {VIOLATIONS.map((kind) => (
+                    <tr key={kind}>
+                      <td>{VIOLATION_LABEL[kind] ?? RULE_LABEL[kind] ?? kind}</td>
+                      {counted.map((run) => {
+                        const n = run.summary.violations?.[kind] ?? 0
+                        return (
+                          <td key={run.name} className={n ? 'num ad-mono' : 'num ad-mono ad-muted'}>
+                            {n}
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td>Total</td>
+                    {counted.map((run) => (
+                      <td key={run.name} className="num ad-mono">
+                        {run.summary.violation_total ?? 0}
+                      </td>
+                    ))}
+                  </tr>
+                </tfoot>
+              </table>
             )}
           </figure>
         </div>

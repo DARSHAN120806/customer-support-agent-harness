@@ -34,7 +34,7 @@ export function Tickets({ onOpenConversation }: Props) {
     <section aria-labelledby="tickets-title">
       <header className="ad-page-head">
         <h2 id="tickets-title">Tickets</h2>
-        <p className="ad-muted">Chats the assistant handed to a person, newest first. Customer emails are masked</p>
+        <p className="ad-muted">Chats the assistant handed to a person, newest first. Customer emails are masked.</p>
       </header>
 
       {error ? (
@@ -42,7 +42,7 @@ export function Tickets({ onOpenConversation }: Props) {
       ) : !tickets ? (
         <p className="ad-muted">Loading tickets…</p>
       ) : tickets.length === 0 ? (
-        <p className="ad-empty">No tickets yet. They appear here when the assistant hands a chat to a person</p>
+        <p className="ad-empty">No tickets yet. They appear here when the assistant hands a chat to a person.</p>
       ) : (
         <>
           <div className="ad-filters">
@@ -89,7 +89,7 @@ export function Tickets({ onOpenConversation }: Props) {
                     </td>
                     <td className="nowrap ad-muted">{dateTime(t.created_at)}</td>
                     <td className="nowrap">{REASON_LABEL[t.reason] ?? t.reason}</td>
-                    <td className="nowrap ad-mono">{t.order_id ?? '—'}</td>
+                    <td className="nowrap">{t.order_id ? <Tag>{t.order_id}</Tag> : '—'}</td>
                     <td className="ad-summary">{t.summary}</td>
                     <td className={t.status === 'open' ? 'ad-status open' : 'ad-status'}>{t.status === 'open' ? 'Open' : 'Closed'}</td>
                     <td className="nowrap">

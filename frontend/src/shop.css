@@ -46,7 +46,7 @@
 }
 
 .shop-nav a {
-  padding: 6px 12px;
+  padding: 8px 12px;
   border-radius: var(--jl-radius-control);
   color: var(--jl-text-2);
   font-size: 14px;
@@ -256,7 +256,7 @@
 
 .shop .amount {
   height: 28px;
-  padding: 0 10px;
+  padding: 0 12px;
   border-color: var(--jl-hairline);
   background: transparent;
   font-family: var(--jl-mono);
@@ -290,7 +290,7 @@
 
 .shop .add-button {
   height: 36px;
-  padding: 0 14px;
+  padding: 0 16px;
   font-size: 14px;
 }
 

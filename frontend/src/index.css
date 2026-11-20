@@ -25,6 +25,12 @@ p {
   margin: 0;
 }
 
+/* Bold text (for example in a reply) uses the real 600 weight of the font,
+   never a faked 700. */
+strong {
+  font-weight: 600;
+}
+
 /* Read by screen readers, but not shown on screen. */
 .visually-hidden {
   position: absolute;

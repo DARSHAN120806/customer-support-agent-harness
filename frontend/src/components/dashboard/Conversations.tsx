@@ -24,7 +24,7 @@ export function ConversationList({ onOpen }: ListProps) {
       <header className="ad-page-head">
         <h2>Conversations</h2>
         <p className="ad-muted">
-          Newest first. Customers appear as codes, and emails, phone numbers and addresses are masked
+          Newest first. Customers appear as codes, and emails, phone numbers and addresses are masked.
         </p>
       </header>
 
@@ -117,6 +117,7 @@ export function ConversationReplay({ conversationId, onBack }: ReplayProps) {
       </header>
       {error && <p className="ad-error" role="alert">{error}</p>}
       {!events && !error && <p className="ad-muted">Loading…</p>}
+      {events && turns.length === 0 && <p className="ad-empty">No messages in this conversation</p>}
 
       {turns.length > 0 && (
         <div className="ad-replay">

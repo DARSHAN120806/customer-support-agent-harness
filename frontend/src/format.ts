@@ -24,9 +24,11 @@ export const OUTCOME_LABEL: Record<string, string> = {
   error: 'Stopped: unexpected error',
 }
 
+// Model costs are fractions of a cent to a few dollars, so every cost on the
+// admin screens uses the same format: four decimals ("$0.0073", "$0.3310").
 export function money(value: number | null | undefined): string {
   if (value == null) return '—'
-  return value < 0.01 ? `$${value.toFixed(4)}` : `$${value.toFixed(3)}`
+  return `$${value.toFixed(4)}`
 }
 
 // Ticket reasons in plain words.

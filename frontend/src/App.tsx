@@ -76,7 +76,7 @@ export default function App() {
   function expired() {
     sessionStorage.removeItem(STORAGE_KEY)
     setSession(null)
-    setNotice('Your chat ended because it was idle for a while. Please sign in again')
+    setNotice('Your chat ended because it was idle for a while. Please sign in again.')
   }
 
   if (restoring) return <p className="loading">Loading…</p>

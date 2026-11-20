@@ -275,7 +275,9 @@ def create_app(
                 s["escalated"] = s["escalated"] or bool(e.get("escalated"))
             elif e["event"] in (event_log.REPLY_REWRITE, event_log.REPLY_BLOCKED):
                 s["blocked_or_rewritten"] += 1
-        newest = sorted(summaries.values(), key=lambda s: s["last_at"], reverse=True)
+        # A sign-in with no message sent is not a conversation worth listing.
+        talked = [s for s in summaries.values() if s["turns"] > 0]
+        newest = sorted(talked, key=lambda s: s["last_at"], reverse=True)
         return newest[:limit]
 
     @app.get("/api/conversations/{conversation_id}", dependencies=admin_only)
