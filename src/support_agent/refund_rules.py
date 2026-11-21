@@ -23,6 +23,8 @@ from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 
+from .currency import format_inr
+
 # --- The reasons a customer can give ------------------------------------------------
 # The AI must pick one of these. Anything else is refused before any rule runs.
 CHANGED_MIND = "changed_mind"  # no longer wanted, bought by mistake, wrong colour...
@@ -41,7 +43,7 @@ ITEM_REASONS = (CHANGED_MIND, FAULTY, DAMAGED, WRONG_ITEM)
 RETURN_WINDOW_DAYS = 30  # Returns Policy: "within 30 days of the delivery date"
 WRONG_ITEM_DAYS = 14  # Returns Policy: wrong item, "within 14 days of delivery"
 DAMAGE_REPORT_DAYS = 7  # Shipping Policy: damaged parcel, "within 7 days of delivery"
-RETURN_FEE = Decimal("6.99")  # Refund Policy: deducted for a change of mind
+RETURN_FEE = Decimal("699.00")  # Refund Policy: ₹699, deducted for a change of mind
 MAX_RESTOCKING_PERCENT = 20  # Refund Policy: "up to 20%" if used or unpackaged
 
 # --- Item types that cannot be returned for a change of mind -------------------------
@@ -56,8 +58,9 @@ NEEDS_STAFF = "needs_staff"  # allowed by the rules, but a person must decide
 NOT_ALLOWED = "not_allowed"  # the policy does not allow it
 NEED_INFO = "need_info"  # the customer must answer a question first
 
-# The default for `decide`: small, simple cases only (the owner's choice, 21 Nov 2026).
-AUTO_APPROVE_LIMIT = Decimal("50.00")
+# The default for `decide`: small, simple cases only (the owner's choice, 21 Nov 2026;
+# $50 became ₹5,000 when the shop moved to rupees).
+AUTO_APPROVE_LIMIT = Decimal("5000.00")  # ₹5,000
 AUTO_APPROVE_REASONS = (CHANGED_MIND, WRONG_ITEM)
 
 # Past returns with these words in their status did not take the items back, so
@@ -372,7 +375,7 @@ def decide(
     if reason not in auto_reasons:
         why.append("This kind of request is always checked by the support team.")
     if check.money.net_refund > limit:
-        why.append(f"Refunds over ${limit} are checked by the support team.")
+        why.append(f"Refunds over {format_inr(limit)} are checked by the support team.")
     if why:
         return Decision(NEEDS_STAFF, check, tuple(why))
     return Decision(APPROVE, check, ())

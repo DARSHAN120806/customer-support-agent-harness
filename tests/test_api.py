@@ -300,9 +300,9 @@ def test_products_come_from_the_shop_document(make_client):
 
     products = {p["name"]: p for p in client.get("/api/products").json()}
     assert len(products) == 16
-    assert products["Cast Iron Skillet"]["price"] == 55.0
+    assert products["Cast Iron Skillet"]["price"] == 5500.0
     assert products["Wool Throw Blanket"]["stock_status"] == "Out of stock"
-    assert products["Juniper Lane Gift Card"]["price_options"] == [25.0, 50.0, 100.0]
+    assert products["Juniper Lane Gift Card"]["price_options"] == [2500.0, 5000.0, 10000.0]
 
 
 def test_earlier_tickets_from_the_shop_records_are_listed_without_staff_names(make_client):

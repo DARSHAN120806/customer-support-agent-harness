@@ -25,26 +25,26 @@ Every order has an ID in the form JL- followed by five digits, for example JL-10
 
 ## Product catalogue and prices
 
-Prices are in US dollars and include sales tax. Prices can change; the price you paid is the one shown on your order.
+Prices are in Indian rupees (₹) and include GST. Prices can change; the price you paid is the one shown on your order.
 
 | Product | Category | Price | Warranty |
 |---|---|---|---|
-| Bluetooth Speaker Mini | Electronics | $39.99 | 1 year |
-| Wireless Earbuds Pro | Electronics | $79.00 | 1 year |
-| LED Desk Lamp | Electronics | $34.50 | 1 year |
-| Electric Kettle 1.7L | Electronics | $45.00 | 1 year |
-| Smart Plug (2-Pack) | Electronics | $25.00 | 1 year |
-| Oak Side Table | Furniture | $129.00 | 2 years |
-| Wool Throw Blanket | Homeware | $68.00 | None |
-| Cast Iron Skillet | Homeware | $55.00 | None |
-| Ceramic Pour-Over Coffee Set | Homeware | $42.00 | None |
-| Ceramic Planter Set | Homeware | $32.00 | None |
-| Bamboo Cutting Board | Homeware | $24.00 | None |
-| Linen Napkins (Set of 4) | Homeware | $18.50 | None |
-| Adjustable Phone Stand | Homeware | $15.00 | None |
-| Scented Soy Candle | Homeware | $12.00 | None |
-| Personalised Leather Notebook | Personalised | $29.00 | None |
-| Juniper Lane Gift Card | Gift card | $25, $50, or $100 | Not applicable |
+| Bluetooth Speaker Mini | Electronics | ₹3,999 | 1 year |
+| Wireless Earbuds Pro | Electronics | ₹7,900 | 1 year |
+| LED Desk Lamp | Electronics | ₹3,450 | 1 year |
+| Electric Kettle 1.7L | Electronics | ₹4,500 | 1 year |
+| Smart Plug (2-Pack) | Electronics | ₹2,500 | 1 year |
+| Oak Side Table | Furniture | ₹12,900 | 2 years |
+| Wool Throw Blanket | Homeware | ₹6,800 | None |
+| Cast Iron Skillet | Homeware | ₹5,500 | None |
+| Ceramic Pour-Over Coffee Set | Homeware | ₹4,200 | None |
+| Ceramic Planter Set | Homeware | ₹3,200 | None |
+| Bamboo Cutting Board | Homeware | ₹2,400 | None |
+| Linen Napkins (Set of 4) | Homeware | ₹1,850 | None |
+| Adjustable Phone Stand | Homeware | ₹1,500 | None |
+| Scented Soy Candle | Homeware | ₹1,200 | None |
+| Personalised Leather Notebook | Personalised | ₹2,900 | None |
+| Juniper Lane Gift Card | Gift card | ₹2,500 ₹5,000 or ₹10,000 | Not applicable |
 
 ## Stock and availability
 

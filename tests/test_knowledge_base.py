@@ -31,13 +31,13 @@ def test_search_finds_the_right_section(knowledge_base):
     hits = knowledge_base.search("How much does express shipping cost?")
 
     assert hits[0].chunk.section == "Shipping options and prices"
-    assert "$12.99" in hits[0].chunk.text
+    assert "₹1,299" in hits[0].chunk.text
 
 
 def test_search_finds_a_product_in_the_price_table(knowledge_base):
     hits = knowledge_base.search("price of the Oak Side Table")
 
-    assert any("$129.00" in hit.chunk.text for hit in hits)
+    assert any("₹12,900" in hit.chunk.text for hit in hits)
 
 
 def test_search_returns_best_match_first_and_at_most_top_k(knowledge_base):

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { Product } from '../../api'
-import { dollars, lineFor, type CartLine } from './cart'
+import { rupees, lineFor, type CartLine } from './cart'
 import { ProductArt } from './ProductArt'
 
 type Props = {
@@ -45,12 +45,12 @@ export function ProductCard({ product, quantityOf, onAdd }: Props) {
                   aria-pressed={option === amount}
                   onClick={() => setAmount(option)}
                 >
-                  {dollars(option).replace('.00', '')}
+                  {rupees(option)}
                 </button>
               ))}
             </div>
           ) : (
-            <span className="price">{dollars(product.price ?? 0)}</span>
+            <span className="price">{rupees(product.price ?? 0)}</span>
           )}
           <button
             type="button"

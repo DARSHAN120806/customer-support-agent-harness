@@ -3,7 +3,7 @@
 Imported from the extended knowledge base uploaded on 20 November 2026.
 These records are NOT searchable by the assistant. scripts/import_synthetic_data.py turns them into data/orders.json and data/internal/.
 
-> Everything below this line is generated test data. It is not real. All files in this pack share the same order IDs, dates and amounts. Data snapshot: **2026-11-20 09:00 ET**. Times are Eastern Time. Amounts are USD.
+> Everything below this line is generated test data. It is not real. All files in this pack share the same order IDs, dates and amounts. Data snapshot: **2026-11-20 09:00 ET**. Times are Eastern Time. Amounts are INR (Indian rupees).
 
 ## Support ticket log
 
@@ -175,7 +175,7 @@ The automated assistant creates a ticket whenever it cannot resolve something; t
 | TK-60162 | 2026-08-16 00:17 | Assistant chat | Cancellation request | JL-10431 | abigail.ellis51@webmail.example | Closed | Sofia L. | Cancelled while processing; refund approved by support |
 | TK-60163 | 2026-08-16 09:39 | Email | Return request | JL-10372 | noah.turner45@webmail.example | Closed | Dan K. | Scented Soy Candle — Changed my mind |
 | TK-60164 | 2026-08-16 10:06 | Assistant chat | Return request | JL-10346 | scarlett.garcia45@webmail.example | Closed | Elena R. | Wool Throw Blanket — No longer needed |
-| TK-60165 | 2026-08-16 14:53 | Assistant chat | Refund dispute | JL-11016 | sophia.larson@webmail.example | Closed | Priya N. | RF-30056: Disagrees with $6.99 return shipping fee |
+| TK-60165 | 2026-08-16 14:53 | Assistant chat | Refund dispute | JL-11016 | sophia.larson@webmail.example | Closed | Priya N. | RF-30056: Disagrees with ₹699 return shipping fee |
 | TK-60166 | 2026-08-16 15:03 | Assistant chat | Customer asked for a human | JL-10698 | levi.singh4@inbox.example | Closed | Priya N. | Handled by support team by email |
 | TK-60167 | 2026-08-16 15:07 | Assistant chat | Missing / late package | JL-10392 | ella.thompson@mailbox.example | Closed | Elena R. | Marked delivered — not received |
 | TK-60168 | 2026-08-16 17:20 | Assistant chat | Return request | JL-10262 | soren.owens@inbox.example | Closed | Elena R. | Cast Iron Skillet — Bought by mistake |
@@ -253,7 +253,7 @@ The automated assistant creates a ticket whenever it cannot resolve something; t
 | TK-60240 | 2026-09-11 08:25 | Email | Warranty claim | JL-10123 | gabriel.foster60@inbox.example | Closed | Dan K. | Oak Side Table — Leg joint cracked at the join |
 | TK-60241 | 2026-09-12 10:38 | Assistant chat | Return request | JL-10433 | jamal.lopez@mailbox.example | Closed | Marcus T. | Cast Iron Skillet — No longer needed |
 | TK-60242 | 2026-09-12 20:50 | Assistant chat | Warranty claim | JL-10034 | priya.flores98@mailbox.example | Closed | Priya N. | Cast Iron Skillet — Cracked |
-| TK-60243 | 2026-09-13 08:51 | Assistant chat | Refund dispute | JL-10417 | arjun.rossi@inbox.example | Closed | Elena R. | RF-30097: Disagrees with $6.99 return shipping fee |
+| TK-60243 | 2026-09-13 08:51 | Assistant chat | Refund dispute | JL-10417 | arjun.rossi@inbox.example | Closed | Elena R. | RF-30097: Disagrees with ₹699 return shipping fee |
 | TK-60244 | 2026-09-13 10:58 | Email | Refund dispute | JL-10331 | priya.owens@mailbox.example | Closed | Marcus T. | RF-30089: Item was returned in good condition |
 | TK-60245 | 2026-09-13 11:50 | Assistant chat | Warranty claim | JL-10120 | aria.kim21@mailbox.example | Closed | Priya N. | Cast Iron Skillet — Stopped working as expected |
 | TK-60246 | 2026-09-13 16:38 | Email | Order status question | JL-10082 | keisha.martinez@webmail.example | Closed | Dan K. | Handled by support team by email |
@@ -419,7 +419,7 @@ The automated assistant creates a ticket whenever it cannot resolve something; t
 | TK-60406 | 2026-10-24 20:29 | Assistant chat | Refund dispute | JL-10648 | logan.sanders@webmail.example | Closed | Priya N. | RF-30149: Item was returned in good condition |
 | TK-60407 | 2026-10-25 13:38 | Assistant chat | Return request | JL-10595 | lucia.mitchell6@webmail.example | Closed | Marcus T. | Electric Kettle 1.7L — Bought by mistake |
 | TK-60408 | 2026-10-25 14:39 | Assistant chat | Warranty claim | JL-10089 | nora.perry47@mailbox.example | Closed | Elena R. | Wireless Earbuds Pro — Right earbud keeps disconnecting |
-| TK-60409 | 2026-10-25 15:03 | Assistant chat | Refund dispute | JL-10569 | nathan.perry@inbox.example | Closed | Priya N. | RF-30145: Disagrees with $6.99 return shipping fee |
+| TK-60409 | 2026-10-25 15:03 | Assistant chat | Refund dispute | JL-10569 | nathan.perry@inbox.example | Closed | Priya N. | RF-30145: Disagrees with ₹699 return shipping fee |
 | TK-60410 | 2026-10-25 16:10 | Assistant chat | Return request | JL-10766 | harper.underwood@mailbox.example | Closed | Elena R. | Bamboo Cutting Board — Changed my mind |
 | TK-60411 | 2026-10-26 04:27 | Email | Cancellation request | JL-10874 | soren.perry93@webmail.example | Closed | Dan K. | Cancelled while processing; refund approved by support |
 | TK-60412 | 2026-10-26 10:25 | Email | Return request | JL-10728 | mei.daniels@inbox.example | Closed | Sofia L. | Electric Kettle 1.7L — Bought by mistake |
@@ -551,7 +551,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** I'd like to return the Bamboo Cutting Board from JL-10868. My email is diego.sanders64@mailbox.example.
 
-**Assistant:** JL-10868 was delivered on 2026-11-02, so you're on day 18 of the 30-day return window (it closes on 2026-12-02). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a $6.99 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
+**Assistant:** JL-10868 was delivered on 2026-11-02, so you're on day 18 of the 30-day return window (it closes on 2026-12-02). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a ₹699 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
 
 **Outcome:** ticket_created: return_request
 
@@ -559,7 +559,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** Where's my refund for JL-10401? Email lily.underwood@inbox.example.
 
-**Assistant:** Refund RF-30079 for JL-10401 was approved on 2026-08-25 and sent on 2026-09-02. The net amount is $233.97 (package confirmed lost / not received), refunded to: Original payment (Visa). Your bank or card provider may take a few extra days to show it on your statement.
+**Assistant:** Refund RF-30079 for JL-10401 was approved on 2026-08-25 and sent on 2026-09-02. The net amount is ₹23,397 (package confirmed lost / not received), refunded to: Original payment (Visa). Your bank or card provider may take a few extra days to show it on your statement.
 
 **Outcome:** answered_from_refund_data
 
@@ -599,7 +599,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** I'd like to return the Ceramic Pour-Over Coffee Set from JL-10938. My email is caleb.iyer69@mailbox.example.
 
-**Assistant:** JL-10938 was delivered on 2026-11-12, so you're on day 8 of the 30-day return window (it closes on 2026-12-12). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a $6.99 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
+**Assistant:** JL-10938 was delivered on 2026-11-12, so you're on day 8 of the 30-day return window (it closes on 2026-12-12). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a ₹699 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
 
 **Outcome:** ticket_created: return_request
 
@@ -615,7 +615,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** I need to cancel JL-11011 (ethan.brooks@webmail.example).
 
-**Assistant:** I'm sorry — JL-11011 was dispatched on 2026-07-10, and once an order has been dispatched it can't be cancelled. When it arrives you can return it within 30 days of the delivery date if it's eligible. Unless the item is faulty, damaged or wrong, a $6.99 return shipping fee is deducted from the refund. Would you like me to pass a return request to the support team once it's delivered?
+**Assistant:** I'm sorry — JL-11011 was dispatched on 2026-07-10, and once an order has been dispatched it can't be cancelled. When it arrives you can return it within 30 days of the delivery date if it's eligible. Unless the item is faulty, damaged or wrong, a ₹699 return shipping fee is deducted from the refund. Would you like me to pass a return request to the support team once it's delivered?
 
 **Outcome:** answered
 
@@ -663,7 +663,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** Is Express shipping free on big orders?
 
-**Assistant:** No. Express is never free; it's $12.99 on every order. Only Standard shipping is free over $50.00.
+**Assistant:** No. Express is never free; it's ₹1,299 on every order. Only Standard shipping is free over ₹5,000.
 
 **Outcome:** answered
 
@@ -695,7 +695,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** I'd like to return the Cast Iron Skillet from JL-10856. My email is liam.brooks94@mailbox.example.
 
-**Assistant:** JL-10856 was delivered on 2026-10-27, so you're on day 24 of the 30-day return window (it closes on 2026-11-26). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a $6.99 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
+**Assistant:** JL-10856 was delivered on 2026-10-27, so you're on day 24 of the 30-day return window (it closes on 2026-11-26). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a ₹699 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
 
 **Outcome:** ticket_created: return_request
 
@@ -719,7 +719,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** How much is shipping?
 
-**Assistant:** Standard (3–5 business days after dispatch) is $4.99, or free on orders with an item subtotal of $50.00 or more. Express (1–2 business days after dispatch) is $12.99 on every order.
+**Assistant:** Standard (3–5 business days after dispatch) is ₹499, or free on orders with an item subtotal of ₹5,000 or more. Express (1–2 business days after dispatch) is ₹1,299 on every order.
 
 **Outcome:** answered
 
@@ -727,7 +727,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** Please cancel JL-10996. I used caleb.patel@inbox.example.
 
-**Assistant:** JL-10996 is still 'processing', so it can be cancelled. I can't cancel it myself, so I'm passing your request to the support team as a ticket. If it's cancelled before dispatch, the refund of $105.49 goes back to your original payment method (Visa) within 3 business days of the cancellation, and the team will reply by email within 1 business day.
+**Assistant:** JL-10996 is still 'processing', so it can be cancelled. I can't cancel it myself, so I'm passing your request to the support team as a ticket. If it's cancelled before dispatch, the refund of ₹10,549 goes back to your original payment method (Visa) within 3 business days of the cancellation, and the team will reply by email within 1 business day.
 
 **Outcome:** ticket_created: cancellation_request
 
@@ -775,7 +775,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** Where's my refund for JL-10522? Email evelyn.ellis@webmail.example.
 
-**Assistant:** Refund RF-30121 for JL-10522 was approved on 2026-09-23 and sent on 2026-10-01. The net amount is $122.01 (return — change of mind), refunded to: Original payment (Mastercard). Your bank or card provider may take a few extra days to show it on your statement.
+**Assistant:** Refund RF-30121 for JL-10522 was approved on 2026-09-23 and sent on 2026-10-01. The net amount is ₹12,201 (return — change of mind), refunded to: Original payment (Mastercard). Your bank or card provider may take a few extra days to show it on your statement.
 
 **Outcome:** answered_from_refund_data
 
@@ -791,7 +791,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** Where's my refund for JL-10243? Email emma.ingram97@mailbox.example.
 
-**Assistant:** Refund RF-30039 for JL-10243 was approved on 2026-07-27 and sent on 2026-08-03. The net amount is $29.99 (package confirmed lost / not received), refunded to: Store credit. Your bank or card provider may take a few extra days to show it on your statement.
+**Assistant:** Refund RF-30039 for JL-10243 was approved on 2026-07-27 and sent on 2026-08-03. The net amount is ₹2,999 (package confirmed lost / not received), refunded to: Store credit. Your bank or card provider may take a few extra days to show it on your statement.
 
 **Outcome:** answered_from_refund_data
 
@@ -855,7 +855,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** Where's my refund for JL-10484? Email olivia.hughes41@inbox.example.
 
-**Assistant:** Refund RF-30075 for JL-10484 was approved on 2026-08-21 and sent on 2026-08-25. The net amount is $55.00 (cancelled before dispatch), refunded to: Original payment (PayPal). Your bank or card provider may take a few extra days to show it on your statement.
+**Assistant:** Refund RF-30075 for JL-10484 was approved on 2026-08-21 and sent on 2026-08-25. The net amount is ₹5,500 (cancelled before dispatch), refunded to: Original payment (PayPal). Your bank or card provider may take a few extra days to show it on your statement.
 
 **Outcome:** answered_from_refund_data
 
@@ -887,7 +887,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** I'd like to return the LED Desk Lamp from JL-10956. My email is noah.kowalski93@webmail.example.
 
-**Assistant:** JL-10956 was delivered on 2026-11-17, so you're on day 3 of the 30-day return window (it closes on 2026-12-17). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a $6.99 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
+**Assistant:** JL-10956 was delivered on 2026-11-17, so you're on day 3 of the 30-day return window (it closes on 2026-12-17). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a ₹699 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
 
 **Outcome:** ticket_created: return_request
 
@@ -967,7 +967,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** Where's my refund for JL-10615? Email arjun.martinez@inbox.example.
 
-**Assistant:** Refund RF-30175 for JL-10615 was approved on 2026-10-26 and sent on 2026-11-04. The net amount is $8.01 (return — change of mind), refunded to: Original payment (Visa). Your bank or card provider may take a few extra days to show it on your statement.
+**Assistant:** Refund RF-30175 for JL-10615 was approved on 2026-10-26 and sent on 2026-11-04. The net amount is ₹801 (return — change of mind), refunded to: Original payment (Visa). Your bank or card provider may take a few extra days to show it on your statement.
 
 **Outcome:** answered_from_refund_data
 
@@ -983,7 +983,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** Please cancel JL-11000. I used nathan.underwood41@inbox.example.
 
-**Assistant:** JL-11000 is still 'processing', so it can be cancelled. I can't cancel it myself, so I'm passing your request to the support team as a ticket. If it's cancelled before dispatch, the refund of $129.00 goes back to your original payment method (Visa) within 3 business days of the cancellation, and the team will reply by email within 1 business day.
+**Assistant:** JL-11000 is still 'processing', so it can be cancelled. I can't cancel it myself, so I'm passing your request to the support team as a ticket. If it's cancelled before dispatch, the refund of ₹12,900 goes back to your original payment method (Visa) within 3 business days of the cancellation, and the team will reply by email within 1 business day.
 
 **Outcome:** ticket_created: cancellation_request
 
@@ -1031,7 +1031,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** I'd like to return the Bluetooth Speaker Mini from JL-10951. My email is noah.johnson@webmail.example.
 
-**Assistant:** JL-10951 was delivered on 2026-11-13, so you're on day 7 of the 30-day return window (it closes on 2026-12-13). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a $6.99 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
+**Assistant:** JL-10951 was delivered on 2026-11-13, so you're on day 7 of the 30-day return window (it closes on 2026-12-13). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a ₹699 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
 
 **Outcome:** ticket_created: return_request
 
@@ -1063,7 +1063,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** I'd like to return the Smart Plug (2-Pack) from JL-10948. My email is noah.kelly@webmail.example.
 
-**Assistant:** JL-10948 was delivered on 2026-11-17, so you're on day 3 of the 30-day return window (it closes on 2026-12-17). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a $6.99 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
+**Assistant:** JL-10948 was delivered on 2026-11-17, so you're on day 3 of the 30-day return window (it closes on 2026-12-17). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a ₹699 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
 
 **Outcome:** ticket_created: return_request
 
@@ -1079,7 +1079,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** I need to cancel JL-10028 (maya.lopez39@inbox.example).
 
-**Assistant:** I'm sorry — JL-10028 was dispatched on 2026-06-05, and once an order has been dispatched it can't be cancelled. When it arrives you can return it within 30 days of the delivery date if it's eligible. Unless the item is faulty, damaged or wrong, a $6.99 return shipping fee is deducted from the refund. Would you like me to pass a return request to the support team once it's delivered?
+**Assistant:** I'm sorry — JL-10028 was dispatched on 2026-06-05, and once an order has been dispatched it can't be cancelled. When it arrives you can return it within 30 days of the delivery date if it's eligible. Unless the item is faulty, damaged or wrong, a ₹699 return shipping fee is deducted from the refund. Would you like me to pass a return request to the support team once it's delivered?
 
 **Outcome:** answered
 
@@ -1103,7 +1103,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** I'd like to return the Scented Soy Candle from JL-10913. My email is ethan.lopez97@mailbox.example.
 
-**Assistant:** JL-10913 was delivered on 2026-11-06, so you're on day 14 of the 30-day return window (it closes on 2026-12-06). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a $6.99 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
+**Assistant:** JL-10913 was delivered on 2026-11-06, so you're on day 14 of the 30-day return window (it closes on 2026-12-06). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a ₹699 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
 
 **Outcome:** ticket_created: return_request
 
@@ -1135,7 +1135,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** I'd like to return the Linen Napkins (Set of 4) from JL-10851. My email is elijah.kim78@webmail.example.
 
-**Assistant:** JL-10851 was delivered on 2026-10-28, so you're on day 23 of the 30-day return window (it closes on 2026-11-27). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a $6.99 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
+**Assistant:** JL-10851 was delivered on 2026-10-28, so you're on day 23 of the 30-day return window (it closes on 2026-11-27). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a ₹699 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
 
 **Outcome:** ticket_created: return_request
 
@@ -1151,7 +1151,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** I need to cancel JL-10328 (owen.walker@mailbox.example).
 
-**Assistant:** I'm sorry — JL-10328 was dispatched on 2026-07-27, and once an order has been dispatched it can't be cancelled. When it arrives you can return it within 30 days of the delivery date if it's eligible. Unless the item is faulty, damaged or wrong, a $6.99 return shipping fee is deducted from the refund. Would you like me to pass a return request to the support team once it's delivered?
+**Assistant:** I'm sorry — JL-10328 was dispatched on 2026-07-27, and once an order has been dispatched it can't be cancelled. When it arrives you can return it within 30 days of the delivery date if it's eligible. Unless the item is faulty, damaged or wrong, a ₹699 return shipping fee is deducted from the refund. Would you like me to pass a return request to the support team once it's delivered?
 
 **Outcome:** answered
 
@@ -1159,7 +1159,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** I'd like to return the Scented Soy Candle from JL-10826. My email is sophia.patel66@inbox.example.
 
-**Assistant:** JL-10826 was delivered on 2026-10-26, so you're on day 25 of the 30-day return window (it closes on 2026-11-25). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a $6.99 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
+**Assistant:** JL-10826 was delivered on 2026-10-26, so you're on day 25 of the 30-day return window (it closes on 2026-11-25). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a ₹699 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
 
 **Outcome:** ticket_created: return_request
 
@@ -1223,7 +1223,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** Where's my refund for JL-10331? Email priya.owens@mailbox.example.
 
-**Assistant:** Refund RF-30089 for JL-10331 was approved on 2026-09-01 and sent on 2026-09-10. The net amount is $29.01 (return — change of mind), refunded to: Original payment (Visa). Your bank or card provider may take a few extra days to show it on your statement.
+**Assistant:** Refund RF-30089 for JL-10331 was approved on 2026-09-01 and sent on 2026-09-10. The net amount is ₹2,901 (return — change of mind), refunded to: Original payment (Visa). Your bank or card provider may take a few extra days to show it on your statement.
 
 **Outcome:** answered_from_refund_data
 
@@ -1271,7 +1271,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** Are prices including tax?
 
-**Assistant:** Yes. All prices are in US dollars and include sales tax.
+**Assistant:** Yes. All prices are in Indian rupees (₹) and include GST.
 
 **Outcome:** answered
 
@@ -1279,7 +1279,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** I'd like to return the Scented Soy Candle from JL-10949. My email is maya.walker@webmail.example.
 
-**Assistant:** JL-10949 was delivered on 2026-11-17, so you're on day 3 of the 30-day return window (it closes on 2026-12-17). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a $6.99 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
+**Assistant:** JL-10949 was delivered on 2026-11-17, so you're on day 3 of the 30-day return window (it closes on 2026-12-17). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a ₹699 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
 
 **Outcome:** ticket_created: return_request
 
@@ -1391,7 +1391,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** Where's my refund for JL-10399? Email evelyn.sanders96@mailbox.example.
 
-**Assistant:** Refund RF-30110 for JL-10399 was approved on 2026-09-14 and sent on 2026-09-22. The net amount is $25.01 (return — change of mind), refunded to: Original payment (PayPal). Your bank or card provider may take a few extra days to show it on your statement.
+**Assistant:** Refund RF-30110 for JL-10399 was approved on 2026-09-14 and sent on 2026-09-22. The net amount is ₹2,501 (return — change of mind), refunded to: Original payment (PayPal). Your bank or card provider may take a few extra days to show it on your statement.
 
 **Outcome:** answered_from_refund_data
 
@@ -1399,7 +1399,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** I'd like to return the LED Desk Lamp from JL-10884. My email is emma.ramirez@mailbox.example.
 
-**Assistant:** JL-10884 was delivered on 2026-11-04, so you're on day 16 of the 30-day return window (it closes on 2026-12-04). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a $6.99 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
+**Assistant:** JL-10884 was delivered on 2026-11-04, so you're on day 16 of the 30-day return window (it closes on 2026-12-04). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a ₹699 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
 
 **Outcome:** ticket_created: return_request
 
@@ -1415,7 +1415,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** I need to cancel JL-10434 (aria.reyes94@webmail.example).
 
-**Assistant:** I'm sorry — JL-10434 was dispatched on 2026-08-17, and once an order has been dispatched it can't be cancelled. When it arrives you can return it within 30 days of the delivery date if it's eligible. Unless the item is faulty, damaged or wrong, a $6.99 return shipping fee is deducted from the refund. Would you like me to pass a return request to the support team once it's delivered?
+**Assistant:** I'm sorry — JL-10434 was dispatched on 2026-08-17, and once an order has been dispatched it can't be cancelled. When it arrives you can return it within 30 days of the delivery date if it's eligible. Unless the item is faulty, damaged or wrong, a ₹699 return shipping fee is deducted from the refund. Would you like me to pass a return request to the support team once it's delivered?
 
 **Outcome:** answered
 
@@ -1455,7 +1455,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** I need to cancel JL-10604 (elijah.gupta@webmail.example).
 
-**Assistant:** I'm sorry — JL-10604 was dispatched on 2026-09-14, and once an order has been dispatched it can't be cancelled. When it arrives you can return it within 30 days of the delivery date if it's eligible. Unless the item is faulty, damaged or wrong, a $6.99 return shipping fee is deducted from the refund. Would you like me to pass a return request to the support team once it's delivered?
+**Assistant:** I'm sorry — JL-10604 was dispatched on 2026-09-14, and once an order has been dispatched it can't be cancelled. When it arrives you can return it within 30 days of the delivery date if it's eligible. Unless the item is faulty, damaged or wrong, a ₹699 return shipping fee is deducted from the refund. Would you like me to pass a return request to the support team once it's delivered?
 
 **Outcome:** answered
 
@@ -1471,7 +1471,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** Where's my refund for JL-10838? Email logan.donovan@inbox.example.
 
-**Assistant:** Refund RF-30159 for JL-10838 was approved on 2026-10-19 and sent on 2026-10-22. The net amount is $87.50 (cancelled before dispatch), refunded to: Original payment (Mastercard). Your bank or card provider may take a few extra days to show it on your statement.
+**Assistant:** Refund RF-30159 for JL-10838 was approved on 2026-10-19 and sent on 2026-10-22. The net amount is ₹8,750 (cancelled before dispatch), refunded to: Original payment (Mastercard). Your bank or card provider may take a few extra days to show it on your statement.
 
 **Outcome:** answered_from_refund_data
 
@@ -1479,7 +1479,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** I'd like to return the Ceramic Pour-Over Coffee Set from JL-10890. My email is tamara.walsh64@inbox.example.
 
-**Assistant:** JL-10890 was delivered on 2026-10-30, so you're on day 21 of the 30-day return window (it closes on 2026-11-29). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a $6.99 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
+**Assistant:** JL-10890 was delivered on 2026-10-30, so you're on day 21 of the 30-day return window (it closes on 2026-11-29). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a ₹699 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
 
 **Outcome:** ticket_created: return_request
 
@@ -1543,7 +1543,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** Where's my refund for JL-10773? Email ethan.thompson@mailbox.example.
 
-**Assistant:** Refund RF-30174 for JL-10773 was approved on 2026-10-26 and sent on 2026-11-02. The net amount is $79.00 (package confirmed lost / not received), refunded to: Original payment (Visa). Your bank or card provider may take a few extra days to show it on your statement.
+**Assistant:** Refund RF-30174 for JL-10773 was approved on 2026-10-26 and sent on 2026-11-02. The net amount is ₹7,900 (package confirmed lost / not received), refunded to: Original payment (Visa). Your bank or card provider may take a few extra days to show it on your statement.
 
 **Outcome:** answered_from_refund_data
 
@@ -1607,7 +1607,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** Where's my refund for JL-10246? Email evelyn.gray92@mailbox.example.
 
-**Assistant:** Refund RF-30021 for JL-10246 was approved on 2026-07-12 and sent on 2026-07-14. The net amount is $147.00 (cancelled before dispatch), refunded to: Original payment (Mastercard). Your bank or card provider may take a few extra days to show it on your statement.
+**Assistant:** Refund RF-30021 for JL-10246 was approved on 2026-07-12 and sent on 2026-07-14. The net amount is ₹14,700 (cancelled before dispatch), refunded to: Original payment (Mastercard). Your bank or card provider may take a few extra days to show it on your statement.
 
 **Outcome:** answered_from_refund_data
 
@@ -1743,7 +1743,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** Where's my refund for JL-10214? Email abigail.morgan86@webmail.example.
 
-**Assistant:** Refund RF-30017 for JL-10214 was approved on 2026-07-07 and sent on 2026-07-08. The net amount is $39.49 (cancelled before dispatch), refunded to: Original payment (Visa). Your bank or card provider may take a few extra days to show it on your statement.
+**Assistant:** Refund RF-30017 for JL-10214 was approved on 2026-07-07 and sent on 2026-07-08. The net amount is ₹3,949 (cancelled before dispatch), refunded to: Original payment (Visa). Your bank or card provider may take a few extra days to show it on your statement.
 
 **Outcome:** answered_from_refund_data
 
@@ -1751,7 +1751,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** I'd like to return the Wireless Earbuds Pro from JL-10888. My email is zoey.kowalski@inbox.example.
 
-**Assistant:** JL-10888 was delivered on 2026-10-30, so you're on day 21 of the 30-day return window (it closes on 2026-11-29). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a $6.99 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
+**Assistant:** JL-10888 was delivered on 2026-10-30, so you're on day 21 of the 30-day return window (it closes on 2026-11-29). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a ₹699 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
 
 **Outcome:** ticket_created: return_request
 
@@ -1791,7 +1791,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** I need to cancel JL-10607 (henry.vasquez@webmail.example).
 
-**Assistant:** I'm sorry — JL-10607 was dispatched on 2026-09-14, and once an order has been dispatched it can't be cancelled. When it arrives you can return it within 30 days of the delivery date if it's eligible. Unless the item is faulty, damaged or wrong, a $6.99 return shipping fee is deducted from the refund. Would you like me to pass a return request to the support team once it's delivered?
+**Assistant:** I'm sorry — JL-10607 was dispatched on 2026-09-14, and once an order has been dispatched it can't be cancelled. When it arrives you can return it within 30 days of the delivery date if it's eligible. Unless the item is faulty, damaged or wrong, a ₹699 return shipping fee is deducted from the refund. Would you like me to pass a return request to the support team once it's delivered?
 
 **Outcome:** answered
 
@@ -1799,7 +1799,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** I'd like to return the Bamboo Cutting Board from JL-10910. My email is ethan.flores40@inbox.example.
 
-**Assistant:** JL-10910 was delivered on 2026-11-09, so you're on day 11 of the 30-day return window (it closes on 2026-12-09). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a $6.99 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
+**Assistant:** JL-10910 was delivered on 2026-11-09, so you're on day 11 of the 30-day return window (it closes on 2026-12-09). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a ₹699 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
 
 **Outcome:** ticket_created: return_request
 
@@ -1823,7 +1823,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** I need to cancel JL-10949 (maya.walker@webmail.example).
 
-**Assistant:** I'm sorry — JL-10949 was dispatched on 2026-11-09, and once an order has been dispatched it can't be cancelled. When it arrives you can return it within 30 days of the delivery date if it's eligible. Unless the item is faulty, damaged or wrong, a $6.99 return shipping fee is deducted from the refund. Would you like me to pass a return request to the support team once it's delivered?
+**Assistant:** I'm sorry — JL-10949 was dispatched on 2026-11-09, and once an order has been dispatched it can't be cancelled. When it arrives you can return it within 30 days of the delivery date if it's eligible. Unless the item is faulty, damaged or wrong, a ₹699 return shipping fee is deducted from the refund. Would you like me to pass a return request to the support team once it's delivered?
 
 **Outcome:** answered
 
@@ -1831,7 +1831,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** If I return one item, will you charge shipping on the rest?
 
-**Assistant:** No. Only the returned items are refunded, and if the remaining items no longer reach the $50.00 free-shipping threshold we don't charge shipping after the fact.
+**Assistant:** No. Only the returned items are refunded, and if the remaining items no longer reach the ₹5,000 free-shipping threshold we don't charge shipping after the fact.
 
 **Outcome:** answered
 
@@ -1879,7 +1879,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** What's your return policy?
 
-**Assistant:** Most items can be returned within 30 days of the delivery date if unused, undamaged and in the original packaging with accessories. Gift cards, personalised items, opened scented products and 'final sale' items can't be returned unless faulty or damaged. Returns are approved by the support team; a $6.99 return fee applies unless the item is faulty, damaged, or wrong.
+**Assistant:** Most items can be returned within 30 days of the delivery date if unused, undamaged and in the original packaging with accessories. Gift cards, personalised items, opened scented products and 'final sale' items can't be returned unless faulty or damaged. Returns are approved by the support team; a ₹699 return fee applies unless the item is faulty, damaged, or wrong.
 
 **Outcome:** answered
 
@@ -1903,7 +1903,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** Where's my refund for JL-10148? Email logan.ramirez@mailbox.example.
 
-**Assistant:** Refund RF-30042 for JL-10148 was approved on 2026-07-29 and sent on 2026-08-06. The net amount is $72.01 (return — change of mind), refunded to: Original payment (Visa). Your bank or card provider may take a few extra days to show it on your statement.
+**Assistant:** Refund RF-30042 for JL-10148 was approved on 2026-07-29 and sent on 2026-08-06. The net amount is ₹7,201 (return — change of mind), refunded to: Original payment (Visa). Your bank or card provider may take a few extra days to show it on your statement.
 
 **Outcome:** answered_from_refund_data
 
@@ -1927,7 +1927,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** Where's my refund for JL-10497? Email ella.harris17@webmail.example.
 
-**Assistant:** Refund RF-30114 for JL-10497 was approved on 2026-09-15 and sent on 2026-09-22. The net amount is $61.01 (return — change of mind), refunded to: Original payment (American Express). Your bank or card provider may take a few extra days to show it on your statement.
+**Assistant:** Refund RF-30114 for JL-10497 was approved on 2026-09-15 and sent on 2026-09-22. The net amount is ₹6,101 (return — change of mind), refunded to: Original payment (American Express). Your bank or card provider may take a few extra days to show it on your statement.
 
 **Outcome:** answered_from_refund_data
 
@@ -1951,7 +1951,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** I need to cancel JL-10902 (james.owens@inbox.example).
 
-**Assistant:** I'm sorry — JL-10902 was dispatched on 2026-11-02, and once an order has been dispatched it can't be cancelled. When it arrives you can return it within 30 days of the delivery date if it's eligible. Unless the item is faulty, damaged or wrong, a $6.99 return shipping fee is deducted from the refund. Would you like me to pass a return request to the support team once it's delivered?
+**Assistant:** I'm sorry — JL-10902 was dispatched on 2026-11-02, and once an order has been dispatched it can't be cancelled. When it arrives you can return it within 30 days of the delivery date if it's eligible. Unless the item is faulty, damaged or wrong, a ₹699 return shipping fee is deducted from the refund. Would you like me to pass a return request to the support team once it's delivered?
 
 **Outcome:** answered
 
@@ -1991,7 +1991,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** Where's my refund for JL-10236? Email mei.anderson@mailbox.example.
 
-**Assistant:** Refund RF-30047 for JL-10236 was approved on 2026-07-31 and sent on 2026-08-10. The net amount is $158.01 (return — change of mind), refunded to: Original payment (Visa). Your bank or card provider may take a few extra days to show it on your statement.
+**Assistant:** Refund RF-30047 for JL-10236 was approved on 2026-07-31 and sent on 2026-08-10. The net amount is ₹15,801 (return — change of mind), refunded to: Original payment (Visa). Your bank or card provider may take a few extra days to show it on your statement.
 
 **Outcome:** answered_from_refund_data
 
@@ -1999,7 +1999,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** I need to cancel JL-10815 (julian.daniels@mailbox.example).
 
-**Assistant:** I'm sorry — JL-10815 was dispatched on 2026-10-15, and once an order has been dispatched it can't be cancelled. When it arrives you can return it within 30 days of the delivery date if it's eligible. Unless the item is faulty, damaged or wrong, a $6.99 return shipping fee is deducted from the refund. Would you like me to pass a return request to the support team once it's delivered?
+**Assistant:** I'm sorry — JL-10815 was dispatched on 2026-10-15, and once an order has been dispatched it can't be cancelled. When it arrives you can return it within 30 days of the delivery date if it's eligible. Unless the item is faulty, damaged or wrong, a ₹699 return shipping fee is deducted from the refund. Would you like me to pass a return request to the support team once it's delivered?
 
 **Outcome:** answered
 
@@ -2031,7 +2031,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** Please cancel JL-10999. I used evelyn.ortiz15@webmail.example.
 
-**Assistant:** JL-10999 is still 'processing', so it can be cancelled. I can't cancel it myself, so I'm passing your request to the support team as a ticket. If it's cancelled before dispatch, the refund of $50.49 goes back to your original payment method (Visa) within 3 business days of the cancellation, and the team will reply by email within 1 business day.
+**Assistant:** JL-10999 is still 'processing', so it can be cancelled. I can't cancel it myself, so I'm passing your request to the support team as a ticket. If it's cancelled before dispatch, the refund of ₹5,049 goes back to your original payment method (Visa) within 3 business days of the cancellation, and the team will reply by email within 1 business day.
 
 **Outcome:** ticket_created: cancellation_request
 
@@ -2143,7 +2143,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** Where's my refund for JL-10291? Email brandon.kim15@webmail.example.
 
-**Assistant:** Refund RF-30027 for JL-10291 was approved on 2026-07-19 and sent on 2026-07-20. The net amount is $113.50 (cancelled before dispatch), refunded to: Original payment (Visa). Your bank or card provider may take a few extra days to show it on your statement.
+**Assistant:** Refund RF-30027 for JL-10291 was approved on 2026-07-19 and sent on 2026-07-20. The net amount is ₹11,350 (cancelled before dispatch), refunded to: Original payment (Visa). Your bank or card provider may take a few extra days to show it on your statement.
 
 **Outcome:** answered_from_refund_data
 
@@ -2215,7 +2215,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** Please cancel JL-10997. I used maya.larson@mailbox.example.
 
-**Assistant:** JL-10997 is still 'processing', so it can be cancelled. I can't cancel it myself, so I'm passing your request to the support team as a ticket. If it's cancelled before dispatch, the refund of $49.99 goes back to your original payment method (Visa) within 3 business days of the cancellation, and the team will reply by email within 1 business day.
+**Assistant:** JL-10997 is still 'processing', so it can be cancelled. I can't cancel it myself, so I'm passing your request to the support team as a ticket. If it's cancelled before dispatch, the refund of ₹4,999 goes back to your original payment method (Visa) within 3 business days of the cancellation, and the team will reply by email within 1 business day.
 
 **Outcome:** ticket_created: cancellation_request
 
@@ -2231,7 +2231,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** I'd like to return the Ceramic Planter Set from JL-10937. My email is arjun.donovan@inbox.example.
 
-**Assistant:** JL-10937 was delivered on 2026-11-12, so you're on day 8 of the 30-day return window (it closes on 2026-12-12). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a $6.99 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
+**Assistant:** JL-10937 was delivered on 2026-11-12, so you're on day 8 of the 30-day return window (it closes on 2026-12-12). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a ₹699 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
 
 **Outcome:** ticket_created: return_request
 
@@ -2247,7 +2247,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** Can I swap my order for a different colour?
 
-**Assistant:** We don't offer direct exchanges. Return the item for a refund (if eligible) and place a new order. Unless it's faulty or wrong, a $6.99 return shipping fee is deducted.
+**Assistant:** We don't offer direct exchanges. Return the item for a refund (if eligible) and place a new order. Unless it's faulty or wrong, a ₹699 return shipping fee is deducted.
 
 **Outcome:** answered
 
@@ -2271,7 +2271,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** I need to cancel JL-10049 (liam.nelson11@webmail.example).
 
-**Assistant:** I'm sorry — JL-10049 was dispatched on 2026-06-08, and once an order has been dispatched it can't be cancelled. When it arrives you can return it within 30 days of the delivery date if it's eligible. Unless the item is faulty, damaged or wrong, a $6.99 return shipping fee is deducted from the refund. Would you like me to pass a return request to the support team once it's delivered?
+**Assistant:** I'm sorry — JL-10049 was dispatched on 2026-06-08, and once an order has been dispatched it can't be cancelled. When it arrives you can return it within 30 days of the delivery date if it's eligible. Unless the item is faulty, damaged or wrong, a ₹699 return shipping fee is deducted from the refund. Would you like me to pass a return request to the support team once it's delivered?
 
 **Outcome:** answered
 
@@ -2303,7 +2303,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** I'd like to return the Scented Soy Candle from JL-10952. My email is henry.donovan33@mailbox.example.
 
-**Assistant:** JL-10952 was delivered on 2026-11-16, so you're on day 4 of the 30-day return window (it closes on 2026-12-16). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a $6.99 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
+**Assistant:** JL-10952 was delivered on 2026-11-16, so you're on day 4 of the 30-day return window (it closes on 2026-12-16). The item must be unused, undamaged and in its original packaging. I can't start the return myself: I'm passing your request to the support team, who will email you a return label within 1 business day. You then have 14 days from receiving the label to drop it off. As it's not a fault, a ₹699 return shipping fee will be deducted from your refund. Refunds are approved by the support team after they inspect the item.
 
 **Outcome:** ticket_created: return_request
 
@@ -2317,9 +2317,9 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 ### Conversation 225 — Policy question
 
-**Customer:** Does the $50 free shipping count the shipping cost?
+**Customer:** Does the ₹5,000 free shipping count the shipping cost?
 
-**Assistant:** The $50.00 threshold is based on the item subtotal before shipping.
+**Assistant:** The ₹5,000 threshold is based on the item subtotal before shipping.
 
 **Outcome:** answered
 
@@ -2343,7 +2343,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** Where's my refund for JL-10788? Email arjun.morgan96@mailbox.example.
 
-**Assistant:** Refund RF-30208 for JL-10788 was approved on 2026-11-18 for $25.01, going to: Store credit. Approved refunds are sent within 5–7 business days (cancelled orders within 3 business days); the scheduled send date is 2026-11-27.
+**Assistant:** Refund RF-30208 for JL-10788 was approved on 2026-11-18 for ₹2,501, going to: Store credit. Approved refunds are sent within 5–7 business days (cancelled orders within 3 business days); the scheduled send date is 2026-11-27.
 
 **Outcome:** answered_from_refund_data
 
@@ -2351,7 +2351,7 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** I need to cancel JL-10650 (elijah.foster@webmail.example).
 
-**Assistant:** I'm sorry — JL-10650 was dispatched on 2026-09-21, and once an order has been dispatched it can't be cancelled. When it arrives you can return it within 30 days of the delivery date if it's eligible. Unless the item is faulty, damaged or wrong, a $6.99 return shipping fee is deducted from the refund. Would you like me to pass a return request to the support team once it's delivered?
+**Assistant:** I'm sorry — JL-10650 was dispatched on 2026-09-21, and once an order has been dispatched it can't be cancelled. When it arrives you can return it within 30 days of the delivery date if it's eligible. Unless the item is faulty, damaged or wrong, a ₹699 return shipping fee is deducted from the refund. Would you like me to pass a return request to the support team once it's delivered?
 
 **Outcome:** answered
 
@@ -2359,6 +2359,6 @@ Grounded in the records above. Assistant answers follow policy: it cannot approv
 
 **Customer:** I need to cancel JL-10879 (mateo.anderson@inbox.example).
 
-**Assistant:** I'm sorry — JL-10879 was dispatched on 2026-10-26, and once an order has been dispatched it can't be cancelled. When it arrives you can return it within 30 days of the delivery date if it's eligible. Unless the item is faulty, damaged or wrong, a $6.99 return shipping fee is deducted from the refund. Would you like me to pass a return request to the support team once it's delivered?
+**Assistant:** I'm sorry — JL-10879 was dispatched on 2026-10-26, and once an order has been dispatched it can't be cancelled. When it arrives you can return it within 30 days of the delivery date if it's eligible. Unless the item is faulty, damaged or wrong, a ₹699 return shipping fee is deducted from the refund. Would you like me to pass a return request to the support team once it's delivered?
 
 **Outcome:** answered

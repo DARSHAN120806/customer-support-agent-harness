@@ -30,7 +30,7 @@ Returns cannot be started automatically. Every return is reviewed and approved b
 ## Return shipping cost
 
 - If the item is faulty, damaged, or not what you ordered, return shipping is free.
-- For any other reason (for example, you changed your mind), a $6.99 return shipping fee is deducted from your refund.
+- For any other reason (for example, you changed your mind), a ₹699 return shipping fee is deducted from your refund.
 
 ## Exchanges
 

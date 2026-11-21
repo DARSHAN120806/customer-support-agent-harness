@@ -128,7 +128,7 @@ def test_the_shop_page_table_must_stay_readable(store):
 
 
 def test_a_change_in_the_number_of_products_is_pointed_out(store):
-    problems, warnings = check(store, "company_overview.md", lambda t: t.replace("| Scented Soy Candle | Homeware | $12.00 | None |\n", "", 1))
+    problems, warnings = check(store, "company_overview.md", lambda t: t.replace("| Scented Soy Candle | Homeware | ₹1,200 | None |\n", "", 1))
 
     assert problems == []
     assert any("15 products (it showed 16)" in w for w in warnings)
@@ -243,13 +243,13 @@ def test_an_earlier_version_can_be_viewed_and_restored(setup):
 def test_editing_the_product_table_updates_the_shop_page(setup):
     client, admin, _, _, _ = setup
     doc = client.get("/api/admin/documents/company_overview.md", headers=admin).json()
-    new_text = doc["text"].replace("| Cast Iron Skillet | Homeware | $55.00 |", "| Cast Iron Skillet | Homeware | $59.00 |", 1)
+    new_text = doc["text"].replace("| Cast Iron Skillet | Homeware | ₹5,500 |", "| Cast Iron Skillet | Homeware | ₹5,900 |", 1)
 
     response = client.put("/api/admin/documents/company_overview.md", headers=admin, json={"text": new_text, "version": doc["version"]})
 
     assert response.status_code == 200, response.text
     prices = {p["name"]: p["price"] for p in client.get("/api/products").json()}
-    assert prices["Cast Iron Skillet"] == 59.0
+    assert prices["Cast Iron Skillet"] == 5900.0
 
 
 def test_orders_can_be_found_and_opened_with_the_email_masked(setup):

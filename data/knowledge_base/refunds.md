@@ -30,12 +30,12 @@ Refunds go back to the original payment method only. We cannot refund to a diffe
 
 - The price of the returned item is refunded in full if it is unused and in its original packaging.
 - The original shipping fee is refunded only if the item was faulty, damaged, or not what you ordered.
-- A $6.99 return shipping fee is deducted when you return an item for any reason other than a fault, damage, or our mistake.
+- A ₹699 return shipping fee is deducted when you return an item for any reason other than a fault, damage, or our mistake.
 - Items returned used, or without their original packaging, may have a restocking fee of up to 20% of the item price deducted. The support team decides this after inspection.
 
 ## Partial refunds
 
-If you return only some of the items in an order, only those items are refunded. If the remaining items no longer reach the $50.00 free-shipping threshold, we do not charge shipping after the fact.
+If you return only some of the items in an order, only those items are refunded. If the remaining items no longer reach the ₹5,000 free-shipping threshold, we do not charge shipping after the fact.
 
 ## Refund disputes
 

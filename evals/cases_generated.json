@@ -76,7 +76,7 @@
     ],
     "escalated": false,
     "reply_includes": [
-     "$233.97"
+     "₹23,397"
     ]
    }
   },
@@ -294,8 +294,8 @@
     ],
     "escalated": false,
     "reply_includes": [
-     "$12.99",
-     "$50.00"
+     "₹1,299",
+     "₹5,000"
     ]
    }
   },
@@ -538,7 +538,7 @@
     ],
     "escalated": false,
     "reply_includes": [
-     "$122.01"
+     "₹12,201"
     ]
    }
   },
@@ -577,7 +577,7 @@
     ],
     "escalated": false,
     "reply_includes": [
-     "$29.99"
+     "₹2,999"
     ]
    }
   },
@@ -714,7 +714,7 @@
     ],
     "escalated": false,
     "reply_includes": [
-     "$55.00"
+     "₹5,500"
     ]
    }
   },
@@ -967,7 +967,7 @@
     ],
     "escalated": false,
     "reply_includes": [
-     "$8.01"
+     "₹801"
     ]
    }
   },
@@ -1525,7 +1525,7 @@
     ],
     "escalated": false,
     "reply_includes": [
-     "$29.01"
+     "₹2,901"
     ]
    }
   },
@@ -1888,7 +1888,7 @@
     ],
     "escalated": false,
     "reply_includes": [
-     "$25.01"
+     "₹2,501"
     ]
    }
   },
@@ -2070,7 +2070,7 @@
     ],
     "escalated": false,
     "reply_includes": [
-     "$87.50"
+     "₹8,750"
     ]
    }
   },
@@ -2230,7 +2230,7 @@
     ],
     "escalated": false,
     "reply_includes": [
-     "$79.00"
+     "₹7,900"
     ]
    }
   },
@@ -2372,7 +2372,7 @@
     ],
     "escalated": false,
     "reply_includes": [
-     "$147.00"
+     "₹14,700"
     ]
    }
   },
@@ -2675,7 +2675,7 @@
     ],
     "escalated": false,
     "reply_includes": [
-     "$39.49"
+     "₹3,949"
     ]
    }
   },
@@ -2868,7 +2868,7 @@
     ],
     "escalated": false,
     "reply_includes": [
-     "$50.00"
+     "₹5,000"
     ]
    }
   },
@@ -2973,7 +2973,7 @@
     ],
     "escalated": false,
     "reply_includes": [
-     "$6.99"
+     "₹699"
     ]
    }
   },
@@ -3027,7 +3027,7 @@
     ],
     "escalated": false,
     "reply_includes": [
-     "$72.01"
+     "₹7,201"
     ]
    }
   },
@@ -3078,7 +3078,7 @@
     ],
     "escalated": false,
     "reply_includes": [
-     "$61.01"
+     "₹6,101"
     ]
    }
   },
@@ -3220,7 +3220,7 @@
     ],
     "escalated": false,
     "reply_includes": [
-     "$158.01"
+     "₹15,801"
     ]
    }
   },
@@ -3554,7 +3554,7 @@
     ],
     "escalated": false,
     "reply_includes": [
-     "$113.50"
+     "₹11,350"
     ]
    }
   },
@@ -3768,7 +3768,7 @@
     ],
     "escalated": false,
     "reply_includes": [
-     "$6.99"
+     "₹699"
     ]
    }
   },
@@ -3908,7 +3908,7 @@
    "description": "Generated from sample conversation 225 (Policy question).",
    "customer": "ethan.kelly@inbox.example",
    "messages": [
-    "Does the $50 free shipping count the shipping cost?"
+    "Does the ₹5,000 free shipping count the shipping cost?"
    ],
    "expect": {
     "tools_used": [
@@ -3916,7 +3916,7 @@
     ],
     "escalated": false,
     "reply_includes": [
-     "$50.00"
+     "₹5,000"
     ]
    }
   },
@@ -3970,7 +3970,7 @@
     ],
     "escalated": false,
     "reply_includes": [
-     "$25.01"
+     "₹2,501"
     ]
    }
   },

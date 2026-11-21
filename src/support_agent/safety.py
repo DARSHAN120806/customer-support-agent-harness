@@ -46,8 +46,10 @@ REFUND_CLAIM_PATTERNS = [
 ]
 
 
-# A dollar amount, such as "$6.99" or "$1,200".
-MONEY_PATTERN = re.compile(r"\$\s?(\d[\d,]*(?:\.\d+)?)")
+# An amount of money. The shop's prices are in Indian rupees ("₹699",
+# "₹1,29,000", "Rs. 499", "INR 5,000"). A dollar amount ("$6.99") is caught too:
+# the shop's sources never contain one, so a reply with one is always checked.
+MONEY_PATTERN = re.compile(r"(?:\$|₹|\bRs\.?|\bINR)\s?(\d[\d,]*(?:\.\d+)?)", re.IGNORECASE)
 # A number written with a decimal point, such as "42.0" in order data.
 DECIMAL_PATTERN = re.compile(r"(?<![\d.])\d[\d,]*\.\d+(?![\d.])")
 # A percentage, such as "20%".
@@ -370,7 +372,7 @@ def collect_sources(messages: list[dict[str, Any]]) -> str:
 
 
 def find_ungrounded_figures(reply: str, sources: str) -> list[str]:
-    """Return the dollar amounts, percentages, time periods, and dates in the
+    """Return the amounts of money, percentages, time periods, and dates in the
     reply that do not appear in the sources.
 
     This is the code-level backstop for "never invent prices, policies, or order
@@ -378,18 +380,18 @@ def find_ungrounded_figures(reply: str, sources: str) -> list[str]:
     head, such as a total or a deadline, also counts as ungrounded. Deadlines
     are meant to come from the calculate_date tool, whose result is a source.
     """
-    # A dollar amount counts as found only if the sources show it as money: with
-    # a "$" (policies, "$12.99") or with a decimal point (order data, "42.0").
-    # Matching any bare number would let "$3.00" pass because of "3-5 days".
+    # An amount counts as found only if the sources show it as money: with a
+    # currency sign (policies, "₹1,299") or with a decimal point (order data,
+    # "4200.0"). Matching any bare number would let "₹3" pass because of "3-5 days".
     source_money = {_to_number(match) for match in MONEY_PATTERN.findall(sources)} | {
         _to_number(match) for match in DECIMAL_PATTERN.findall(sources)
     }
     source_periods = set(_periods(sources))
 
     ungrounded = [
-        f"${amount}"
-        for amount in MONEY_PATTERN.findall(reply)
-        if _to_number(amount) not in source_money
+        match.group(0)
+        for match in MONEY_PATTERN.finditer(reply)
+        if _to_number(match.group(1)) not in source_money
     ]
     source_percentages = {_to_number(match) for match in PERCENT_PATTERN.findall(sources)}
     ungrounded += [

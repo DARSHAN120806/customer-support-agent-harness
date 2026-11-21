@@ -2,7 +2,7 @@
 // own orders, and their support tickets from the shop's records and from chat.
 import { useState, type FormEvent } from 'react'
 import type { CustomerTicket, OrderSummary } from '../../api'
-import { dollars } from './cart'
+import { rupees } from './cart'
 import { sentence, shortDate } from './dates'
 import { Tag } from './Tag'
 
@@ -33,7 +33,7 @@ export function YourOrders({ orders, onAsk }: OrdersProps) {
                   Ask about this order
                 </button>
               </div>
-              <span className="row-figure">{dollars(order.total)}</span>
+              <span className="row-figure">{rupees(order.total)}</span>
             </li>
           ))}
         </ul>

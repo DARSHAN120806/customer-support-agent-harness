@@ -17,7 +17,7 @@ def test_every_product_in_the_shop_document_is_listed():
 
     assert len(products) == 16
     speaker = products["Bluetooth Speaker Mini"]
-    assert (speaker.category, speaker.price, speaker.warranty) == ("Electronics", 39.99, "1 year")
+    assert (speaker.category, speaker.price, speaker.warranty) == ("Electronics", 3999.0, "1 year")
     assert products["Oak Side Table"].warranty == "2 years"
 
 
@@ -32,7 +32,7 @@ def test_stock_levels_come_from_the_same_document():
 def test_the_gift_card_has_amounts_to_choose_from_instead_of_one_price():
     (card,) = [p for p in load_catalogue(KB) if p.category == "Gift card"]
 
-    assert card.price is None and card.price_options == [25.0, 50.0, 100.0]
+    assert card.price is None and card.price_options == [2500.0, 5000.0, 10000.0]
     assert card.stock_status == "In stock" and card.units_in_stock is None
 
 
@@ -55,10 +55,10 @@ def test_a_small_document_is_read_the_same_way(tmp_path):
     (tmp_path / "company_overview.md").write_text(
         "## Product catalogue and prices\n\n"
         "| Product | Category | Price | Warranty |\n|---|---|---|---|\n"
-        "| Teapot | Homeware | $20.00 | None |\n\n"
+        "| Teapot | Homeware | ₹2,000 | None |\n\n"
         "## Something else\n\n| A | B |\n|---|---|\n| x | y |\n",
         encoding="utf-8",
     )
     (teapot,) = load_catalogue(tmp_path)
 
-    assert (teapot.slug, teapot.price, teapot.stock_status) == ("teapot", 20.0, "In stock")
+    assert (teapot.slug, teapot.price, teapot.stock_status) == ("teapot", 2000.0, "In stock")

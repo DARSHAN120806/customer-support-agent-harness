@@ -9,7 +9,7 @@ customer to a real support person.
 
 ## Features
 
-- **Shop page:** customers sign in and see the products, a cart, their orders
+- **Shop page:** customers sign in and see the products (priced in Indian rupees), a cart, their orders
   and their support tickets.
 - **Support chat:** a "Chat with us" button answers questions about orders,
   shipping, returns, refunds and warranties.

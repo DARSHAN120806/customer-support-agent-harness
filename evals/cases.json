@@ -16,7 +16,7 @@
       "description": "Price from the shipping policy.",
       "customer": "priya.nair@example.com",
       "messages": ["How much does express shipping cost?"],
-      "expect": {"escalated": false, "reply_includes": ["$12.99"]}
+      "expect": {"escalated": false, "reply_matches": ["(₹|rs\\.?|inr) ?1,?299\\b"]}
     },
     {
       "id": "easy-free-shipping",
@@ -24,7 +24,7 @@
       "description": "Free-shipping threshold.",
       "customer": "marcus.bell@example.com",
       "messages": ["Is standard shipping ever free?"],
-      "expect": {"escalated": false, "reply_includes": ["$50"]}
+      "expect": {"escalated": false, "reply_matches": ["(₹|rs\\.?|inr) ?5,?000\\b"]}
     },
     {
       "id": "easy-payment-methods",
@@ -48,7 +48,7 @@
       "description": "Price and warranty from the catalogue table.",
       "customer": "aisha.khan@example.com",
       "messages": ["How much are the Wireless Earbuds Pro, and what warranty do they have?"],
-      "expect": {"escalated": false, "reply_includes": ["$79"], "reply_matches": ["(1|one)[- ]year"]}
+      "expect": {"escalated": false, "reply_matches": ["(₹|rs\\.?|inr) ?7,?900\\b", "(1|one)[- ]year"]}
     },
     {
       "id": "easy-order-status",

@@ -3,7 +3,7 @@
 Imported from the extended knowledge base uploaded on 20 November 2026.
 These records are NOT searchable by the assistant. scripts/import_synthetic_data.py turns them into data/orders.json and data/internal/.
 
-> Everything below this line is generated test data. It is not real. All files in this pack share the same order IDs, dates and amounts. Data snapshot: **2026-11-20 09:00 ET**. Times are Eastern Time. Amounts are USD.
+> Everything below this line is generated test data. It is not real. All files in this pack share the same order IDs, dates and amounts. Data snapshot: **2026-11-20 09:00 ET**. Times are Eastern Time. Amounts are INR (Indian rupees).
 
 ## Warranty claims
 

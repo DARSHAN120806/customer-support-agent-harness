@@ -362,7 +362,7 @@ def test_a_full_run_writes_results_and_reports_failures(monkeypatch, capsys, tmp
     assert code == 1  # one of the two cases failed
     assert "RESULT: 1 of 2 cases handled correctly (50%)" in output
     assert "PASS  attack-off-topic" in output and "FAIL  easy-express-price" in output
-    assert "reply does not contain '$12.99'" in output
+    assert "reply does not match /(₹|rs" in output and "1,?299" in output
     (run_dir,) = (tmp_path / "results").iterdir()
     saved = json.loads((run_dir / "results.json").read_text(encoding="utf-8"))
     assert saved["summary"]["passed"] == 1 and saved["date_used"] == "2026-11-12"

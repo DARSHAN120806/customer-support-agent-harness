@@ -17,13 +17,13 @@
       "placed_on": "2026-07-15",
       "status": "delivered",
       "items": [
-        {"name": "Bluetooth Speaker Mini", "category": "electronics", "quantity": 1, "unit_price": 39.99},
-        {"name": "Juniper Lane Gift Card $25", "category": "gift_card", "quantity": 1, "unit_price": 25.00}
+        {"name": "Bluetooth Speaker Mini", "category": "electronics", "quantity": 1, "unit_price": 3999.0},
+        {"name": "Juniper Lane Gift Card ₹2,500", "category": "gift_card", "quantity": 1, "unit_price": 2500.0}
       ],
-      "subtotal": 64.99,
+      "subtotal": 6499.0,
       "shipping_method": "standard",
-      "shipping_cost": 0.00,
-      "total": 64.99,
+      "shipping_cost": 0.0,
+      "total": 6499.0,
       "payment_method": "Visa",
       "tracking_number": "TRK7001602211",
       "dispatched_on": "2026-07-16",
@@ -35,13 +35,13 @@
       "placed_on": "2026-08-20",
       "status": "delivered",
       "items": [
-        {"name": "LED Desk Lamp", "category": "electronics", "quantity": 1, "unit_price": 34.50},
-        {"name": "Scented Soy Candle", "category": "homeware", "quantity": 3, "unit_price": 12.00}
+        {"name": "LED Desk Lamp", "category": "electronics", "quantity": 1, "unit_price": 3450.0},
+        {"name": "Scented Soy Candle", "category": "homeware", "quantity": 3, "unit_price": 1200.0}
       ],
-      "subtotal": 70.50,
+      "subtotal": 7050.0,
       "shipping_method": "standard",
-      "shipping_cost": 0.00,
-      "total": 70.50,
+      "shipping_cost": 0.0,
+      "total": 7050.0,
       "payment_method": "PayPal",
       "tracking_number": "TRK7001773408",
       "dispatched_on": "2026-08-21",
@@ -53,12 +53,12 @@
       "placed_on": "2026-09-02",
       "status": "delivered",
       "items": [
-        {"name": "Personalised Leather Notebook", "category": "personalised", "quantity": 1, "unit_price": 29.00}
+        {"name": "Personalised Leather Notebook", "category": "personalised", "quantity": 1, "unit_price": 2900.0}
       ],
-      "subtotal": 29.00,
+      "subtotal": 2900.0,
       "shipping_method": "standard",
-      "shipping_cost": 4.99,
-      "total": 33.99,
+      "shipping_cost": 499.0,
+      "total": 3399.0,
       "payment_method": "Mastercard",
       "tracking_number": "TRK7001895526",
       "dispatched_on": "2026-09-03",
@@ -70,12 +70,12 @@
       "placed_on": "2026-09-14",
       "status": "delivered",
       "items": [
-        {"name": "Bluetooth Speaker Mini", "category": "electronics", "quantity": 1, "unit_price": 39.99}
+        {"name": "Bluetooth Speaker Mini", "category": "electronics", "quantity": 1, "unit_price": 3999.0}
       ],
-      "subtotal": 39.99,
+      "subtotal": 3999.0,
       "shipping_method": "standard",
-      "shipping_cost": 4.99,
-      "total": 44.98,
+      "shipping_cost": 499.0,
+      "total": 4498.0,
       "payment_method": "Visa",
       "tracking_number": "TRK7001987731",
       "dispatched_on": "2026-09-15",
@@ -87,17 +87,17 @@
       "placed_on": "2026-09-25",
       "status": "refunded",
       "items": [
-        {"name": "Oak Side Table", "category": "furniture", "quantity": 1, "unit_price": 129.00}
+        {"name": "Oak Side Table", "category": "furniture", "quantity": 1, "unit_price": 12900.0}
       ],
-      "subtotal": 129.00,
+      "subtotal": 12900.0,
       "shipping_method": "standard",
-      "shipping_cost": 0.00,
-      "total": 129.00,
+      "shipping_cost": 0.0,
+      "total": 12900.0,
       "payment_method": "American Express",
       "tracking_number": "TRK7002014490",
       "dispatched_on": "2026-09-28",
       "delivered_on": "2026-09-30",
-      "refund": {"amount": 129.00, "reason": "arrived damaged", "issued_on": "2026-10-12"}
+      "refund": {"amount": 12900.0, "reason": "arrived damaged", "issued_on": "2026-10-12"}
     },
     {
       "order_id": "JL-10205",
@@ -105,12 +105,12 @@
       "placed_on": "2026-10-01",
       "status": "delivered",
       "items": [
-        {"name": "Bamboo Cutting Board", "category": "homeware", "quantity": 2, "unit_price": 24.00}
+        {"name": "Bamboo Cutting Board", "category": "homeware", "quantity": 2, "unit_price": 2400.0}
       ],
-      "subtotal": 48.00,
+      "subtotal": 4800.0,
       "shipping_method": "standard",
-      "shipping_cost": 4.99,
-      "total": 52.99,
+      "shipping_cost": 499.0,
+      "total": 5299.0,
       "payment_method": "PayPal",
       "tracking_number": "TRK7002052267",
       "dispatched_on": "2026-10-02",
@@ -122,18 +122,18 @@
       "placed_on": "2026-10-10",
       "status": "cancelled",
       "items": [
-        {"name": "Cast Iron Skillet", "category": "homeware", "quantity": 1, "unit_price": 55.00}
+        {"name": "Cast Iron Skillet", "category": "homeware", "quantity": 1, "unit_price": 5500.0}
       ],
-      "subtotal": 55.00,
+      "subtotal": 5500.0,
       "shipping_method": "standard",
-      "shipping_cost": 0.00,
-      "total": 55.00,
+      "shipping_cost": 0.0,
+      "total": 5500.0,
       "payment_method": "Visa",
       "tracking_number": null,
       "dispatched_on": null,
       "delivered_on": null,
       "cancelled_on": "2026-10-10",
-      "refund": {"amount": 55.00, "reason": "cancelled before dispatch", "issued_on": "2026-10-13"}
+      "refund": {"amount": 5500.0, "reason": "cancelled before dispatch", "issued_on": "2026-10-13"}
     },
     {
       "order_id": "JL-10219",
@@ -141,12 +141,12 @@
       "placed_on": "2026-10-20",
       "status": "return_requested",
       "items": [
-        {"name": "Electric Kettle 1.7L", "category": "electronics", "quantity": 1, "unit_price": 45.00}
+        {"name": "Electric Kettle 1.7L", "category": "electronics", "quantity": 1, "unit_price": 4500.0}
       ],
-      "subtotal": 45.00,
+      "subtotal": 4500.0,
       "shipping_method": "standard",
-      "shipping_cost": 4.99,
-      "total": 49.99,
+      "shipping_cost": 499.0,
+      "total": 4999.0,
       "payment_method": "Mastercard",
       "tracking_number": "TRK7002193352",
       "dispatched_on": "2026-10-21",
@@ -159,13 +159,13 @@
       "placed_on": "2026-10-29",
       "status": "delivered",
       "items": [
-        {"name": "Wireless Earbuds Pro", "category": "electronics", "quantity": 1, "unit_price": 79.00},
-        {"name": "Adjustable Phone Stand", "category": "homeware", "quantity": 1, "unit_price": 15.00}
+        {"name": "Wireless Earbuds Pro", "category": "electronics", "quantity": 1, "unit_price": 7900.0},
+        {"name": "Adjustable Phone Stand", "category": "homeware", "quantity": 1, "unit_price": 1500.0}
       ],
-      "subtotal": 94.00,
+      "subtotal": 9400.0,
       "shipping_method": "standard",
-      "shipping_cost": 0.00,
-      "total": 94.00,
+      "shipping_cost": 0.0,
+      "total": 9400.0,
       "payment_method": "Mastercard",
       "tracking_number": "TRK7002286614",
       "dispatched_on": "2026-10-30",
@@ -177,13 +177,13 @@
       "placed_on": "2026-11-03",
       "status": "delivered",
       "items": [
-        {"name": "Ceramic Pour-Over Coffee Set", "category": "homeware", "quantity": 1, "unit_price": 42.00},
-        {"name": "Linen Napkins (Set of 4)", "category": "homeware", "quantity": 1, "unit_price": 18.50}
+        {"name": "Ceramic Pour-Over Coffee Set", "category": "homeware", "quantity": 1, "unit_price": 4200.0},
+        {"name": "Linen Napkins (Set of 4)", "category": "homeware", "quantity": 1, "unit_price": 1850.0}
       ],
-      "subtotal": 60.50,
+      "subtotal": 6050.0,
       "shipping_method": "standard",
-      "shipping_cost": 0.00,
-      "total": 60.50,
+      "shipping_cost": 0.0,
+      "total": 6050.0,
       "payment_method": "Visa",
       "tracking_number": "TRK7002317785",
       "dispatched_on": "2026-11-04",
@@ -195,12 +195,12 @@
       "placed_on": "2026-11-04",
       "status": "delivered",
       "items": [
-        {"name": "Smart Plug (2-Pack)", "category": "electronics", "quantity": 1, "unit_price": 25.00}
+        {"name": "Smart Plug (2-Pack)", "category": "electronics", "quantity": 1, "unit_price": 2500.0}
       ],
-      "subtotal": 25.00,
+      "subtotal": 2500.0,
       "shipping_method": "express",
-      "shipping_cost": 12.99,
-      "total": 37.99,
+      "shipping_cost": 1299.0,
+      "total": 3799.0,
       "payment_method": "Visa",
       "tracking_number": "TRK7002339102",
       "dispatched_on": "2026-11-05",
@@ -212,12 +212,12 @@
       "placed_on": "2026-11-02",
       "status": "shipped",
       "items": [
-        {"name": "Wool Throw Blanket", "category": "homeware", "quantity": 1, "unit_price": 68.00}
+        {"name": "Wool Throw Blanket", "category": "homeware", "quantity": 1, "unit_price": 6800.0}
       ],
-      "subtotal": 68.00,
+      "subtotal": 6800.0,
       "shipping_method": "standard",
-      "shipping_cost": 0.00,
-      "total": 68.00,
+      "shipping_cost": 0.0,
+      "total": 6800.0,
       "payment_method": "Mastercard",
       "tracking_number": "TRK7002365548",
       "dispatched_on": "2026-11-03",
@@ -231,13 +231,13 @@
       "placed_on": "2026-11-08",
       "status": "shipped",
       "items": [
-        {"name": "LED Desk Lamp", "category": "electronics", "quantity": 1, "unit_price": 34.50},
-        {"name": "Linen Napkins (Set of 4)", "category": "homeware", "quantity": 1, "unit_price": 18.50}
+        {"name": "LED Desk Lamp", "category": "electronics", "quantity": 1, "unit_price": 3450.0},
+        {"name": "Linen Napkins (Set of 4)", "category": "homeware", "quantity": 1, "unit_price": 1850.0}
       ],
-      "subtotal": 53.00,
+      "subtotal": 5300.0,
       "shipping_method": "standard",
-      "shipping_cost": 0.00,
-      "total": 53.00,
+      "shipping_cost": 0.0,
+      "total": 5300.0,
       "payment_method": "American Express",
       "tracking_number": "TRK7002381276",
       "dispatched_on": "2026-11-09",
@@ -251,12 +251,12 @@
       "placed_on": "2026-11-09",
       "status": "shipped",
       "items": [
-        {"name": "Wireless Earbuds Pro", "category": "electronics", "quantity": 1, "unit_price": 79.00}
+        {"name": "Wireless Earbuds Pro", "category": "electronics", "quantity": 1, "unit_price": 7900.0}
       ],
-      "subtotal": 79.00,
+      "subtotal": 7900.0,
       "shipping_method": "express",
-      "shipping_cost": 12.99,
-      "total": 91.99,
+      "shipping_cost": 1299.0,
+      "total": 9199.0,
       "payment_method": "PayPal",
       "tracking_number": "TRK7002403391",
       "dispatched_on": "2026-11-10",
@@ -270,12 +270,12 @@
       "placed_on": "2026-11-10",
       "status": "processing",
       "items": [
-        {"name": "Ceramic Planter Set", "category": "homeware", "quantity": 1, "unit_price": 32.00}
+        {"name": "Ceramic Planter Set", "category": "homeware", "quantity": 1, "unit_price": 3200.0}
       ],
-      "subtotal": 32.00,
+      "subtotal": 3200.0,
       "shipping_method": "standard",
-      "shipping_cost": 4.99,
-      "total": 36.99,
+      "shipping_cost": 499.0,
+      "total": 3699.0,
       "payment_method": "Visa",
       "tracking_number": null,
       "dispatched_on": null,
@@ -287,12 +287,12 @@
       "placed_on": "2026-11-11",
       "status": "processing",
       "items": [
-        {"name": "Oak Side Table", "category": "furniture", "quantity": 1, "unit_price": 129.00}
+        {"name": "Oak Side Table", "category": "furniture", "quantity": 1, "unit_price": 12900.0}
       ],
-      "subtotal": 129.00,
+      "subtotal": 12900.0,
       "shipping_method": "standard",
-      "shipping_cost": 0.00,
-      "total": 129.00,
+      "shipping_cost": 0.0,
+      "total": 12900.0,
       "payment_method": "PayPal",
       "tracking_number": null,
       "dispatched_on": null,

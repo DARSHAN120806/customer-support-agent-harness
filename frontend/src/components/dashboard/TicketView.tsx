@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { ApiError, dashboardApi, MAX_MESSAGE_LENGTH, type OrderDetail, type PanelPerson, type TicketDetail } from '../../api'
 import { REASON_LABEL, dateTime, day, statusLabel } from '../../format'
 import { FormattedText } from '../FormattedText'
-import { dollars } from '../shop/cart'
+import { rupees } from '../shop/cart'
 import { Tag } from '../shop/Tag'
 import { OrderView } from './Orders'
 
@@ -248,7 +248,7 @@ export function TicketView({ ticketId, person, onBack, onOpenConversation }: Pro
                       <span>
                         <Tag>{o.order_id}</Tag>
                         <span className="ad-muted ad-order-meta">
-                          {day(o.placed_on)} · {o.status.replace(/_/g, ' ')} · {dollars(o.total)}
+                          {day(o.placed_on)} · {o.status.replace(/_/g, ' ')} · {rupees(o.total)}
                         </span>
                       </span>
                       <button type="button" className="ad-link" onClick={() => openOrder(o.order_id)}>

@@ -47,7 +47,7 @@ def test_a_normal_order_question_end_to_end(settings, knowledge_base, orders, ti
                 ToolCall("c2", "calculate_date", {"start_date": "2026-11-07", "add_days": 30})
             ),
             text_response(
-                "Your order was delivered on 7 November 2026 and the total was $60.50. "
+                "Your order was delivered on 7 November 2026 and the total was ₹6,050. "
                 "You can return it until 7 December 2026."
             ),
         ],
@@ -55,7 +55,7 @@ def test_a_normal_order_question_end_to_end(settings, knowledge_base, orders, ti
     result = agent.run("Tell me about order JL-10231")
 
     assert result.outcome == COMPLETED
-    assert "$60.50" in result.reply
+    assert "₹6,050" in result.reply
     assert not result.escalated
     assert tickets.all() == []
     # The model was told today's date and given all four tools.

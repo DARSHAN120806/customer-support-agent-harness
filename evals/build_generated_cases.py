@@ -23,6 +23,7 @@ import sys
 from datetime import date
 from pathlib import Path
 
+from support_agent.currency import format_inr
 from support_agent.safety import asks_for_human
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -33,7 +34,7 @@ TODAY = date(2026, 11, 20)  # the snapshot date of the records
 
 EMAIL = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
 ORDER_ID = re.compile(r"\bJL-\d{5}\b")
-MONEY = re.compile(r"\$\d[\d,]*(?:\.\d{2})?")
+MONEY = re.compile(r"₹\d[\d,]*(?:\.\d{2})?")  # a rupee amount, "₹1,29,000"
 WARRANTY_YEARS = {"electronics": 1, "furniture": 2}
 
 CATEGORY_BY_KIND = {
@@ -162,7 +163,7 @@ def build() -> str:
                 expect["reply_matches"] = ["lost|investigat"]
         elif kind == "Refund status" and order and order.get("refunds"):
             expect["escalated"] = False
-            expect["reply_includes"] = [f"${order['refunds'][-1]['net_refund']:,.2f}"]
+            expect["reply_includes"] = [format_inr(order['refunds'][-1]['net_refund'])]
         elif kind == "Warranty claim — status" and order and order.get("warranty_claims"):
             words = CLAIM_STATUS_WORDS.get(order["warranty_claims"][-1]["status"])
             if words:

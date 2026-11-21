@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { ApiError, dashboardApi, type OrderDetail, type OrderRow } from '../../api'
 import { day } from '../../format'
 import { Tag } from '../shop/Tag'
-import { dollars } from '../shop/cart'
+import { rupees } from '../shop/cart'
 
 // The kinds of records an order can carry, in plain words.
 const RECORDS: Record<string, string> = {
@@ -128,7 +128,7 @@ export function Orders() {
                   <td className="ad-summary">{o.items.join(', ')}</td>
                   <td className="nowrap">{words(o.status)}</td>
                   <td className="num ad-mono">{o.records || '—'}</td>
-                  <td className="num ad-mono">{dollars(o.total)}</td>
+                  <td className="num ad-mono">{rupees(o.total)}</td>
                   <td>
                     <button type="button" className="ad-link" onClick={() => show(o.order_id)}>
                       Open
@@ -170,16 +170,16 @@ export function OrderView({ detail, onBack, backLabel = '← All orders' }: { de
                 <span>
                   {item.name} <span className="ad-muted">× {item.quantity}</span>
                 </span>
-                <span className="ad-mono">{dollars(item.unit_price * item.quantity)}</span>
+                <span className="ad-mono">{rupees(item.unit_price * item.quantity)}</span>
               </li>
             ))}
             <li>
               <span className="ad-muted">Shipping</span>
-              <span className="ad-mono">{dollars(Number(order.shipping_cost ?? 0))}</span>
+              <span className="ad-mono">{rupees(Number(order.shipping_cost ?? 0))}</span>
             </li>
             <li>
               <strong>Total</strong>
-              <span className="ad-mono">{dollars(Number(order.total ?? 0))}</span>
+              <span className="ad-mono">{rupees(Number(order.total ?? 0))}</span>
             </li>
           </ul>
         </section>

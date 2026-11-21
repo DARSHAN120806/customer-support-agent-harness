@@ -160,9 +160,9 @@ def lookup(knowledge_base, orders, tickets, customer, order_id):
 def test_the_owner_sees_the_order_with_its_records(data, knowledge_base, full_orders, tickets):
     result = json.loads(lookup(knowledge_base, full_orders, tickets, owner_of(data, "JL-10401"), "JL-10401"))
 
-    assert result["status"] == "lost" and result["total"] == 233.97
+    assert result["status"] == "lost" and result["total"] == 23397.0
     assert result["refunds"][0]["refund_id"] == "RF-30079"
-    assert result["refunds"][0]["net_refund"] == 233.97
+    assert result["refunds"][0]["net_refund"] == 23397.0
     assert result["carrier_investigations"][0]["case_id"] == "INV-50014"
     assert "customer_id" not in result
 
@@ -171,7 +171,7 @@ def test_nobody_else_sees_those_records(data, knowledge_base, full_orders, ticke
     for stranger in (PRIYA, owner_of(data, "JL-10075")):
         text = lookup(knowledge_base, full_orders, tickets, stranger, "JL-10401")
         assert "No order JL-10401 was found" in text
-        assert "RF-30079" not in text and "233.97" not in text
+        assert "RF-30079" not in text and "23397" not in text
 
 
 def test_a_renumbered_order_belongs_to_its_new_owner_only(data, knowledge_base, full_orders, tickets):

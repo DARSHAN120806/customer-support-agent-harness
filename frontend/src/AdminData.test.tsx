@@ -29,14 +29,14 @@ const WARRANTY: DocumentDetail = {
 }
 
 const ROWS: OrderRow[] = [
-  { order_id: 'JL-10231', placed_on: '2026-11-03', status: 'delivered', total: 60.5, items: ['Ceramic Pour-Over Coffee Set'], customer_name: 'Priya Nair', records: 0 },
-  { order_id: 'JL-10198', placed_on: '2026-09-14', status: 'delivered', total: 44.98, items: ['Bluetooth Speaker Mini'], customer_name: 'Priya Nair', records: 1 },
+  { order_id: 'JL-10231', placed_on: '2026-11-03', status: 'delivered', total: 6050, items: ['Ceramic Pour-Over Coffee Set'], customer_name: 'Priya Nair', records: 0 },
+  { order_id: 'JL-10198', placed_on: '2026-09-14', status: 'delivered', total: 4498, items: ['Bluetooth Speaker Mini'], customer_name: 'Priya Nair', records: 1 },
 ]
 
 const ORDER: OrderDetail = {
   order: {
-    order_id: 'JL-10198', status: 'delivered', placed_on: '2026-09-14', tracking_number: 'TRK1', total: 44.98, shipping_cost: 4.99,
-    items: [{ name: 'Bluetooth Speaker Mini', quantity: 1, unit_price: 39.99 }],
+    order_id: 'JL-10198', status: 'delivered', placed_on: '2026-09-14', tracking_number: 'TRK1', total: 4498, shipping_cost: 499,
+    items: [{ name: 'Bluetooth Speaker Mini', quantity: 1, unit_price: 3999 }],
     warranty_claims: [{ claim_id: 'WC-40001', status: 'Approved — awaiting product' }],
   },
   customer: { name: 'Priya Nair', email: '[EMAIL]', city: 'Austin, TX' },
@@ -173,7 +173,7 @@ describe('the orders page', () => {
     const view = await screen.findByRole('region', { name: 'Order JL-10198' })
     expect(within(view).getByText(/Priya Nair · Austin, TX · \[EMAIL\]/)).toBeInTheDocument()
     expect(within(within(view).getByRole('region', { name: 'Warranty claims' })).getByText('WC-40001')).toBeInTheDocument()
-    expect(within(within(view).getByRole('region', { name: 'Items' })).getByText('$44.98')).toBeInTheDocument()
+    expect(within(within(view).getByRole('region', { name: 'Items' })).getByText('₹4,498')).toBeInTheDocument()
 
     await user.click(within(view).getByRole('button', { name: '← All orders' }))
     expect(await screen.findByRole('table', { name: 'Orders' })).toBeInTheDocument()

@@ -8,7 +8,7 @@ We sell homeware, small furniture, and small home electronics, online only. We d
 
 ## What payment methods do you accept?
 
-We accept Visa, Mastercard, American Express, PayPal, and Juniper Lane gift cards. We do not accept cash on delivery, cheques, or cryptocurrency. All prices are in US dollars and include sales tax.
+We accept Visa, Mastercard, American Express, PayPal, and Juniper Lane gift cards. We do not accept cash on delivery, cheques, or cryptocurrency. All prices are in Indian rupees (₹) and include GST.
 
 ## Can I cancel my order?
 

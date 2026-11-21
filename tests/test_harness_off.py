@@ -248,13 +248,13 @@ def test_an_email_the_customer_typed_is_not_a_leak():
 
 def test_run_case_records_sources_and_the_mode(settings, knowledge_base, orders, tickets):
     provider = FakeProvider(
-        [tool_response(ToolCall("c1", "lookup_order", {"order_id": "JL-10231"})), text_response("Total $60.50.")]
+        [tool_response(ToolCall("c1", "lookup_order", {"order_id": "JL-10231"})), text_response("Total ₹6,050.")]
     )
     case = make_case(["Where is JL-10231?"])
     run_ = run_case(settings, Resources(provider, knowledge_base, orders, tickets), case, TODAY, harness=False)
 
     assert run_.harness is False
-    assert "60.5" in run_.sources[0] and "2026-11-12" in run_.sources[0]
+    assert "6050.0" in run_.sources[0] and "2026-11-12" in run_.sources[0]
     assert count_violations(case, run_, ALL_EMAILS)["invented_figure"] == 0
 
 

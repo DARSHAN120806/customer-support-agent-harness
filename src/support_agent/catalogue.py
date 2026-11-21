@@ -14,11 +14,12 @@ from pathlib import Path
 from typing import Any
 
 from .config import ConfigError
+from .currency import RUPEES
 
 OVERVIEW_FILE = "company_overview.md"
 CATALOGUE_HEADING = "Product catalogue and prices"
 STOCK_HEADING = "Stock levels"
-MONEY = re.compile(r"\$(\d+(?:\.\d{2})?)")
+MONEY = RUPEES  # "₹3,999"; prices are in Indian rupees
 
 
 @dataclass(frozen=True)
@@ -50,7 +51,7 @@ def load_catalogue(knowledge_base_dir: Path) -> list[Product]:
 
     products = []
     for name, category, price_text, warranty, *_ in rows:
-        amounts = [float(a) for a in MONEY.findall(price_text)]
+        amounts = [float(a.replace(",", "")) for a in MONEY.findall(price_text)]
         single = len(amounts) == 1
         level = stock.get(name)
         products.append(

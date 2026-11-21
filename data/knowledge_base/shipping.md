@@ -10,10 +10,10 @@ We ship to addresses in the United States only, including Alaska and Hawaii. We 
 
 | Option | Delivery time | Price |
 |---|---|---|
-| Standard | 3–5 business days after dispatch | $4.99, or free on orders of $50.00 or more |
-| Express | 1–2 business days after dispatch | $12.99 on every order |
+| Standard | 3–5 business days after dispatch | ₹499, or free on orders of ₹5,000 or more |
+| Express | 1–2 business days after dispatch | ₹1,299 on every order |
 
-The $50.00 free-shipping threshold is based on the item subtotal before shipping. Express shipping is never free.
+The ₹5,000 free-shipping threshold is based on the item subtotal before shipping. Express shipping is never free.
 
 ## Order processing time
 

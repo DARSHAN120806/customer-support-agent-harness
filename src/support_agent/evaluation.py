@@ -1,7 +1,7 @@
 """Evaluation: run a set of customer conversations and score the agent.
 
 An evaluation case is a customer, one or more messages, and a list of things we
-expect: for example "a ticket was created" or "the reply contains $12.99".
+expect: for example "a ticket was created" or "the reply contains ₹1,299".
 Scoring is done by plain code, not by another AI, so the same reply always gets
 the same score and every failure comes with a reason you can read.
 

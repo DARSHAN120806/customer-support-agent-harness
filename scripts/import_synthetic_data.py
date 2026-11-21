@@ -33,6 +33,8 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
+from support_agent.currency import RUPEES, format_inr
+
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "data" / "source"
 EXTENSION = SOURCE / "synthetic_extension"
@@ -60,21 +62,21 @@ CATEGORY = {
     "Juniper Lane Gift Card": "gift_card",
 }
 PRICE = {
-    "Bluetooth Speaker Mini": 39.99,
-    "Wireless Earbuds Pro": 79.00,
-    "LED Desk Lamp": 34.50,
-    "Electric Kettle 1.7L": 45.00,
-    "Smart Plug (2-Pack)": 25.00,
-    "Oak Side Table": 129.00,
-    "Wool Throw Blanket": 68.00,
-    "Cast Iron Skillet": 55.00,
-    "Ceramic Pour-Over Coffee Set": 42.00,
-    "Ceramic Planter Set": 32.00,
-    "Bamboo Cutting Board": 24.00,
-    "Linen Napkins (Set of 4)": 18.50,
-    "Adjustable Phone Stand": 15.00,
-    "Scented Soy Candle": 12.00,
-    "Personalised Leather Notebook": 29.00,
+    "Bluetooth Speaker Mini": 3999.0,
+    "Wireless Earbuds Pro": 7900.0,
+    "LED Desk Lamp": 3450.0,
+    "Electric Kettle 1.7L": 4500.0,
+    "Smart Plug (2-Pack)": 2500.0,
+    "Oak Side Table": 12900.0,
+    "Wool Throw Blanket": 6800.0,
+    "Cast Iron Skillet": 5500.0,
+    "Ceramic Pour-Over Coffee Set": 4200.0,
+    "Ceramic Planter Set": 3200.0,
+    "Bamboo Cutting Board": 2400.0,
+    "Linen Napkins (Set of 4)": 1850.0,
+    "Adjustable Phone Stand": 1500.0,
+    "Scented Soy Candle": 1200.0,
+    "Personalised Leather Notebook": 2900.0,
 }
 
 # What each warranty claim status means, in words the assistant can pass on.
@@ -149,7 +151,8 @@ def read_tables(path: Path) -> dict[str, list[dict[str, str | None]]]:
 def money(text: str | None) -> float | None:
     if text is None:
         return None
-    match = re.fullmatch(r"\$([\d,]+(?:\.\d+)?)", text.strip())
+    # Amounts are in Indian rupees, for example "₹3,999" or "₹1,29,000".
+    match = RUPEES.fullmatch(text.strip())
     if not match:
         raise ValueError(f"not an amount: {text!r}")
     return round(float(match.group(1).replace(",", "")), 2)
@@ -190,8 +193,8 @@ def parse_items(text: str) -> list[dict[str, Any]]:
         name, extra = match["name"], match["extra"]
         item: dict[str, Any] = {"name": name, "category": CATEGORY[name], "quantity": int(match["qty"])}
         if name == "Juniper Lane Gift Card":
-            value = money(re.fullmatch(r"(\$[\d.,]+) card", extra).group(1))
-            item["name"] = f"Juniper Lane Gift Card ${value:g}"
+            value = money(re.fullmatch(r"(₹[\d.,]+) card", extra).group(1))
+            item["name"] = f"Juniper Lane Gift Card {format_inr(value)}"
             item["unit_price"] = value
         else:
             item["unit_price"] = PRICE[name]

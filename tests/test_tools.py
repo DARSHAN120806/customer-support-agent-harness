@@ -56,7 +56,7 @@ def test_customer_can_see_their_own_order(registry):
 
     order = json.loads(result.content)
     assert order["status"] == "delivered"
-    assert order["total"] == 60.50
+    assert order["total"] == 6050.0
     assert order["delivered_on"] == "2026-11-07"
     assert "customer_id" not in order
 
@@ -72,7 +72,7 @@ def test_customer_cannot_see_another_customers_order(registry):
     result = registry.execute("lookup_order", {"order_id": "JL-10240"})
 
     assert "No order JL-10240 was found" in result.content
-    for private_detail in ("Wireless Earbuds", "91.99", "TRK", "PayPal", "marcus"):
+    for private_detail in ("Wireless Earbuds", "9199", "TRK", "PayPal", "marcus"):
         assert private_detail not in result.content
 
 
@@ -99,7 +99,7 @@ def test_the_owner_can_see_that_same_order(knowledge_base, orders, tickets):
     )
     result = marcus_registry.execute("lookup_order", {"order_id": "JL-10240"})
 
-    assert json.loads(result.content)["total"] == 91.99
+    assert json.loads(result.content)["total"] == 9199.0
 
 
 def test_badly_formed_order_id_is_an_error(registry):

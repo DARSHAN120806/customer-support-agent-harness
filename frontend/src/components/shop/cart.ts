@@ -35,7 +35,7 @@ export function lineFor(product: Product, amount?: number): CartLine | null {
   return {
     id: product.price == null ? `${product.slug}:${price}` : product.slug,
     slug: product.slug,
-    name: product.price == null ? `${product.name} (${dollars(price)})` : product.name,
+    name: product.price == null ? `${product.name} (${rupees(price)})` : product.name,
     price,
     quantity: 1,
     maxQuantity: Math.max(0, Math.min(MAX_PER_ITEM, stock)),
@@ -73,6 +73,14 @@ export function useCart(email: string) {
   return { lines, add, setQuantity, count, subtotal }
 }
 
-export function dollars(amount: number): string {
-  return amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
+// Shop prices are in Indian rupees, with Indian digit grouping: ₹3,999 and
+// ₹1,29,000. Paise are shown only when there are some.
+export function rupees(amount: number): string {
+  const whole = Number.isInteger(amount)
+  return amount.toLocaleString('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    minimumFractionDigits: whole ? 0 : 2,
+    maximumFractionDigits: 2,
+  })
 }

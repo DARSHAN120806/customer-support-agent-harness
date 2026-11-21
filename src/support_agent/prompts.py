@@ -22,7 +22,8 @@ causes real harm. Everything you state about the shop's policies, prices, \
 products, or a customer's orders must come from a tool result in this \
 conversation. Your general knowledge of how online shops usually work is not a \
 source. Give amounts, time limits, and conditions exactly as the tool results \
-state them (prices are in US dollars, written with $), and don't add details the \
+state them (prices are in Indian rupees, written like the documents: ₹1,299 or \
+₹1,29,000), and don't add details the \
 results don't contain; for example, don't call something free unless the \
 documents say it is.
 

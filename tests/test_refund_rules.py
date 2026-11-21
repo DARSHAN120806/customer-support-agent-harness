@@ -61,7 +61,7 @@ def replay(order: dict, record: dict) -> rules.Check:
 
 
 def _order_name(order: dict, name: str) -> str:
-    """One old record writes "Juniper Lane Gift Card" for "Juniper Lane Gift Card $50".
+    """One old record writes "Juniper Lane Gift Card" for "Juniper Lane Gift Card ₹5,000".
     Use the order's own name when exactly one item starts with the record's name."""
     names = [i["name"] for i in order["items"]]
     if name in names:
@@ -162,11 +162,11 @@ def order(**changes) -> dict:
         "order_id": "JL-99001",
         "status": "delivered",
         "items": [
-            {"name": "Linen Napkins (Set of 4)", "category": "homeware", "quantity": 2, "unit_price": 18.5},
-            {"name": "Oak Side Table", "category": "furniture", "quantity": 1, "unit_price": 129.0},
+            {"name": "Linen Napkins (Set of 4)", "category": "homeware", "quantity": 2, "unit_price": 1850.0},
+            {"name": "Oak Side Table", "category": "furniture", "quantity": 1, "unit_price": 12900.0},
         ],
-        "subtotal": 166.0,
-        "shipping_cost": 4.99,
+        "subtotal": 16600.0,
+        "shipping_cost": 499.0,
         "payment_method": "Visa",
         "delivered_on": "2026-11-10",
     }
@@ -185,7 +185,7 @@ def test_a_small_change_of_mind_return_is_approved_with_the_fee_taken_off():
     check, decision = ask(order(), rules.CHANGED_MIND, NAPKIN)
     assert decision.outcome == rules.APPROVE
     assert check.money == rules.Money(
-        Decimal("18.50"), Decimal("0.00"), Decimal("6.99"), Decimal("11.51"), "Original payment (Visa)", False
+        Decimal("1850.00"), Decimal("0.00"), Decimal("699.00"), Decimal("1151.00"), "Original payment (Visa)", False
     )
     assert "20%" in check.notes[0]
 
@@ -201,13 +201,13 @@ def test_day_30_is_still_in_time_and_day_31_is_not():
 def test_over_the_limit_goes_to_a_person_even_when_allowed():
     check, decision = ask(order(), rules.CHANGED_MIND, Item("Oak Side Table", 1))
     assert check.allowed and decision.outcome == rules.NEEDS_STAFF
-    assert any("over $50.00" in why for why in decision.why)
+    assert any("over ₹5,000" in why for why in decision.why)
 
 
 def test_faulty_and_damaged_are_always_checked_by_a_person_and_shipping_is_refunded():
     check, decision = ask(order(), rules.FAULTY, NAPKIN)
     assert decision.outcome == rules.NEEDS_STAFF
-    assert check.money.net_refund == Decimal("23.49") and check.money.free_return_label
+    assert check.money.net_refund == Decimal("2349.00") and check.money.free_return_label
     assert ask(order(), rules.DAMAGED, NAPKIN, today=date(2026, 11, 15))[1].outcome == rules.NEEDS_STAFF
 
 
@@ -229,20 +229,20 @@ def test_a_wrong_item_is_approved_with_a_free_label_within_14_days_only():
 
 
 def test_personalised_items_only_come_back_when_faulty():
-    notebook = {"name": "Personalised Leather Notebook", "category": "personalised", "quantity": 1, "unit_price": 29.0}
+    notebook = {"name": "Personalised Leather Notebook", "category": "personalised", "quantity": 1, "unit_price": 2900.0}
     the_order = order(items=[notebook])
     assert ask(the_order, rules.CHANGED_MIND, Item(notebook["name"], 1))[0].problems[0].rule == "personalised"
     assert ask(the_order, rules.FAULTY, Item(notebook["name"], 1))[0].allowed
 
 
 def test_gift_cards_never_come_back():
-    card = {"name": "Juniper Lane Gift Card $50", "category": "gift_card", "quantity": 1, "unit_price": 50.0}
+    card = {"name": "Juniper Lane Gift Card ₹5,000", "category": "gift_card", "quantity": 1, "unit_price": 5000.0}
     check, decision = ask(order(items=[card], delivered_on=None), rules.CHANGED_MIND, Item(card["name"], 1))
     assert decision.outcome == rules.NOT_ALLOWED and check.problems[0].rule == "gift_card"
 
 
 def test_a_candle_needs_an_answer_about_the_seal_first():
-    candle = {"name": "Scented Soy Candle", "category": "homeware", "quantity": 1, "unit_price": 22.0}
+    candle = {"name": "Scented Soy Candle", "category": "homeware", "quantity": 1, "unit_price": 2200.0}
     the_order = order(items=[candle])
     check, decision = ask(the_order, rules.CHANGED_MIND, Item(candle["name"], 1))
     assert decision.outcome == rules.NEED_INFO and "seal" in check.question
@@ -268,7 +268,7 @@ def test_a_cancelled_or_refunded_order_cannot_be_refunded_again():
 
 def test_cancelling_only_works_before_dispatch_and_goes_to_a_person():
     check, decision = ask(order(status="processing", delivered_on=None), rules.CANCEL)
-    assert decision.outcome == rules.NEEDS_STAFF and check.money.net_refund == Decimal("170.99")
+    assert decision.outcome == rules.NEEDS_STAFF and check.money.net_refund == Decimal("17099.00")
     assert ask(order(status="dispatched"), rules.CANCEL)[0].problems[0].rule == "already_dispatched"
 
 
@@ -290,8 +290,8 @@ def test_an_unknown_reason_is_refused_before_any_rule_runs():
 
 def test_the_limit_and_the_auto_reasons_can_be_changed():
     check, _ = ask(order(), rules.CHANGED_MIND, Item("Oak Side Table", 1))
-    assert rules.decide(check, rules.CHANGED_MIND, limit=Decimal("200")).outcome == rules.APPROVE
-    assert rules.decide(check, rules.CHANGED_MIND, limit=Decimal("200"), auto_reasons=()).outcome == rules.NEEDS_STAFF
+    assert rules.decide(check, rules.CHANGED_MIND, limit=Decimal("20000")).outcome == rules.APPROVE
+    assert rules.decide(check, rules.CHANGED_MIND, limit=Decimal("20000"), auto_reasons=()).outcome == rules.NEEDS_STAFF
 
 
 def test_the_rules_never_change_the_order(orders):

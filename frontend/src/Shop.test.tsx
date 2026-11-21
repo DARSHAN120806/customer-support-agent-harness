@@ -13,8 +13,8 @@ const SESSION: Session = {
   conversation_id: 'conv_000000000001',
   customer: { name: 'Priya Nair', email: 'priya.nair@example.com', order_count: 2 },
   orders: [
-    { order_id: 'JL-10198', placed_on: '2026-09-14', status: 'delivered', total: 44.98, items: ['Bluetooth Speaker Mini'] },
-    { order_id: 'JL-10231', placed_on: '2026-11-03', status: 'delivered', total: 60.5, items: ['Ceramic Pour-Over Coffee Set', 'Linen Napkins (Set of 4)'] },
+    { order_id: 'JL-10198', placed_on: '2026-09-14', status: 'delivered', total: 4498, items: ['Bluetooth Speaker Mini'] },
+    { order_id: 'JL-10231', placed_on: '2026-11-03', status: 'delivered', total: 6050, items: ['Ceramic Pour-Over Coffee Set', 'Linen Napkins (Set of 4)'] },
   ],
   transcript: [],
   assistant_name: 'Juniper Lane Goods virtual assistant',
@@ -35,11 +35,11 @@ function product(name: string, overrides: Partial<Product> = {}): Product {
 }
 
 const PRODUCTS: Product[] = [
-  product('Bluetooth Speaker Mini', { category: 'Electronics', price: 39.99, warranty: '1 year' }),
-  product('Cast Iron Skillet', { price: 55 }),
-  product('Wool Throw Blanket', { price: 68, stock_status: 'Out of stock', units_in_stock: 0 }),
-  product('Ceramic Planter Set', { price: 32, stock_status: 'Low stock', units_in_stock: 2 }),
-  product('Juniper Lane Gift Card', { category: 'Gift card', price: null, price_options: [25, 50, 100], warranty: 'Not applicable', units_in_stock: null }),
+  product('Bluetooth Speaker Mini', { category: 'Electronics', price: 3999, warranty: '1 year' }),
+  product('Cast Iron Skillet', { price: 5500 }),
+  product('Wool Throw Blanket', { price: 6800, stock_status: 'Out of stock', units_in_stock: 0 }),
+  product('Ceramic Planter Set', { price: 3200, stock_status: 'Low stock', units_in_stock: 2 }),
+  product('Juniper Lane Gift Card', { category: 'Gift card', price: null, price_options: [2500, 5000, 10000], warranty: 'Not applicable', units_in_stock: null }),
 ]
 
 const TICKETS: CustomerTicket[] = [
@@ -95,7 +95,7 @@ describe('the shop page', () => {
 
     expect(window.location.hash).toBe('#/')
     expect(screen.getAllByRole('article')).toHaveLength(PRODUCTS.length)
-    expect(within(card('Bluetooth Speaker Mini')).getByText('$39.99')).toBeInTheDocument()
+    expect(within(card('Bluetooth Speaker Mini')).getByText('₹3,999')).toBeInTheDocument()
     expect(within(card('Bluetooth Speaker Mini')).getByText('Electronics · 1 year warranty')).toBeInTheDocument()
     expect(within(card('Cast Iron Skillet')).getByText('Homeware')).toBeInTheDocument() // no "None warranty"
     expect(within(card('Cast Iron Skillet')).getByRole('img', { name: 'Cast Iron Skillet' })).toBeInTheDocument()
@@ -128,7 +128,7 @@ describe('the shop page', () => {
     const rows = within(orders).getAllByRole('listitem')
     expect(rows[0]).toHaveTextContent('JL-10231')
     expect(rows[0]).toHaveTextContent('Placed 3 Nov 2026 · Delivered')
-    expect(rows[0]).toHaveTextContent('$60.50')
+    expect(rows[0]).toHaveTextContent('₹6,050')
     expect(rows[1]).toHaveTextContent('JL-10198')
   })
 
@@ -189,8 +189,8 @@ describe('the cart', () => {
     await user.click(cartButton())
     const cart = screen.getByRole('dialog', { name: 'Your cart' })
     expect(within(cart).getByText('Cast Iron Skillet')).toBeInTheDocument()
-    expect(within(cart).getByText('$110.00')).toBeInTheDocument()
-    expect(within(cart).getByText('$149.99')).toBeInTheDocument() // the subtotal
+    expect(within(cart).getByText('₹11,000')).toBeInTheDocument()
+    expect(within(cart).getByText('₹14,999')).toBeInTheDocument() // the subtotal
   })
 
   it('can never check out', async () => {
@@ -235,12 +235,12 @@ describe('the cart', () => {
     const user = await openShop()
     const giftCard = card('Juniper Lane Gift Card')
 
-    await user.click(within(giftCard).getByRole('button', { name: '$100' }))
-    expect(within(giftCard).getByRole('button', { name: '$100' })).toHaveAttribute('aria-pressed', 'true')
+    await user.click(within(giftCard).getByRole('button', { name: '₹10,000' }))
+    expect(within(giftCard).getByRole('button', { name: '₹10,000' })).toHaveAttribute('aria-pressed', 'true')
     await user.click(within(giftCard).getByRole('button', { name: 'Add to cart' }))
     await user.click(cartButton())
 
-    expect(within(screen.getByRole('dialog')).getByText('Juniper Lane Gift Card ($100.00)')).toBeInTheDocument()
+    expect(within(screen.getByRole('dialog')).getByText('Juniper Lane Gift Card (₹10,000)')).toBeInTheDocument()
   })
 
   it('closes with Escape and is remembered for this tab', async () => {
@@ -252,7 +252,7 @@ describe('the cart', () => {
     await user.keyboard('{Escape}')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     const saved = JSON.parse(sessionStorage.getItem('juniper-lane-cart:priya.nair@example.com') ?? '[]')
-    expect(saved).toMatchObject([{ id: 'cast-iron-skillet', quantity: 1, price: 55 }])
+    expect(saved).toMatchObject([{ id: 'cast-iron-skillet', quantity: 1, price: 5500 }])
   })
 })
 

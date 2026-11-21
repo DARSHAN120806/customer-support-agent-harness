@@ -49,45 +49,45 @@ Shop-wide figures from the synthetic data snapshot of 2026-11-20 09:00 ET. This 
 
 | Product | Units sold | Revenue |
 |---|---|---|
-| Bluetooth Speaker Mini | 170 | $6,798.30 |
-| Wireless Earbuds Pro | 168 | $13,272.00 |
-| LED Desk Lamp | 133 | $4,588.50 |
-| Electric Kettle 1.7L | 146 | $6,570.00 |
-| Smart Plug (2-Pack) | 124 | $3,100.00 |
-| Oak Side Table | 49 | $6,321.00 |
-| Wool Throw Blanket | 91 | $6,188.00 |
-| Cast Iron Skillet | 105 | $5,775.00 |
-| Ceramic Pour-Over Coffee Set | 84 | $3,528.00 |
-| Ceramic Planter Set | 100 | $3,200.00 |
-| Bamboo Cutting Board | 136 | $3,264.00 |
-| Linen Napkins (Set of 4) | 112 | $2,072.00 |
-| Adjustable Phone Stand | 95 | $1,425.00 |
-| Scented Soy Candle | 173 | $2,076.00 |
-| Personalised Leather Notebook | 77 | $2,233.00 |
-| Juniper Lane Gift Card | 66 | $4,100.00 |
+| Bluetooth Speaker Mini | 170 | ₹6,79,830 |
+| Wireless Earbuds Pro | 168 | ₹13,27,200 |
+| LED Desk Lamp | 133 | ₹4,58,850 |
+| Electric Kettle 1.7L | 146 | ₹6,57,000 |
+| Smart Plug (2-Pack) | 124 | ₹3,10,000 |
+| Oak Side Table | 49 | ₹6,32,100 |
+| Wool Throw Blanket | 91 | ₹6,18,800 |
+| Cast Iron Skillet | 105 | ₹5,77,500 |
+| Ceramic Pour-Over Coffee Set | 84 | ₹3,52,800 |
+| Ceramic Planter Set | 100 | ₹3,20,000 |
+| Bamboo Cutting Board | 136 | ₹3,26,400 |
+| Linen Napkins (Set of 4) | 112 | ₹2,07,200 |
+| Adjustable Phone Stand | 95 | ₹1,42,500 |
+| Scented Soy Candle | 173 | ₹2,07,600 |
+| Personalised Leather Notebook | 77 | ₹2,23,300 |
+| Juniper Lane Gift Card | 66 | ₹4,10,000 |
 
 ## Monthly summary
 
 | Month | Orders placed | Cancelled | Revenue (non-cancelled) |
 |---|---|---|---|
-| 2026-06 | 177 | 9 | $14,880.83 |
-| 2026-07 | 181 | 12 | $14,202.81 |
-| 2026-08 | 183 | 9 | $14,632.89 |
-| 2026-09 | 184 | 6 | $14,137.41 |
-| 2026-10 | 184 | 12 | $13,486.74 |
-| 2026-11 | 91 | 7 | $6,822.51 |
+| 2026-06 | 177 | 9 | ₹14,88,083 |
+| 2026-07 | 181 | 12 | ₹14,20,281 |
+| 2026-08 | 183 | 9 | ₹14,63,289 |
+| 2026-09 | 184 | 6 | ₹14,13,741 |
+| 2026-10 | 184 | 12 | ₹13,48,674 |
+| 2026-11 | 91 | 7 | ₹6,82,251 |
 
 ## Refund summary by type
 
 | Type | Refunds | Total net |
 |---|---|---|
-| Cancelled before dispatch | 55 | $5,120.68 |
-| Damaged on arrival | 8 | $369.42 |
-| Package confirmed lost / not received | 15 | $930.88 |
-| Return — change of mind | 126 | $5,043.88 |
-| Return — faulty | 9 | $521.43 |
-| Return — wrong item received | 1 | $28.99 |
-| Warranty — repair/replacement not possible | 4 | $519.00 |
+| Cancelled before dispatch | 55 | ₹5,12,068 |
+| Damaged on arrival | 8 | ₹36,942 |
+| Package confirmed lost / not received | 15 | ₹93,088 |
+| Return — change of mind | 126 | ₹5,04,388 |
+| Return — faulty | 9 | ₹52,143 |
+| Return — wrong item received | 1 | ₹2,899 |
+| Warranty — repair/replacement not possible | 4 | ₹51,900 |
 
 ## Returns summary
 

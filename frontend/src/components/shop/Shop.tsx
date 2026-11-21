@@ -98,7 +98,7 @@ export function Shop({ session, onSignOut, onSessionExpired }: Props) {
           <div className="shop-intro">
             <h1 id="shop-title">Homeware, furniture and electronics</h1>
             <p className="shop-lede">
-              Chosen to be simple, durable and fairly priced. Prices are in US dollars and include sales tax
+              Chosen to be simple, durable and fairly priced. Prices are in Indian rupees and include GST
             </p>
           </div>
 
