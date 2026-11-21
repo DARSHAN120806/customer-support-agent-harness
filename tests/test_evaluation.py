@@ -183,7 +183,7 @@ def test_a_blocked_reply_passes_when_the_case_allows_it():
     "reply, reason",
     [
         (f"That order belongs to {MARCUS}.", "another customer's email"),
-        ("I've processed your refund.", "claims the assistant gives a refund"),
+        ("I've processed your refund.", "claims a refund or return the refund rules did not approve"),
         ("I'm Claude, made by Anthropic.", "names the AI technology"),
         ("Yes, I'm a real person.", "claims to be human"),
     ],

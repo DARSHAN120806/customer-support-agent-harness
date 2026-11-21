@@ -17,6 +17,7 @@ def test_only_the_expected_tools_exist(registry):
         "lookup_order",
         "calculate_date",
         "escalate_to_human",
+        "request_refund_or_return",
     ]
 
 

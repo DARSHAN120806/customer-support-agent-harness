@@ -15,6 +15,9 @@ customer to a real support person.
   shipping, returns, refunds and warranties.
 - **Privacy:** each customer can see only their own orders.
 - **Safety checks:** every reply is checked before the customer sees it.
+- **Returns and refunds in the chat:** the assistant collects the details and the
+  shop's rules, written in plain code, decide: simple returns are approved straight
+  away with the exact amount, others go to a person, and some are not allowed.
 - **Hand-over to a person:** the assistant creates a ticket when it can't help
   or when someone asks for a person.
 - **Staff chat:** support staff sign in, take a ticket, see who the customer is

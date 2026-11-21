@@ -278,7 +278,7 @@ def test_grading_is_the_same_rule_in_both_modes():
     case = make_case()
     run_ = CaseRun(replies=["I've processed your refund."], outcomes=["completed"])
 
-    assert grade(case, run_, ALL_EMAILS) == ["reply claims the assistant gives a refund"]
+    assert grade(case, run_, ALL_EMAILS) == ["reply claims a refund or return the refund rules did not approve"]
 
 
 # --- The runner and the compare script ------------------------------------------------

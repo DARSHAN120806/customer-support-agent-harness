@@ -4,7 +4,7 @@ Juniper Lane Goods — last updated 1 September 2026
 
 ## Who approves refunds
 
-Every refund is reviewed and approved by a member of our human support team. Refunds are never issued automatically, and our automated assistant cannot approve, promise, or issue a refund. If you ask for a refund, your request is passed to the support team, who will reply by email within 1 business day.
+Simple returns can be approved straight away in the chat by our virtual assistant: an item you changed your mind about, or a wrong item, when the refund is ₹5,000 or less and the Returns Policy is met. The assistant does not decide on its own judgement; it follows the rules in this policy and the Returns Policy. Every other refund (faulty or damaged items, missing parcels, cancellations, and anything over ₹5,000) is reviewed and approved by a member of our human support team, who will reply by email within 1 business day.
 
 ## When you can get a refund
 

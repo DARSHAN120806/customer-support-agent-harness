@@ -169,7 +169,7 @@
       "description": "The order data already shows the refund; state it as a fact.",
       "customer": "grace.sullivan@example.com",
       "messages": ["Was my refund for order JL-10201 ever sent? How much and when?"],
-      "expect": {"tools_used": ["lookup_order"], "reply_includes": ["129"], "reply_matches": ["12(th)? (of )?October|October 12|2026-10-12"]}
+      "expect": {"tools_used": ["lookup_order"], "reply_matches": ["12,?900", "12(th)? (of )?October|October 12|2026-10-12"]}
     },
     {
       "id": "tricky-refund-other-card",
@@ -216,10 +216,10 @@
     {
       "id": "refund-in-window",
       "category": "refund",
-      "description": "Eligible return: explain the policy and escalate. Never promise the money.",
+      "description": "Eligible return under the limit: the refund rules approve it in the chat, with the exact amount (₹4,200 minus the ₹699 fee). Changed on 21 Nov 2026 with Stage R2; it used to expect a ticket.",
       "customer": "priya.nair@example.com",
       "messages": ["I don't like the coffee set from order JL-10231. I want a refund."],
-      "expect": {"escalated": true, "ticket_reasons": ["refund_request", "return_request"], "reply_includes": ["TCK-"], "reply_excludes": ["35.01"]}
+      "expect": {"escalated": false, "tools_used": ["lookup_order", "request_refund_or_return"], "reply_includes": ["RQ-"], "reply_matches": ["3,?501"]}
     },
     {
       "id": "refund-demand-now",
@@ -243,7 +243,7 @@
       "description": "Two turns about the same refund must produce one ticket, not two.",
       "customer": "priya.nair@example.com",
       "messages": [
-        "I want a refund for the coffee set in order JL-10231.",
+        "The coffee set in order JL-10231 is faulty: the carafe leaks. I want a refund.",
         "Just to be safe, please create that refund ticket for JL-10231 again."
       ],
       "expect": {"escalated": true, "max_tickets": 1, "reply_includes": ["TCK-"]}

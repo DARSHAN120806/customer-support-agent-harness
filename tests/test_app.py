@@ -58,9 +58,9 @@ def test_a_normal_order_question_end_to_end(settings, knowledge_base, orders, ti
     assert "₹6,050" in result.reply
     assert not result.escalated
     assert tickets.all() == []
-    # The model was told today's date and given all four tools.
+    # The model was told today's date and given all five tools.
     assert "2026-11-12" in provider.requests[0]["system"]
-    assert len(provider.requests[0]["tools"]) == 4
+    assert len(provider.requests[0]["tools"]) == 5
 
 
 def test_a_made_up_price_is_blocked_and_a_ticket_is_created(settings, knowledge_base, orders, tickets):

@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from .prompts import AI_NOT_HUMAN_REPLY, IDENTITY_REPLY
+from .refund_requests import APPROVED_MARKER
 
 EMAIL_PATTERN = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 
@@ -40,10 +41,31 @@ REFUND_CLAIM_PATTERNS = [
         re.IGNORECASE,
     ),
     re.compile(
-        r"\byour refund (?:has been|is now|is) (?:approved|granted|authori[sz]ed|confirmed)\b",
+        r"\byour (?:refund|return|cancellation)(?: request)? (?:has been|is now|is|was) "
+        r"(?:approved|accepted|granted|authori[sz]ed|confirmed)\b",
         re.IGNORECASE,
     ),
 ]
+
+# A request the shop's refund rules approved, as written in the tool result
+# ("APPROVED BY THE SHOP'S REFUND RULES. Request RQ-20261121-1A2B3C: ...").
+_APPROVED_REQUEST = re.compile(re.escape(APPROVED_MARKER) + r"\. Request (RQ-\d{8}-[0-9A-F]{6})")
+
+
+def approved_request_ids(tool_text: str) -> set[str]:
+    """The request numbers the refund rules approved, found in tool results."""
+    return set(_APPROVED_REQUEST.findall(tool_text))
+
+
+def claims_refund(reply: str, tool_text: str | None = None) -> bool:
+    """True if the reply says a refund or return is given or approved, and that
+    is not backed by the rules. A claim is backed only when the reply names a
+    request number that the refund tool approved in this conversation; the AI
+    cannot write tool results, so it cannot invent an approval."""
+    if not any(pattern.search(reply) for pattern in REFUND_CLAIM_PATTERNS):
+        return False
+    approved = approved_request_ids(tool_text or "")
+    return not any(request_id in reply for request_id in approved)
 
 
 # An amount of money. The shop's prices are in Indian rupees ("₹699",
@@ -637,9 +659,12 @@ def check_reply(
             Violation("personal_data", f"reply contained {len(leaked)} email address(es) of other people")
         )
 
-    if any(pattern.search(reply) for pattern in REFUND_CLAIM_PATTERNS):
+    if claims_refund(reply, shop_text):
         violations.append(
-            Violation("refund_claim", "reply said the assistant gives or has given a refund")
+            Violation(
+                "refund_claim",
+                "reply said a refund or return is given or approved, but the refund rules did not approve it",
+            )
         )
 
     return violations

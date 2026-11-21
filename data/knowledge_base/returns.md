@@ -25,7 +25,7 @@ The following items cannot be returned unless they arrive faulty or damaged:
 2. The support team checks that the item is eligible and emails you a return label within 1 business day.
 3. Pack the item securely, attach the label, and drop it off with the carrier within 14 days of receiving the label.
 
-Returns cannot be started automatically. Every return is reviewed and approved by a member of the support team.
+You can also start a return in the chat with our virtual assistant. A simple return of ₹5,000 or less (you changed your mind, or you received the wrong item) that meets this policy is approved straight away. Every other return is reviewed and approved by a member of the support team.
 
 ## Return shipping cost
 

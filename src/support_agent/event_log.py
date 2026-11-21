@@ -42,6 +42,7 @@ TOOL_CALL = "tool_call"
 REPLY_REWRITE = "reply_rewrite"  # a draft failed a check and the model was asked to redo it
 REPLY_BLOCKED = "reply_blocked"  # a reply was withheld from the customer
 TICKET_CREATED = "ticket_created"
+REFUND_REQUEST = "refund_request"  # a refund or return request was checked by the rules
 TURN_END = "turn_end"  # the reply was sent
 RETRY = "retry"  # a call failed for a temporary reason and is being tried again
 ERROR = "error"  # a call failed for good (after any retries)

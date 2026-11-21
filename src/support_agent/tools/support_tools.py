@@ -1,12 +1,14 @@
-"""The three tools of the support agent.
+"""The tools of the support agent.
 
     search_knowledge_base   look something up in the shop's documents
     lookup_order            read one of the current customer's orders
     calculate_date          work out a deadline, such as when a warranty ends
     escalate_to_human       hand the conversation to the human support team
+    request_refund_or_return  start a refund, return or cancellation (refund_tool.py)
 
-There is deliberately no tool that changes anything in the shop: no refunds, no
-cancellations, no address changes. The agent can read and it can escalate.
+No tool changes the shop's data. request_refund_or_return only writes a request
+record, and the decision is made by plain code (refund_rules.py), never by the
+AI. There are no address changes and nothing moves money.
 """
 
 from __future__ import annotations
@@ -22,8 +24,10 @@ from ..event_log import EventLogger, NullLogger
 from ..knowledge_base import KnowledgeBase
 from ..orders import OrderStore, normalize_email, normalize_order_id
 from ..prompts import SUPPORT_EMAIL
+from ..refund_requests import RefundRequestStore
 from ..retry import RetryPolicy, ServiceError, call_with_retry
 from ..tickets import ESCALATION_REASONS, TicketError, TicketStore
+from .refund_tool import make_refund_tool
 from .registry import Tool, ToolError, ToolRegistry, require_text
 
 # More tickets than this in one conversation means something is going wrong.
@@ -48,6 +52,8 @@ class SessionContext:
     logger: EventLogger | NullLogger = field(default_factory=NullLogger)
     # How often, and how patiently, failed calls are tried again.
     retry_policy: RetryPolicy = field(default_factory=RetryPolicy)
+    # Refund and return requests made in this conversation.
+    refund_request_ids: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         self.customer_email = normalize_email(self.customer_email)
@@ -99,12 +105,17 @@ def build_tool_registry(
     orders: OrderStore,
     tickets: TicketStore,
     today: date | None = None,
+    refund_requests: RefundRequestStore | None = None,
 ) -> ToolRegistry:
+    today = today or date.today()
+    # Requests are kept next to the tickets unless a file is given.
+    requests = refund_requests or RefundRequestStore(tickets.path.parent / "refund_requests.jsonl")
     registry = ToolRegistry()
     registry.register(make_search_tool(session, knowledge_base))
     registry.register(make_order_tool(session, orders))
-    registry.register(make_date_tool(today or date.today()))
+    registry.register(make_date_tool(today))
     registry.register(make_escalation_tool(session, tickets))
+    registry.register(make_refund_tool(session, orders, tickets, requests, today, create_ticket))
     return registry
 
 

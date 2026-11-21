@@ -310,8 +310,12 @@ def _check_items(order: dict[str, Any], request: Request, today: date) -> Check:
         problems.append(Problem("late", _late_text(delivered, RETURN_WINDOW_DAYS, "returns")))
     if request.reason == WRONG_ITEM and days > WRONG_ITEM_DAYS:
         problems.append(Problem("late", _late_text(delivered, WRONG_ITEM_DAYS, "a wrong item")))
-    if request.reason == DAMAGED and days > DAMAGE_REPORT_DAYS:
-        problems.append(Problem("late", _late_text(delivered, DAMAGE_REPORT_DAYS, "damage")))
+    # Damage should be reported within 7 days. Reported later, but still inside
+    # the 30-day return window, it is not refused outright: a person decides
+    # (it may count as a faulty item). After 30 days it is refused.
+    damage_reported_late = request.reason == DAMAGED and DAMAGE_REPORT_DAYS < days <= RETURN_WINDOW_DAYS
+    if request.reason == DAMAGED and days > RETURN_WINDOW_DAYS:
+        problems.append(Problem("late", _late_text(delivered, RETURN_WINDOW_DAYS, "damage or returns")))
 
     if problems:
         return Check(allowed=False, problems=tuple(problems))
@@ -334,6 +338,11 @@ def _check_items(order: dict[str, Any], request: Request, today: date) -> Check:
         staff.append("The item is inspected when it comes back to confirm the fault.")
     if request.reason == DAMAGED:
         staff.append("The support team must see photos of the packaging and the item.")
+    if damage_reported_late:
+        staff.append(
+            f"Reported {days} days after delivery, after the {DAMAGE_REPORT_DAYS}-day limit for damage "
+            f"but within the {RETURN_WINDOW_DAYS}-day return window."
+        )
     if request.reason == CHANGED_MIND:
         notes.append(
             f"If the item comes back used or without its original packaging, up to "

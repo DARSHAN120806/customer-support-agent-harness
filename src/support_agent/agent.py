@@ -313,7 +313,7 @@ class Agent:
         the model has the facts, and this is usually where it explains the
         policy before ending with a short closing line.
         """
-        return any(not self._tools.is_read_only(call.name) for call in calls)
+        return any(self._tools.shows_text_alongside(call.name) for call in calls)
 
     def _run_tool_for_model(
         self, tool: tuple[str, dict[str, Any]], call_id: str, step: int, messages: list[dict[str, Any]]

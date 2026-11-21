@@ -211,9 +211,14 @@ def test_faulty_and_damaged_are_always_checked_by_a_person_and_shipping_is_refun
     assert ask(order(), rules.DAMAGED, NAPKIN, today=date(2026, 11, 15))[1].outcome == rules.NEEDS_STAFF
 
 
-def test_damage_must_be_reported_within_7_days():
-    check, _ = ask(order(), rules.DAMAGED, NAPKIN, today=date(2026, 11, 18))
-    assert check.problems[0].rule == "late"
+def test_damage_reported_after_7_days_goes_to_a_person_and_after_30_days_is_refused():
+    # Delivered 2026-11-10. Day 8: past the 7-day damage limit, inside the 30-day window.
+    check, decision = ask(order(), rules.DAMAGED, NAPKIN, today=date(2026, 11, 18))
+    assert decision.outcome == rules.NEEDS_STAFF
+    assert any("after the 7-day limit for damage" in why for why in decision.why)
+    # Day 31: refused.
+    check, decision = ask(order(), rules.DAMAGED, NAPKIN, today=date(2026, 12, 11))
+    assert decision.outcome == rules.NOT_ALLOWED and check.problems[0].rule == "late"
 
 
 def test_faulty_after_30_days_goes_to_a_person_as_a_warranty_claim():

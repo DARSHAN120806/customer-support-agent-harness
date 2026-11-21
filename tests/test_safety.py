@@ -371,7 +371,8 @@ def test_prompt_states_the_safety_rules():
     prompt = build_system_prompt()
 
     for phrase in (
-        "never issue, approve, or promise a refund",
+        "Never say a refund or return is approved, granted or on its way unless the tool",
+        "You don't decide whether it is allowed",
         "upset, angry",
         "not sure of the answer",
         "asks for a human",

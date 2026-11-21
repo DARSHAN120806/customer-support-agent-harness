@@ -28,6 +28,9 @@ class Tool:
     # True for tools that only look information up. False for tools that do
     # something on the customer's behalf, such as creating a ticket.
     read_only: bool = True
+    # Whether text the model writes in the same step is shown to the customer.
+    # None means: shown for tools that do something, hidden for look-ups.
+    shows_text_alongside: bool | None = None
 
 
 @dataclass(frozen=True)
@@ -51,6 +54,12 @@ class ToolRegistry:
     def is_read_only(self, name: str) -> bool:
         tool = self._tools.get(name)
         return tool is None or tool.read_only
+
+    def shows_text_alongside(self, name: str) -> bool:
+        tool = self._tools.get(name)
+        if tool is None:
+            return False
+        return (not tool.read_only) if tool.shows_text_alongside is None else tool.shows_text_alongside
 
     def definitions(self) -> list[dict[str, Any]]:
         """The tool list in the format the model expects."""

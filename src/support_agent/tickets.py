@@ -93,6 +93,10 @@ class TicketStore:
             raise TicketError(f"The ticket file could not be written ({type(error).__name__}).") from error
         return ticket
 
+    @property
+    def path(self) -> Path:
+        return self._path
+
     def all(self) -> list[dict[str, Any]]:
         with self._lock:
             return self._read()
