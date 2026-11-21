@@ -164,7 +164,7 @@ describe('chatting', () => {
 
     await user.type(screen.getByLabelText('Your message'), 'I want a human{Enter}')
 
-    expect(await screen.findByText(/Our team will reply by email/)).toHaveTextContent('TCK-20261120-ABC123')
+    expect(await screen.findByText(/will answer here or under Your tickets/)).toHaveTextContent('TCK-20261120-ABC123')
   })
 
   it('puts a question about an order into the message box', async () => {

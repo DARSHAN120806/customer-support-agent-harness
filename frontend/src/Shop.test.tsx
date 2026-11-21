@@ -139,7 +139,7 @@ describe('the shop page', () => {
     const tickets = screen.getByRole('region', { name: 'Your tickets' })
     expect(await within(tickets).findByText('TCK-20261120-AB12CD')).toBeInTheDocument()
     expect(within(tickets).getByText('Refund request')).toBeInTheDocument()
-    expect(within(tickets).getByText('Open')).toBeInTheDocument()
+    expect(within(tickets).getByText('Waiting for the team')).toBeInTheDocument()
     expect(within(tickets).getByText('TK-60029')).toBeInTheDocument()
     expect(within(tickets).getByText('Closed')).toBeInTheDocument()
   })
@@ -321,7 +321,7 @@ describe('the support chat', () => {
 
     const tickets = screen.getByRole('region', { name: 'Your tickets' })
     expect(await within(tickets).findByText('TCK-20261121-NEW123')).toBeInTheDocument()
-    expect(screen.getByText(/Our team will reply by email/)).toHaveTextContent('TCK-20261121-NEW123')
+    expect(screen.getByText(/will answer here or under Your tickets/)).toHaveTextContent('TCK-20261121-NEW123')
   })
 })
 

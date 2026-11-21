@@ -1,8 +1,12 @@
 // The support chat on the shop page: a "Chat with us" button at the bottom
 // right that opens a chat window with the shop's virtual assistant. Closing
 // the window keeps the conversation, so opening it again carries on.
+//
+// When a person from the support team takes the customer's ticket, they join
+// this same window: their messages arrive through a quiet check every few
+// seconds, and the customer's messages go to them instead of the assistant.
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
-import { api, ApiError, MAX_MESSAGE_LENGTH, type Session, type TranscriptEntry } from '../../api'
+import { api, ApiError, MAX_MESSAGE_LENGTH, type Handoff, type Session, type TranscriptEntry } from '../../api'
 import { FormattedText } from '../FormattedText'
 import { Tag } from '../shop/Tag'
 
@@ -19,6 +23,9 @@ type Props = {
 
 type Entry = TranscriptEntry & { isError?: boolean }
 
+// How often the window checks for messages from the support team.
+const CHECK_MS = 3000
+
 const SUGGESTIONS = ['What is your return policy?', 'How much is express shipping?', 'I want to talk to a person']
 
 export function SupportChat({ session, open, onOpenChange, question, onTicketCreated, onSessionExpired }: Props) {
@@ -30,6 +37,48 @@ export function SupportChat({ session, open, onOpenChange, question, onTicketCre
   const launcherRef = useRef<HTMLButtonElement>(null)
   const wasOpen = useRef(open)
   const firstName = session.customer.name.split(' ')[0]
+  // Who from the team is in the chat, and how many of their messages arrived
+  // while the window was closed.
+  const [handoff, setHandoff] = useState<Handoff>(session.handoff ?? null)
+  const [unread, setUnread] = useState(0)
+  // How many chat lines the server has; the check asks only for newer ones.
+  const known = useRef(session.transcript.length)
+  const openRef = useRef(open)
+  const callbacks = useRef({ onTicketCreated, onSessionExpired })
+  useEffect(() => {
+    openRef.current = open
+    callbacks.current = { onTicketCreated, onSessionExpired }
+  })
+  // Opening the window counts the new messages as read.
+  if (open && unread !== 0) setUnread(0)
+
+  // Check for news from the support team every few seconds. The customer's own
+  // messages and the assistant's replies are already on screen, so only the
+  // team's messages and notes ("Asha has joined the chat") are added.
+  useEffect(() => {
+    let stopped = false
+    const check = () =>
+      api
+        .updates(session.session_id, known.current)
+        .then((news) => {
+          if (stopped) return
+          known.current = news.next
+          setHandoff(news.handoff)
+          const fromTeam = news.entries.filter((e) => e.role === 'staff' || e.role === 'system')
+          if (fromTeam.length === 0) return
+          setEntries((current) => [...current, ...fromTeam])
+          if (!openRef.current) setUnread((n) => n + fromTeam.filter((e) => e.role === 'staff').length)
+          callbacks.current.onTicketCreated() // "Your tickets" shows the change too
+        })
+        .catch((e: ApiError) => {
+          if (!stopped && e.status === 404) callbacks.current.onSessionExpired()
+        })
+    const timer = setInterval(check, CHECK_MS)
+    return () => {
+      stopped = true
+      clearInterval(timer)
+    }
+  }, [session.session_id])
 
   // A question from the page goes into the message box, ready to send. This is
   // React's way of adjusting state when a prop changes: during the render.
@@ -72,7 +121,12 @@ export function SupportChat({ session, open, onOpenChange, question, onTicketCre
     setWaiting(true)
     try {
       const reply = await api.sendMessage(session.session_id, message)
-      setEntries((current) => [...current, { role: 'assistant', text: reply.reply, ticket_ids: reply.new_ticket_ids }])
+      // No reply means a person from the team has the message; theirs arrives
+      // through the check above.
+      if (reply.reply !== null) {
+        const text = reply.reply
+        setEntries((current) => [...current, { role: 'assistant', text, ticket_ids: reply.new_ticket_ids }])
+      }
       if (reply.new_ticket_ids.length > 0) onTicketCreated()
     } catch (e) {
       const error = e as ApiError
@@ -110,16 +164,23 @@ export function SupportChat({ session, open, onOpenChange, question, onTicketCre
         <button ref={launcherRef} type="button" className="sc-launcher" onClick={() => onOpenChange(true)}>
           <ChatIcon />
           <span>Chat with us</span>
+          {unread > 0 && <span className="sc-unread">{unread} new</span>}
         </button>
       )}
 
       <section className="sc-panel" role="dialog" aria-modal="false" aria-label={session.assistant_name} hidden={!open} onKeyDown={onKeyDown}>
         <header className="sc-head">
           <div>
-            <h2>{session.assistant_name}</h2>
-            <p className="sc-sub">
-              <span className="sc-ai">AI</span> An automated assistant. Ask for a person at any time
-            </p>
+            <h2>{handoff ? `${handoff.name} from the support team` : session.assistant_name}</h2>
+            {handoff ? (
+              <p className="sc-sub">
+                <span className="sc-ai person">Person</span> You're talking to a member of our team
+              </p>
+            ) : (
+              <p className="sc-sub">
+                <span className="sc-ai">AI</span> An automated assistant. Ask for a person at any time
+              </p>
+            )}
           </div>
           <button type="button" className="sc-close" onClick={() => onOpenChange(false)}>
             Close
@@ -142,20 +203,28 @@ export function SupportChat({ session, open, onOpenChange, question, onTicketCre
             </div>
           )}
 
-          {entries.map((entry, i) => (
-            <div key={i} className={`sc-row ${entry.role}`}>
-              <div className={`sc-bubble ${entry.role}${entry.isError ? ' error' : ''}`}>
-                {entry.role === 'assistant' ? <FormattedText text={entry.text} /> : <p>{entry.text}</p>}
-                {entry.ticket_ids?.map((id) => (
-                  <p key={id} className="sc-ticket">
-                    Ticket <Tag>{id}</Tag> created. Our team will reply by email
-                  </p>
-                ))}
+          {entries.map((entry, i) =>
+            entry.role === 'system' ? (
+              // A short note, such as "Asha from the support team has joined the chat".
+              <p key={i} className="sc-note">
+                {entry.text}
+              </p>
+            ) : (
+              <div key={i} className={`sc-row ${entry.role}`}>
+                <div className={`sc-bubble ${entry.role}${entry.isError ? ' error' : ''}`}>
+                  {entry.role === 'staff' && <span className="sc-who">{entry.name} · Support team</span>}
+                  {entry.role === 'assistant' ? <FormattedText text={entry.text} /> : <p>{entry.text}</p>}
+                  {entry.ticket_ids?.map((id) => (
+                    <p key={id} className="sc-ticket">
+                      Ticket <Tag>{id}</Tag> created. Someone from our team will answer here or under Your tickets
+                    </p>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ),
+          )}
 
-          {waiting && (
+          {waiting && !handoff && (
             <div className="sc-row assistant">
               <div className="sc-bubble assistant sc-typing" aria-label="The assistant is typing">
                 <span /> <span /> <span />

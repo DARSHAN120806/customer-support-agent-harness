@@ -62,7 +62,9 @@ def overview(events: Iterable[dict[str, Any]], tickets: list[dict[str, Any]], to
         "customers": len(customers),
         "messages": messages,
         "tickets": len(tickets),
+        # Waiting for someone from the team, and being answered right now.
         "open_tickets": sum(1 for t in tickets if str(t.get("status", "open")).lower() == "open"),
+        "tickets_in_progress": sum(1 for t in tickets if str(t.get("status", "")).lower() == "in_progress"),
         "tickets_by_harness": tickets_by_who.get("harness", 0),
         # Share of conversations that ended up with a person.
         "handover_rate": round(len(with_ticket & conversations) / len(conversations), 3) if conversations else 0.0,

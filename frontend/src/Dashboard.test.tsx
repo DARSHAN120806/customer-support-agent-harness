@@ -162,7 +162,7 @@ describe('getting to the dashboard', () => {
     window.location.hash = '#/dashboard'
     render(<App />)
 
-    expect(screen.getByRole('status')).toHaveTextContent('Sign in with the admin account to open the dashboard')
+    expect(screen.getByRole('status')).toHaveTextContent('Sign in with an admin or support staff account to open the dashboard')
     expect(screen.queryByRole('heading', { name: 'Support dashboard' })).not.toBeInTheDocument()
   })
 })
@@ -216,7 +216,7 @@ describe('tickets', () => {
     fakeApi()
     const user = await openDashboard()
 
-    await user.click(screen.getByRole('button', { name: 'Tickets' }))
+    // From the overview's recent tickets.
     await user.click(await screen.findByRole('button', { name: 'View chat' }))
 
     expect(await screen.findByRole('region', { name: 'Conversation replay' })).toBeInTheDocument()

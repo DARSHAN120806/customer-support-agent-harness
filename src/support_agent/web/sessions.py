@@ -30,6 +30,9 @@ class ChatSession:
     history: list[dict[str, Any]] = field(default_factory=list)
     # What the customer and the assistant said, for showing the chat again.
     transcript: list[dict[str, Any]] = field(default_factory=list)
+    # Set while a person from the support team is chatting in this window:
+    # {"ticket_id": ..., "name": first name}. The assistant is quiet meanwhile.
+    handoff: dict[str, str] | None = None
     last_used: float = field(default_factory=time.monotonic)
     lock: threading.Lock = field(default_factory=threading.Lock)
 
@@ -67,6 +70,12 @@ class SessionStore:
             if session:
                 session.last_used = self._clock()
             return session
+
+    def find(self, rule: Callable[[ChatSession], bool]) -> ChatSession | None:
+        """A live session that matches the rule (without counting as use)."""
+        with self._lock:
+            self._remove_idle()
+            return next((s for s in self._sessions.values() if rule(s)), None)
 
     def remove(self, session_id: str) -> bool:
         with self._lock:

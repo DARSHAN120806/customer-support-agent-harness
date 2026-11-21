@@ -24,6 +24,11 @@ customer's data.
 - **Hand-over to a human:** the assistant creates a support ticket for refunds,
   returns, upset customers, questions it can't answer, and anyone who asks for
   a person.
+- **Support staff answer in the admin panel:** each support person signs in
+  with their own name, staff ID and password, takes a waiting ticket and chats
+  with the customer. If the customer is still in the chat, the reply appears
+  there straight away; otherwise they see it under "Your tickets" next time.
+  "End chat" closes the ticket, and the overview shows who handled how many.
 - **Built-in safety checks:** every reply is checked before the customer sees
   it, to catch made-up figures, refund promises, and other customers' details.
 - **Admin panel:** an overview of conversations, hand-overs, reply time, cost
@@ -112,8 +117,9 @@ npm --prefix frontend run dev
 
 Then open http://localhost:5173 and sign in with an email and password from
 `private/test_passwords.csv`. Customers go to the shop page, where **Chat with
-us** at the bottom right opens the chat. The admin account (`admin@juniperlane.example`) goes to the
-support dashboard.
+us** at the bottom right opens the chat. The admin account
+(`admin@juniperlane.example`) and the support staff accounts (role `staff`)
+go to the admin panel.
 
 **Using a different model**
 

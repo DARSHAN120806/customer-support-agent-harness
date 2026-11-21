@@ -1,4 +1,5 @@
 // Words and number formats shared by the chat panel and the dashboard.
+import type { Ticket } from './api'
 
 // The code checks, in plain words.
 export const RULE_LABEL: Record<string, string> = {
@@ -72,4 +73,11 @@ export function ms(value: unknown): string {
   const n = Number(value)
   if (!Number.isFinite(n)) return ''
   return n >= 1000 ? `${(n / 1000).toFixed(1)} s` : `${n} ms`
+}
+
+// A ticket's state in plain words: waiting, with whom, or closed.
+export function statusLabel(t: Ticket): string {
+  if (t.status === 'open') return 'Waiting'
+  if (t.status === 'in_progress') return `With ${t.assigned_to?.name ?? 'someone'}`
+  return 'Closed'
 }

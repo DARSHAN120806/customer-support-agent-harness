@@ -27,7 +27,11 @@ from ..config import ConfigError
 
 CUSTOMER = "customer"
 ADMIN = "admin"
-ROLES = (CUSTOMER, ADMIN)
+# The company's support people: they answer tickets in the admin panel.
+STAFF = "staff"
+ROLES = (CUSTOMER, ADMIN, STAFF)
+# Roles that sign in to the admin panel rather than the shop.
+PANEL_ROLES = (ADMIN, STAFF)
 
 # scrypt settings: about 50 ms per check on a laptop, which is nothing for one
 # sign-in but makes guessing millions of passwords very slow.
@@ -65,6 +69,13 @@ class Account:
     email: str
     role: str
     password_hash: str
+    # For the admin panel's people: shown on every reply they send.
+    name: str = ""
+    staff_id: str = ""
+
+    def public(self) -> dict[str, str]:
+        """Who this is, without the password hash."""
+        return {"email": self.email, "role": self.role, "name": self.name, "staff_id": self.staff_id}
 
 
 class AccountStore:
@@ -86,7 +97,8 @@ class AccountStore:
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
             accounts = [
-                Account(a["email"], a["role"], a["password_hash"]) for a in data["accounts"]
+                Account(a["email"], a["role"], a["password_hash"], a.get("name", ""), a.get("staff_id", ""))
+                for a in data["accounts"]
             ]
         except (ValueError, KeyError, TypeError) as error:
             raise ConfigError(f"The accounts file {path} could not be read ({error}).") from error
@@ -141,32 +153,38 @@ class SignInLimiter:
 
 
 class AdminSessions:
-    """Signed-in admins, by a random token. Tokens expire after an hour idle."""
+    """People signed in to the admin panel (the admin and support staff), by a
+    random token. Each token remembers who signed in, so a reply is always
+    credited to the right person. Tokens expire after an hour idle."""
 
     def __init__(self, idle_seconds: float = 3600, clock: Callable[[], float] = time.monotonic) -> None:
-        self._last_used: dict[str, float] = {}
+        self._sessions: dict[str, tuple[float, Account | None]] = {}
         self._idle = idle_seconds
         self._clock = clock
         self._lock = threading.Lock()
 
-    def start(self) -> str:
+    def start(self, account: Account | None = None) -> str:
         token = secrets.token_urlsafe(32)
         with self._lock:
-            self._last_used[token] = self._clock()
+            self._sessions[token] = (self._clock(), account)
         return token
 
-    def is_valid(self, token: str) -> bool:
+    def get(self, token: str) -> Account | None:
+        """The person behind a valid token, or None. Using a token keeps it alive."""
         with self._lock:
-            last = self._last_used.get(token)
-            if last is None or self._clock() - last > self._idle:
-                self._last_used.pop(token, None)
-                return False
-            self._last_used[token] = self._clock()
-            return True
+            found = self._sessions.get(token)
+            if found is None or self._clock() - found[0] > self._idle:
+                self._sessions.pop(token, None)
+                return None
+            self._sessions[token] = (self._clock(), found[1])
+            return found[1] or Account("", ADMIN, "", "Admin", "")
+
+    def is_valid(self, token: str) -> bool:
+        return self.get(token) is not None
 
     def end(self, token: str) -> None:
         with self._lock:
-            self._last_used.pop(token, None)
+            self._sessions.pop(token, None)
 
 
 def _key(email: str) -> str:

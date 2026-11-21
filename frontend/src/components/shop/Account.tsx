@@ -1,5 +1,6 @@
 // "Your orders" and "Your tickets" on the shop page: the signed-in customer's
 // own orders, and their support tickets from the shop's records and from chat.
+import { useState, type FormEvent } from 'react'
 import type { CustomerTicket, OrderSummary } from '../../api'
 import { dollars } from './cart'
 import { sentence, shortDate } from './dates'
@@ -44,9 +45,18 @@ export function YourOrders({ orders, onAsk }: OrdersProps) {
 type TicketsProps = {
   tickets: CustomerTicket[] | null // null while loading
   error: string | null
+  // Sends the customer's reply on a ticket and returns the updated ticket.
+  onReply: (ticketId: string, text: string) => Promise<void>
 }
 
-export function YourTickets({ tickets, error }: TicketsProps) {
+// A ticket's state in the customer's words.
+function ticketStatus(ticket: CustomerTicket): string {
+  if (ticket.status === 'in_progress') return `With ${ticket.assigned_name ?? 'our team'}`
+  if (ticket.status === 'open' && ticket.source === 'chat') return 'Waiting for the team'
+  return sentence(ticket.status)
+}
+
+export function YourTickets({ tickets, error, onReply }: TicketsProps) {
   return (
     <section className="account-block" id="tickets" aria-labelledby="tickets-title">
       <h2 id="tickets-title">Your tickets</h2>
@@ -68,12 +78,79 @@ export function YourTickets({ tickets, error }: TicketsProps) {
                   {ticket.order_id ? ` · ${ticket.order_id}` : ''}
                 </p>
                 {ticket.summary && <p className="row-summary">{ticket.summary}</p>}
+                {ticket.source === 'chat' && <TicketThread ticket={ticket} onReply={onReply} />}
               </div>
-              <span className={ticket.status === 'open' ? 'ticket-status open' : 'ticket-status'}>{sentence(ticket.status)}</span>
+              <span className={ticket.status === 'closed' ? 'ticket-status' : 'ticket-status open'}>{ticketStatus(ticket)}</span>
             </li>
           ))}
         </ul>
       )}
     </section>
+  )
+}
+
+type ThreadProps = { ticket: CustomerTicket; onReply: TicketsProps['onReply'] }
+
+// The messages between the customer and the team on one ticket, and a box to
+// answer while the ticket is open. Hidden until the customer opens it.
+function TicketThread({ ticket, onReply }: ThreadProps) {
+  const messages = ticket.messages ?? []
+  const fromTeam = messages.filter((m) => m.from === 'staff').length
+  const [open, setOpen] = useState(false)
+  const [draft, setDraft] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const canReply = ticket.status !== 'closed'
+
+  if (messages.length === 0 && !canReply) return null
+
+  async function send(event: FormEvent) {
+    event.preventDefault()
+    if (!draft.trim()) return
+    setBusy(true)
+    setError(null)
+    try {
+      await onReply(ticket.ticket_id, draft.trim())
+      setDraft('')
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="thread">
+      <button type="button" className="row-link" aria-expanded={open} onClick={() => setOpen(!open)}>
+        {open ? 'Hide messages' : messages.length ? `Messages (${messages.length})` : 'Add a message'}
+        {!open && fromTeam > 0 && <span className="thread-new"> · {fromTeam} from the team</span>}
+      </button>
+      {open && (
+        <>
+          {messages.length > 0 && (
+            <ul className="thread-messages" aria-label={`Messages on ${ticket.ticket_id}`}>
+              {messages.map((m, i) => (
+                <li key={i} className={`thread-message ${m.from}`}>
+                  <span className="thread-who">{m.from === 'staff' ? `${m.name} · Support team` : 'You'}</span>
+                  <p>{m.text}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+          {canReply && (
+            <form className="thread-form" onSubmit={send}>
+              <label htmlFor={`reply-${ticket.ticket_id}`} className="visually-hidden">
+                Reply on {ticket.ticket_id}
+              </label>
+              <textarea id={`reply-${ticket.ticket_id}`} rows={2} maxLength={2000} value={draft} onChange={(e) => setDraft(e.target.value)} />
+              <button type="submit" className="add-button" disabled={busy || !draft.trim()}>
+                {busy ? 'Sending…' : 'Send'}
+              </button>
+            </form>
+          )}
+          {error && <p className="thread-error" role="alert">{error}</p>}
+        </>
+      )}
+    </div>
   )
 }

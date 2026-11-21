@@ -18,9 +18,21 @@ Endpoints (all under /api):
     POST   /sessions/{id}/messages         send a message, get the reply (what the
                                            harness did goes to the log, for the admin)
     DELETE /sessions/{id}                  sign out
-    DELETE /admin/session                  admin sign-out
+    DELETE /admin/session                  admin or staff sign-out
+    GET    /sessions/{id}/updates?after=N  new chat lines (a support person joining,
+                                           their messages, the chat ending)
+    POST   /sessions/{id}/tickets/{ticket}/messages  a customer's reply on a ticket
 
-Admin only (header "Authorization: Bearer <admin token>"):
+Admin panel (header "Authorization: Bearer <token>"); the admin and support staff:
+
+    GET    /admin/me                       who is signed in
+    GET    /stats, /tickets, /conversations, /admin/orders (see below)
+    GET    /tickets/{id}                   one ticket, its earlier chat and its messages
+    POST   /tickets/{id}/take              take a waiting ticket
+    POST   /tickets/{id}/messages          reply to the customer
+    POST   /tickets/{id}/end               end the chat; the ticket is closed
+
+Admin only: model settings, documents, evaluations.
 
     GET    /stats                          numbers for the admin overview
     GET    /admin/model                    the chat and search models in use (keys hidden)
@@ -70,11 +82,12 @@ from ..model_settings import load_saved, public_view, save
 from ..prompts import SHOP_NAME, fallback_reply
 from ..providers import create_embedder, create_provider
 from ..retry import ServiceError
-from .accounts import ADMIN, AccountStore, AdminSessions, SignInLimiter
+from .accounts import ADMIN, PANEL_ROLES, Account, AccountStore, AdminSessions, SignInLimiter
 from .documents import DocumentError, DocumentStore
 from .model_admin import ModelForm, candidate_settings, check_connection, problems, same_search, to_saved
 from .sessions import ChatSession, SessionBusy, SessionStore
 from .stats import overview
+from .ticket_chat import TicketChatError, customer_message, end, first_name, staff_message, take, team
 
 MAX_MESSAGE_LENGTH = 2000
 BASELINES_DIR = PROJECT_ROOT / "evals" / "baselines"
@@ -199,13 +212,52 @@ def create_app(
         return session
 
     def admin_token(authorization: str | None = Header(None)) -> str:
-        """Every dashboard endpoint needs a signed-in admin."""
+        """The token of a signed-in admin-panel user (admin or staff)."""
         token = (authorization or "").removeprefix("Bearer ").strip()
         if not token or not admins.is_valid(token):
             raise HTTPException(401, "Please sign in as an admin.")
         return token
 
-    admin_only = [Depends(admin_token)]
+    def panel_person(token: str = Depends(admin_token)) -> Account:
+        """Who is signed in to the admin panel: the admin or a support person."""
+        person = admins.get(token)
+        if person is None:  # pragma: no cover - admin_token has just checked it
+            raise HTTPException(401, "Please sign in as an admin.")
+        return person
+
+    def admin_person(person: Account = Depends(panel_person)) -> Account:
+        if person.role != ADMIN:
+            raise HTTPException(403, "Only the admin can do this.")
+        return person
+
+    # Support staff see tickets, conversations, orders and the overview; the
+    # admin also sees the model, the documents and the evaluations.
+    panel_only = [Depends(panel_person)]
+    admin_only = [Depends(admin_person)]
+
+    def live_session_for(ticket: dict[str, Any]) -> ChatSession | None:
+        """The customer's chat window this ticket came from, if it is still open."""
+        conversation = ticket.get("conversation_id")
+        email = str(ticket.get("customer_email", "")).lower()
+        if not conversation:
+            return None
+        return sessions.find(
+            lambda s: s.context.logger.conversation_id == conversation and s.customer["email"].lower() == email
+        )
+
+    def ticket_view(ticket: dict[str, Any]) -> dict[str, Any]:
+        """A ticket for the admin panel. Emails are masked, as everywhere there."""
+        view = {**event_log.mask_value(ticket), "customer_email": event_log.EMAIL_MASK}
+        view["status"] = ticket.get("status", "open")
+        view["messages"] = event_log.mask_value(ticket.get("messages", []))
+        view["live"] = live_session_for(ticket) is not None
+        return view
+
+    def chat_call(action: Callable[[], Any]) -> Any:
+        try:
+            return action()
+        except TicketChatError as error:
+            raise HTTPException(error.status, str(error)) from error
 
     # --- Health and sign-in -------------------------------------------------------
 
@@ -227,8 +279,13 @@ def create_app(
             limiter.record_failure(email)
             raise HTTPException(401, WRONG_SIGN_IN)
         limiter.clear(email)
-        if account.role == ADMIN:
-            return {"role": ADMIN, "admin_token": admins.start()}
+        if account.role in PANEL_ROLES:
+            return {
+                "role": account.role,
+                "admin_token": admins.start(account),
+                "name": account.name or "Admin",
+                "staff_id": account.staff_id,
+            }
         customer = customers.get(email)
         if customer is None:  # an account with no customer record behind it
             raise HTTPException(401, WRONG_SIGN_IN)
@@ -243,6 +300,60 @@ def create_app(
     @app.delete("/api/admin/session", status_code=204)
     def admin_sign_out(token: str = Depends(admin_token)) -> None:
         admins.end(token)
+
+    @app.get("/api/admin/me")
+    def who_am_i(person: Account = Depends(panel_person)) -> dict[str, str]:
+        return {"role": person.role, "name": person.name or "Admin", "staff_id": person.staff_id}
+
+    # --- Support staff answering tickets ---------------------------------------------
+
+    @app.get("/api/tickets/{ticket_id}", dependencies=panel_only)
+    def get_ticket(ticket_id: str) -> dict[str, Any]:
+        ticket = resources.tickets.get(ticket_id)
+        if ticket is None:
+            raise HTTPException(404, "No such ticket.")
+        # The customer's chat with the assistant before the hand-over, from the
+        # (masked) log.
+        chat = []
+        if ticket.get("conversation_id"):
+            for e in event_log.read_events(settings.log_file, ticket["conversation_id"]):
+                if e["event"] == event_log.TURN_START:
+                    chat.append({"role": "customer", "text": e.get("message", "")})
+                elif e["event"] == event_log.TURN_END and e.get("reply"):
+                    chat.append({"role": "assistant", "text": e["reply"]})
+        return {"ticket": ticket_view(ticket), "chat": chat}
+
+    @app.post("/api/tickets/{ticket_id}/take")
+    def take_ticket(ticket_id: str, person: Account = Depends(panel_person)) -> dict[str, Any]:
+        ticket = chat_call(lambda: take(resources.tickets, ticket_id, person))
+        session = live_session_for(ticket)
+        if session is not None and not session.handoff:
+            name = first_name(ticket["assigned_to"]["name"])
+            session.handoff = {"ticket_id": ticket_id, "name": name}
+            session.transcript.append(
+                {"role": "system", "text": f"{name} from the support team has joined the chat. You're now talking to a person."}
+            )
+        return get_ticket(ticket_id)
+
+    @app.post("/api/tickets/{ticket_id}/messages")
+    def reply_to_ticket(ticket_id: str, body: Message, person: Account = Depends(panel_person)) -> dict[str, Any]:
+        ticket, message = chat_call(lambda: staff_message(resources.tickets, ticket_id, person, body.text))
+        session = live_session_for(ticket)
+        if session is not None and (session.handoff or {}).get("ticket_id") == ticket_id:
+            session.transcript.append({"role": "staff", "text": message["text"], "name": first_name(message["name"])})
+        return get_ticket(ticket_id)
+
+    @app.post("/api/tickets/{ticket_id}/end")
+    def end_ticket(ticket_id: str, person: Account = Depends(panel_person)) -> dict[str, Any]:
+        ticket = chat_call(lambda: end(resources.tickets, ticket_id, person))
+        session = live_session_for(ticket)
+        if session is not None and (session.handoff or {}).get("ticket_id") == ticket_id:
+            name = session.handoff["name"]
+            session.handoff = None
+            session.transcript.append(
+                {"role": "system", "text": f"{name} has ended the chat. The virtual assistant can help with anything else."}
+            )
+        return get_ticket(ticket_id)
 
     @app.get("/api/sessions/{session_id}")
     def get_session(session_id: str) -> dict[str, Any]:
@@ -267,6 +378,29 @@ def create_app(
         found.sort(key=lambda t: t["created_at"], reverse=True)
         return found[:MAX_TICKETS_SHOWN]
 
+    @app.get("/api/sessions/{session_id}/updates")
+    def chat_updates(session_id: str, after: int = Query(0, ge=0)) -> dict[str, Any]:
+        """New chat lines since `after`, so the chat window can show a support
+        person's messages as they arrive."""
+        session = session_or_404(session_id)
+        return {
+            "entries": session.transcript[after:],
+            "next": len(session.transcript),
+            "handoff": _handoff_view(session),
+        }
+
+    @app.post("/api/sessions/{session_id}/tickets/{ticket_id}/messages")
+    def customer_ticket_reply(session_id: str, ticket_id: str, body: Message) -> dict[str, Any]:
+        """A customer answering a ticket from "Your tickets" (for example after
+        coming back later)."""
+        session = session_or_404(session_id)
+        ticket, message = chat_call(
+            lambda: customer_message(resources.tickets, ticket_id, session.customer["email"], body.text)
+        )
+        if (session.handoff or {}).get("ticket_id") == ticket_id:
+            session.transcript.append({"role": "customer", "text": message["text"]})
+        return _chat_ticket(ticket)
+
     @app.delete("/api/sessions/{session_id}", status_code=204)
     def sign_out(session_id: str) -> None:
         sessions.remove(session_id)
@@ -286,6 +420,16 @@ def create_app(
     def _answer(session: ChatSession, text: str) -> dict[str, Any]:
         if not text:
             raise HTTPException(422, "The message is empty.")
+        if session.handoff:
+            # A person from the support team is in this chat: the message goes
+            # to them, not to the assistant.
+            try:
+                customer_message(resources.tickets, session.handoff["ticket_id"], session.customer["email"], text)
+            except TicketChatError:
+                session.handoff = None  # the ticket was closed meanwhile; the assistant answers
+            else:
+                session.transcript.append({"role": "customer", "text": text})
+                return {"reply": None, "outcome": "sent_to_team", "new_ticket_ids": []}
         tickets_before = len(session.context.ticket_ids)
         history_before = len(session.history)
         try:
@@ -407,7 +551,7 @@ def create_app(
 
     # --- Orders (admin, read only) ----------------------------------------------------
 
-    @app.get("/api/admin/orders", dependencies=admin_only)
+    @app.get("/api/admin/orders", dependencies=panel_only)
     def find_orders(q: str = Query("", max_length=100)) -> dict[str, Any]:
         needle = q.strip().lower()
         found = [
@@ -427,7 +571,7 @@ def create_app(
             ],
         }
 
-    @app.get("/api/admin/orders/{order_id}", dependencies=admin_only)
+    @app.get("/api/admin/orders/{order_id}", dependencies=panel_only)
     def get_order(order_id: str) -> dict[str, Any]:
         pair = orders_by_id.get(order_id.strip().upper())
         if pair is None:
@@ -440,20 +584,17 @@ def create_app(
             "customer": {"name": customer["name"], "email": event_log.EMAIL_MASK, "city": customer.get("city")},
         }
 
-    @app.get("/api/stats", dependencies=admin_only)
+    @app.get("/api/stats", dependencies=panel_only)
     def stats() -> dict[str, Any]:
-        return overview(event_log.read_events(settings.log_file), resources.tickets.all(), today or date.today())
-
-    @app.get("/api/tickets", dependencies=admin_only)
-    def list_tickets() -> list[dict[str, Any]]:
-        """Newest first. Emails are masked: the dashboard has no password."""
         tickets = resources.tickets.all()
-        return [
-            {**event_log.mask_value(t), "customer_email": event_log.EMAIL_MASK}
-            for t in reversed(tickets)
-        ]
+        return overview(event_log.read_events(settings.log_file), tickets, today or date.today()) | {"team": team(tickets)}
 
-    @app.get("/api/conversations", dependencies=admin_only)
+    @app.get("/api/tickets", dependencies=panel_only)
+    def list_tickets() -> list[dict[str, Any]]:
+        """Newest first. Emails are masked."""
+        return [ticket_view(t) for t in reversed(resources.tickets.all())]
+
+    @app.get("/api/conversations", dependencies=panel_only)
     def list_conversations(limit: int = Query(100, ge=1, le=1000)) -> list[dict[str, Any]]:
         summaries: dict[str, dict[str, Any]] = defaultdict(
             lambda: {"turns": 0, "cost_usd": 0.0, "escalated": False, "blocked_or_rewritten": 0}
@@ -480,7 +621,7 @@ def create_app(
         newest = sorted(talked, key=lambda s: s["last_at"], reverse=True)
         return newest[:limit]
 
-    @app.get("/api/conversations/{conversation_id}", dependencies=admin_only)
+    @app.get("/api/conversations/{conversation_id}", dependencies=panel_only)
     def get_conversation(conversation_id: str) -> list[dict[str, Any]]:
         if not re.fullmatch(r"conv_[0-9a-f]{12}", conversation_id):
             raise HTTPException(404, "No such conversation.")
@@ -525,6 +666,7 @@ def create_app(
             "orders": [_order_summary(o) for o in session.customer["orders"]],
             "transcript": session.transcript,
             "assistant_name": f"{SHOP_NAME} virtual assistant",
+            "handoff": _handoff_view(session),
         }
 
     return app
@@ -570,9 +712,21 @@ def _past_ticket(ticket: dict[str, Any], order_id: str) -> dict[str, Any]:
     }
 
 
+def _handoff_view(session: ChatSession) -> dict[str, str] | None:
+    """Who from the support team is in this chat, if anyone."""
+    return {"name": session.handoff["name"]} if session.handoff else None
+
+
 def _chat_ticket(ticket: dict[str, Any]) -> dict[str, Any]:
-    """A ticket the assistant (or the harness) created in a chat."""
+    """A ticket the assistant (or the harness) created in a chat, as its
+    customer sees it: support people appear by first name only."""
+    assigned = ticket.get("assigned_to") or {}
     return {
+        "assigned_name": first_name(assigned["name"]) if assigned else None,
+        "messages": [
+            {"from": m["from"], "text": m["text"], "at": m["at"], **({"name": first_name(m.get("name", ""))} if m["from"] == "staff" else {})}
+            for m in ticket.get("messages", [])
+        ],
         "ticket_id": ticket["ticket_id"],
         "created_at": ticket.get("created_at", ""),
         "status": str(ticket.get("status", "open")).lower(),

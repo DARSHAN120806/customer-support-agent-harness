@@ -397,6 +397,87 @@
   font-weight: 500;
 }
 
+/* A ticket's messages with the support team, under "Your tickets". */
+.thread {
+  margin-top: 8px;
+}
+
+.thread-new {
+  color: var(--jl-accent);
+}
+
+.thread-messages {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.thread-message {
+  max-width: 90%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.thread-message.customer {
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+  background: var(--jl-raised);
+}
+
+.thread-message.staff {
+  border: 1px solid var(--jl-accent);
+  border-bottom-left-radius: 4px;
+  background: var(--jl-card);
+}
+
+.thread-who {
+  display: block;
+  color: var(--jl-text-3);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.thread-message.staff .thread-who {
+  color: var(--jl-accent);
+  font-weight: 500;
+}
+
+.thread-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.thread-form textarea {
+  flex: 1;
+  min-height: 56px;
+  padding: 8px 12px;
+  border: 1px solid var(--jl-field-line);
+  border-radius: var(--jl-radius-control);
+  background: var(--jl-card);
+  color: var(--jl-text);
+  font: inherit;
+  font-size: 14px;
+  resize: vertical;
+}
+
+.thread-form textarea:focus-visible {
+  outline: 2px solid var(--jl-accent);
+  outline-offset: 2px;
+}
+
+.thread-error {
+  margin-top: 8px;
+  color: var(--jl-negative);
+  font-size: 13px;
+}
+
 .empty {
   margin-top: 16px;
   color: var(--jl-text-3);

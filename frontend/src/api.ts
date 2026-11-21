@@ -16,10 +16,16 @@ export type OrderSummary = {
 }
 
 export type TranscriptEntry = {
-  role: 'customer' | 'assistant'
+  // "staff" is a person from the support team; "system" a short note such as
+  // "Asha from the support team has joined the chat".
+  role: 'customer' | 'assistant' | 'staff' | 'system'
   text: string
   ticket_ids?: string[]
+  name?: string
 }
+
+// Who from the support team is in the chat, if anyone.
+export type Handoff = { name: string } | null
 
 export type Session = {
   role: 'customer'
@@ -29,6 +35,7 @@ export type Session = {
   orders: OrderSummary[]
   transcript: TranscriptEntry[]
   assistant_name: string
+  handoff?: Handoff
 }
 
 // A product from the shop's own document (company_overview.md).
@@ -44,14 +51,19 @@ export type Product = {
 }
 
 // One of the signed-in customer's support tickets.
+export type TicketMessage = { from: 'staff' | 'customer'; text: string; at: string; name?: string }
+
 export type CustomerTicket = {
   ticket_id: string
   created_at: string
-  status: string // "open" or "closed"
+  status: string // "open" (waiting), "in_progress" (someone is on it) or "closed"
   topic: string
   summary: string
   order_id: string | null
   source: 'records' | 'chat'
+  // Chat tickets only: who from the team is answering, and the messages.
+  assigned_name?: string | null
+  messages?: TicketMessage[]
 }
 
 // One step the harness took while answering, as written to the event log.
@@ -75,7 +87,8 @@ export type ReplyDetails = {
 }
 
 export type Reply = {
-  reply: string
+  // null when a person from the support team is in the chat: the message went to them.
+  reply: string | null
   outcome: string
   new_ticket_ids: string[]
 }
@@ -114,9 +127,13 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return response.status === 204 ? (undefined as T) : ((await response.json()) as T)
 }
 
-// A customer gets their chat; the admin gets a key for the dashboard.
-export type AdminSignIn = { role: 'admin'; admin_token: string }
+// A customer gets their chat; the admin and support staff get a key for the
+// admin panel, with their name and staff ID.
+export type PanelPerson = { role: 'admin' | 'staff'; name: string; staff_id: string }
+export type AdminSignIn = PanelPerson & { admin_token: string }
 export type SignInResult = Session | AdminSignIn
+
+export type ChatUpdates = { entries: TranscriptEntry[]; next: number; handoff: Handoff }
 
 export const api = {
   signIn: (email: string, password: string) =>
@@ -132,6 +149,13 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ text }),
     }),
+  updates: (sessionId: string, after: number) =>
+    request<ChatUpdates>(`/sessions/${encodeURIComponent(sessionId)}/updates?after=${after}`),
+  replyToTicket: (sessionId: string, ticketId: string, text: string) =>
+    request<CustomerTicket>(
+      `/sessions/${encodeURIComponent(sessionId)}/tickets/${encodeURIComponent(ticketId)}/messages`,
+      { method: 'POST', body: JSON.stringify({ text }) },
+    ),
 }
 
 // The longest message the API accepts.
@@ -142,12 +166,34 @@ export const MAX_MESSAGE_LENGTH = 2000
 export type Ticket = {
   ticket_id: string
   created_at: string
-  status: string
+  status: string // "open" (waiting), "in_progress" or "closed"
   conversation_id: string | null
   customer_email: string // always masked by the API
   reason: string
   order_id: string | null
   summary: string
+  assigned_to?: { name: string; staff_id: string } | null
+  assigned_at?: string
+  closed_at?: string
+  messages?: (TicketMessage & { staff_id?: string })[]
+  // Whether the customer still has this chat open, so replies reach them live.
+  live?: boolean
+}
+
+export type TicketDetail = {
+  ticket: Ticket
+  // The customer's chat with the assistant before the hand-over.
+  chat: { role: 'customer' | 'assistant'; text: string }[]
+}
+
+export type TeamRow = {
+  name: string
+  staff_id: string
+  taken: number
+  closed: number
+  answering_now: number
+  messages: number
+  average_minutes_to_close: number | null
 }
 
 export type ConversationSummary = {
@@ -209,6 +255,8 @@ export type Stats = {
   checks: Record<string, number>
   tickets_by_reason: Record<string, number>
   days: { date: string; messages: number; tickets: number }[]
+  tickets_in_progress?: number
+  team?: TeamRow[]
 }
 
 // The model settings, as the admin panel sees them. Keys never come back:
@@ -278,7 +326,15 @@ export type OrderDetail = {
 
 const docPath = (name: string) => `/admin/documents/${encodeURIComponent(name)}`
 
+const ticketPath = (id: string) => `/tickets/${encodeURIComponent(id)}`
+
 export const dashboardApi = {
+  me: () => asAdmin<PanelPerson>('/admin/me'),
+  ticket: (id: string) => asAdmin<TicketDetail>(ticketPath(id)),
+  takeTicket: (id: string) => asAdmin<TicketDetail>(`${ticketPath(id)}/take`, { method: 'POST' }),
+  replyToTicket: (id: string, text: string) =>
+    asAdmin<TicketDetail>(`${ticketPath(id)}/messages`, { method: 'POST', body: JSON.stringify({ text }) }),
+  endTicket: (id: string) => asAdmin<TicketDetail>(`${ticketPath(id)}/end`, { method: 'POST' }),
   stats: () => asAdmin<Stats>('/stats'),
   documents: () => asAdmin<DocumentSummary[]>('/admin/documents'),
   document: (name: string) => asAdmin<DocumentDetail>(docPath(name)),

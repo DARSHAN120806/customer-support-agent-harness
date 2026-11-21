@@ -80,6 +80,47 @@ export function Overview({ onOpenTickets, onOpenConversation }: Props) {
         </div>
       </div>
 
+      <section className="ad-card ad-team" aria-labelledby="team-title">
+        <div className="ad-card-head">
+          <h3 id="team-title">Support team</h3>
+          <span className="ad-muted">
+            {stats.open_tickets} waiting · {stats.tickets_in_progress ?? 0} being answered
+          </span>
+        </div>
+        {!stats.team || stats.team.length === 0 ? (
+          <p className="ad-empty">Nobody has taken a ticket yet</p>
+        ) : (
+          <table className="ad-table ad-compact" aria-label="Support team">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Staff ID</th>
+                <th className="num">Taken</th>
+                <th className="num">Closed</th>
+                <th className="num">Answering now</th>
+                <th className="num">Messages sent</th>
+                <th className="num">Average time to close</th>
+              </tr>
+            </thead>
+            <tbody>
+              {stats.team.map((row) => (
+                <tr key={row.staff_id || row.name}>
+                  <td>{row.name}</td>
+                  <td className="ad-mono">{row.staff_id || '—'}</td>
+                  <td className="num ad-mono">{row.taken}</td>
+                  <td className="num ad-mono">{row.closed}</td>
+                  <td className="num ad-mono">{row.answering_now}</td>
+                  <td className="num ad-mono">{row.messages}</td>
+                  <td className="num ad-mono">
+                    {row.average_minutes_to_close == null ? '—' : `${row.average_minutes_to_close} min`}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
+
       <section className="ad-card" aria-labelledby="recent-title">
         <div className="ad-card-head">
           <h3 id="recent-title">Recent tickets</h3>

@@ -1089,6 +1089,164 @@
   overflow-wrap: anywhere;
 }
 
+/* --- Support staff: who is signed in, tickets, the ticket chat ---------------------------- */
+
+.ad-me {
+  margin: auto 0 8px !important;
+  padding: 0 8px;
+  color: var(--jl-text-2);
+  font-size: 13px;
+}
+
+.ad-me strong {
+  color: var(--jl-text);
+  font-weight: 500;
+}
+
+.ad-me .ad-mono {
+  white-space: nowrap; /* keep a staff ID like JLS-101 in one piece */
+}
+
+.ad-me + .ad-signout {
+  margin-top: 0;
+}
+
+.ad-show {
+  margin-bottom: 16px;
+}
+
+.ad-live {
+  display: block;
+  color: var(--jl-accent);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.ad-team {
+  margin-bottom: 16px;
+}
+
+.ad-ticket {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  align-items: start;
+  gap: 16px;
+}
+
+.ad-ticket-main,
+.ad-ticket-side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ad-ticket-side {
+  position: sticky;
+  top: 24px;
+}
+
+.ad-ticket-side .ad-button {
+  margin-top: 12px;
+}
+
+.ad-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 480px;
+  margin-top: 12px;
+  overflow-y: auto;
+}
+
+.ad-thread.compact {
+  max-height: 320px;
+}
+
+.ad-line {
+  max-width: 85%;
+}
+
+.ad-line.customer {
+  align-self: flex-end;
+}
+
+.ad-line-who {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--jl-text-2);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.ad-line.customer .ad-line-who {
+  text-align: right;
+}
+
+.ad-line-text {
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+
+.ad-line.customer .ad-line-text {
+  border-bottom-right-radius: 4px;
+  background: var(--jl-raised);
+}
+
+.ad-line.assistant .ad-line-text {
+  border: 1px solid var(--jl-hairline);
+  border-bottom-left-radius: 4px;
+  background: var(--jl-page);
+}
+
+/* A person from the team: the accent marks that a human is answering. */
+.ad-line.staff .ad-line-text {
+  border: 1px solid var(--jl-accent);
+  border-bottom-left-radius: 4px;
+  background: var(--jl-card);
+}
+
+.ad-line-text p + p,
+.ad-line-text p + ul,
+.ad-line-text ul + p {
+  margin-top: 8px;
+}
+
+.ad-line-text ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.ad-reply-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.ad-reply-form textarea {
+  flex: 1;
+  min-height: 64px;
+  padding: 8px 12px;
+  border: 1px solid var(--jl-field-line);
+  border-radius: var(--jl-radius-control);
+  background: var(--jl-card);
+  color: var(--jl-text);
+  font: inherit;
+  resize: vertical;
+}
+
+.ad-reply-form textarea:focus-visible {
+  outline: 2px solid var(--jl-accent);
+  outline-offset: 2px;
+}
+
+.ad-facts.one {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 /* --- Smaller screens ------------------------------------------------------------------- */
 
 @media (max-width: 1100px) {
@@ -1099,11 +1257,13 @@
   .ad-grid,
   .ad-two,
   .ad-replay,
-  .ad-doc-main {
+  .ad-doc-main,
+  .ad-ticket {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .ad-insights {
+  .ad-insights,
+  .ad-ticket-side {
     position: static;
     max-height: none;
   }

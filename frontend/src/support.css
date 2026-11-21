@@ -241,6 +241,47 @@
   line-height: 20px;
 }
 
+/* A person from the support team: the accent edge says a human is answering. */
+.sc-bubble.staff {
+  border: 1px solid var(--jl-accent);
+  border-bottom-left-radius: 4px;
+  background: var(--jl-card);
+}
+
+.sc-who {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--jl-accent);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+}
+
+/* A short note between messages, like "Asha has joined the chat". */
+.sc-note {
+  align-self: center;
+  max-width: 90%;
+  padding: 4px 0;
+  color: var(--jl-text-3);
+  font-size: 13px;
+  line-height: 20px;
+  text-align: center;
+}
+
+.sc-ai.person {
+  border-color: var(--jl-accent);
+  color: var(--jl-accent);
+}
+
+.sc-unread {
+  padding: 0 8px;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--jl-accent);
+  font-size: 12px;
+  line-height: 20px;
+}
+
 /* The assistant is typing: three dots that fade in turn (a live status). */
 .sc-typing {
   display: flex;

@@ -159,7 +159,7 @@ def run_script(out: Path, *extra: str) -> str:
     return result.stdout
 
 
-def test_the_script_makes_a_password_for_every_customer_and_the_admin(tmp_path):
+def test_the_script_makes_a_password_for_every_customer_the_admin_and_the_staff(tmp_path):
     out = tmp_path / "private"
     run_script(out)
 
@@ -168,16 +168,46 @@ def test_the_script_makes_a_password_for_every_customer_and_the_admin(tmp_path):
     with (out / "test_passwords.csv").open(encoding="utf-8") as f:
         rows = list(csv.DictReader(f))
 
-    assert len(accounts) == len(rows) == len(customers) + 1
-    assert [r["role"] for r in rows].count("admin") == 1
+    assert len(accounts) == len(rows) == len(customers) + 4
+    roles = [r["role"] for r in rows]
+    assert (roles.count("admin"), roles.count("staff")) == (1, 3)
+    staff = [r for r in rows if r["role"] == "staff"]
+    assert all(r["name"] and r["staff_id"].startswith("JLS-") for r in staff)
+    assert all(r["staff_id"] == "" for r in rows if r["role"] == "customer")
     # No password appears in the file the app reads.
     accounts_text = (out / "accounts.json").read_text(encoding="utf-8")
     assert not any(r["password"] in accounts_text for r in rows)
-    # The passwords in the list really open their accounts.
+    # The passwords in the list really open their accounts, with name and ID.
     store = AccountStore.load(out / "accounts.json")
-    for row in (rows[0], rows[-1]):
-        assert store.check(row["email"], row["password"]).role == row["role"]
+    for row in (rows[0], staff[0]):
+        account = store.check(row["email"], row["password"])
+        assert account.role == row["role"] and account.staff_id == row["staff_id"]
 
     before = (out / "accounts.json").read_text(encoding="utf-8")
     assert "already exist" in run_script(out)  # running again changes nothing
     assert (out / "accounts.json").read_text(encoding="utf-8") == before
+
+
+def test_running_the_script_again_adds_missing_staff_and_keeps_every_password(tmp_path):
+    out = tmp_path / "private"
+    run_script(out)
+    # Make the files look like they did before staff existed.
+    accounts = json.loads((out / "accounts.json").read_text(encoding="utf-8"))
+    accounts["accounts"] = [a for a in accounts["accounts"] if a["role"] != "staff"]
+    (out / "accounts.json").write_text(json.dumps(accounts), encoding="utf-8")
+    with (out / "test_passwords.csv").open(encoding="utf-8") as f:
+        old_rows = [{k: v for k, v in r.items() if k != "staff_id"} for r in csv.DictReader(f) if r["role"] != "staff"]
+    with (out / "test_passwords.csv").open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=["email", "name", "role", "password"])
+        writer.writeheader()
+        writer.writerows(old_rows)
+
+    assert "Added 3 account(s)" in run_script(out)
+
+    with (out / "test_passwords.csv").open(encoding="utf-8") as f:
+        rows = {r["email"]: r for r in csv.DictReader(f)}
+    store = AccountStore.load(out / "accounts.json")
+    assert all(store.check(r["email"], r["password"]) is not None for r in old_rows[:3])  # old passwords still work
+    assert rows[old_rows[0]["email"]]["password"] == old_rows[0]["password"]
+    assert [r["role"] for r in rows.values()].count("staff") == 3
+    assert store.check("asha.rao@juniperlane.example", rows["asha.rao@juniperlane.example"]["password"]).name == "Asha Rao"

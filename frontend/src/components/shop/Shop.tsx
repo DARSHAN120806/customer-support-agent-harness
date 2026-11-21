@@ -131,7 +131,14 @@ export function Shop({ session, onSignOut, onSessionExpired }: Props) {
 
         <div className="account">
           <YourOrders orders={session.orders} onAsk={(id) => askAbout(`What's the status of my order ${id}?`)} />
-          <YourTickets tickets={tickets} error={ticketsError} />
+          <YourTickets
+            tickets={tickets}
+            error={ticketsError}
+            onReply={async (ticketId, text) => {
+              const updated = await api.replyToTicket(session.session_id, ticketId, text)
+              setTickets((current) => current?.map((t) => (t.ticket_id === ticketId ? updated : t)) ?? null)
+            }}
+          />
         </div>
       </main>
 
