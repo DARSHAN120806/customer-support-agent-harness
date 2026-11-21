@@ -144,12 +144,12 @@ export function Orders() {
   )
 }
 
-function OrderView({ detail, onBack }: { detail: OrderDetail; onBack: () => void }) {
+export function OrderView({ detail, onBack, backLabel = '← All orders' }: { detail: OrderDetail; onBack: () => void; backLabel?: string }) {
   const { order, customer } = detail
   return (
     <section aria-label={`Order ${order.order_id}`}>
       <button type="button" className="ad-link ad-back" onClick={onBack}>
-        ← All orders
+        {backLabel}
       </button>
       <header className="ad-page-head">
         <h2>

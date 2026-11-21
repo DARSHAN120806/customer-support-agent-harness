@@ -251,7 +251,25 @@ def create_app(
         view["status"] = ticket.get("status", "open")
         view["messages"] = event_log.mask_value(ticket.get("messages", []))
         view["live"] = live_session_for(ticket) is not None
+        customer = customers.get(str(ticket.get("customer_email", "")).lower())
+        view["customer_name"] = customer["name"] if customer else None
+        view["customer_id"] = customer["customer_id"] if customer else None
         return view
+
+    def ticket_customer(ticket: dict[str, Any]) -> dict[str, Any] | None:
+        """Who the ticket is from, so the person answering can check their
+        orders. The email stays masked, as everywhere in the panel."""
+        customer = customers.get(str(ticket.get("customer_email", "")).lower())
+        if customer is None:
+            return None
+        newest_first = sorted(customer["orders"], key=lambda o: o["placed_on"], reverse=True)
+        return {
+            "name": customer["name"],
+            "customer_id": customer["customer_id"],
+            "city": customer.get("city"),
+            "email": event_log.EMAIL_MASK,
+            "orders": [_order_summary(o) for o in newest_first],
+        }
 
     def chat_call(action: Callable[[], Any]) -> Any:
         try:
@@ -321,7 +339,7 @@ def create_app(
                     chat.append({"role": "customer", "text": e.get("message", "")})
                 elif e["event"] == event_log.TURN_END and e.get("reply"):
                     chat.append({"role": "assistant", "text": e["reply"]})
-        return {"ticket": ticket_view(ticket), "chat": chat}
+        return {"ticket": ticket_view(ticket), "chat": chat, "customer": ticket_customer(ticket)}
 
     @app.post("/api/tickets/{ticket_id}/take")
     def take_ticket(ticket_id: str, person: Account = Depends(panel_person)) -> dict[str, Any]:

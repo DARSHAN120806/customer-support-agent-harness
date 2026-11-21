@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { ApiError, dashboardApi, MAX_MESSAGE_LENGTH, type PanelPerson, type TicketDetail } from '../../api'
-import { REASON_LABEL, dateTime, statusLabel } from '../../format'
+import { ApiError, dashboardApi, MAX_MESSAGE_LENGTH, type OrderDetail, type PanelPerson, type TicketDetail } from '../../api'
+import { REASON_LABEL, dateTime, day, statusLabel } from '../../format'
 import { FormattedText } from '../FormattedText'
+import { dollars } from '../shop/cart'
 import { Tag } from '../shop/Tag'
+import { OrderView } from './Orders'
 
 // How often the open ticket checks for new customer messages.
 const REFRESH_MS = 3000
@@ -21,6 +23,8 @@ export function TicketView({ ticketId, person, onBack, onOpenConversation }: Pro
   const [error, setError] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
   const [busy, setBusy] = useState(false)
+  // An order of this customer, opened from the Customer card.
+  const [order, setOrder] = useState<OrderDetail | null>(null)
   const threadRef = useRef<HTMLDivElement>(null)
 
   // Load the ticket, then check for new messages every few seconds.
@@ -74,7 +78,17 @@ export function TicketView({ ticketId, person, onBack, onOpenConversation }: Pro
     )
   }
 
-  const { ticket, chat } = detail
+  async function openOrder(orderId: string) {
+    try {
+      setOrder(await dashboardApi.order(orderId))
+    } catch (e) {
+      setError((e as ApiError).message)
+    }
+  }
+
+  if (order) return <OrderView detail={order} onBack={() => setOrder(null)} backLabel={`← Back to ticket ${ticketId}`} />
+
+  const { ticket, chat, customer } = detail
   const mine = ticket.status === 'in_progress' && ticket.assigned_to?.name === person.name && ticket.assigned_to?.staff_id === person.staff_id
   const messages = ticket.messages ?? []
 
@@ -167,38 +181,6 @@ export function TicketView({ ticketId, person, onBack, onOpenConversation }: Pro
         </div>
 
         <aside className="ad-ticket-side" aria-label="About this ticket">
-          <section className="ad-card">
-            <h3>About this ticket</h3>
-            <dl className="ad-facts one">
-              <div>
-                <dt>Created</dt>
-                <dd>{dateTime(ticket.created_at)}</dd>
-              </div>
-              {ticket.order_id && (
-                <div>
-                  <dt>Order</dt>
-                  <dd>
-                    <Tag>{ticket.order_id}</Tag>
-                  </dd>
-                </div>
-              )}
-              <div>
-                <dt>Summary from the assistant</dt>
-                <dd>{ticket.summary}</dd>
-              </div>
-              <div>
-                <dt>Customer</dt>
-                <dd>
-                  {ticket.status === 'closed'
-                    ? 'The chat has ended'
-                    : ticket.live
-                      ? 'In the chat now: your replies appear straight away'
-                      : 'Not in the chat: they will see your replies under Your tickets when they next sign in'}
-                </dd>
-              </div>
-            </dl>
-          </section>
-
           <section className="ad-card" aria-label="Answering">
             <h3>Answering</h3>
             {ticket.status === 'open' && (
@@ -233,6 +215,83 @@ export function TicketView({ ticketId, person, onBack, onOpenConversation }: Pro
               </p>
             )}
           </section>
+          {customer && (
+            <section className="ad-card" aria-label="Customer">
+              <h3>Customer</h3>
+              <dl className="ad-facts">
+                <div>
+                  <dt>Name</dt>
+                  <dd>{customer.name}</dd>
+                </div>
+                <div>
+                  <dt>Customer ID</dt>
+                  <dd className="ad-mono">{customer.customer_id}</dd>
+                </div>
+                {customer.city && (
+                  <div>
+                    <dt>City</dt>
+                    <dd>{customer.city}</dd>
+                  </div>
+                )}
+                <div>
+                  <dt>Email</dt>
+                  <dd className="ad-muted">{customer.email}</dd>
+                </div>
+              </dl>
+              <h3 className="ad-subhead">Orders</h3>
+              {customer.orders.length === 0 ? (
+                <p className="ad-empty">No orders</p>
+              ) : (
+                <ul className="ad-outline" aria-label="Customer orders">
+                  {customer.orders.map((o) => (
+                    <li key={o.order_id}>
+                      <span>
+                        <Tag>{o.order_id}</Tag>
+                        <span className="ad-muted ad-order-meta">
+                          {day(o.placed_on)} · {o.status.replace(/_/g, ' ')} · {dollars(o.total)}
+                        </span>
+                      </span>
+                      <button type="button" className="ad-link" onClick={() => openOrder(o.order_id)}>
+                        Open
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
+          <section className="ad-card">
+            <h3>About this ticket</h3>
+            <dl className="ad-facts one">
+              <div>
+                <dt>Created</dt>
+                <dd>{dateTime(ticket.created_at)}</dd>
+              </div>
+              {ticket.order_id && (
+                <div>
+                  <dt>Order</dt>
+                  <dd>
+                    <Tag>{ticket.order_id}</Tag>
+                  </dd>
+                </div>
+              )}
+              <div>
+                <dt>Summary from the assistant</dt>
+                <dd>{ticket.summary}</dd>
+              </div>
+              <div>
+                <dt>Customer</dt>
+                <dd>
+                  {ticket.status === 'closed'
+                    ? 'The chat has ended'
+                    : ticket.live
+                      ? 'In the chat now: your replies appear straight away'
+                      : 'Not in the chat: they will see your replies under Your tickets when they next sign in'}
+                </dd>
+              </div>
+            </dl>
+          </section>
+
         </aside>
       </div>
     </section>

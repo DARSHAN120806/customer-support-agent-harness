@@ -122,6 +122,37 @@ describe('a support person in the admin panel', () => {
     expect(within(view).queryByLabelText('Your reply')).not.toBeInTheDocument()
   })
 
+  it('sees who the customer is, with their orders, and can open one', async () => {
+    const customer = {
+      name: 'Priya Nair', customer_id: 'C001', city: 'Austin, TX', email: '[EMAIL]',
+      orders: [{ order_id: 'JL-10231', placed_on: '2026-11-02', status: 'in_transit', total: 89.5, items: ['Kettle'] }],
+    }
+    const listed: Ticket = { ...WAITING, customer_name: 'Priya Nair', customer_id: 'C001' }
+    const { user, calls } = await openPanelAsAsha({
+      'GET /api/tickets': () => ({ body: [listed] }),
+      'GET /api/tickets/TCK-20261121-AAA111': () => ({ body: { ticket: listed, chat: CHAT, customer } }),
+      'GET /api/admin/orders/JL-10231': () => ({
+        body: { order: { order_id: 'JL-10231', items: [{ name: 'Kettle', quantity: 1, unit_price: 89.5 }], total: 89.5 }, customer: { name: 'Priya Nair', email: '[EMAIL]' } },
+      }),
+    })
+    await user.click(screen.getByRole('button', { name: 'Tickets' }))
+    const table = await screen.findByRole('table', { name: 'Tickets' })
+    expect(within(table).getByText('Priya Nair').closest('td')).toHaveTextContent('Priya Nair · C001')
+
+    await user.click(within(table).getByRole('button', { name: 'Open' }))
+    const card = await screen.findByRole('region', { name: 'Customer' })
+    expect(card).toHaveTextContent('Priya Nair')
+    expect(card).toHaveTextContent('C001')
+    expect(card).toHaveTextContent('Austin, TX')
+    expect(within(card).getByRole('list', { name: 'Customer orders' })).toHaveTextContent('JL-10231')
+
+    await user.click(within(card).getByRole('button', { name: 'Open' }))
+    expect(await screen.findByRole('region', { name: 'Order JL-10231' })).toHaveTextContent('Kettle')
+    expect(calls.some((c) => c.url === '/api/admin/orders/JL-10231')).toBe(true)
+    await user.click(screen.getByRole('button', { name: '← Back to ticket TCK-20261121-AAA111' }))
+    expect(await screen.findByRole('region', { name: 'Customer' })).toBeInTheDocument()
+  })
+
   it('shows who is answering a ticket someone else took, and why taking failed', async () => {
     const tom: Ticket = { ...WAITING, status: 'in_progress', assigned_to: { name: 'Tom Becker', staff_id: 'JLS-102' } }
     const { user } = await openPanelAsAsha({

@@ -1243,6 +1243,17 @@
   outline-offset: 2px;
 }
 
+.ad-subhead {
+  margin-top: 20px;
+}
+
+.ad-order-meta {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 16px;
+}
+
 .ad-facts.one {
   grid-template-columns: minmax(0, 1fr);
 }

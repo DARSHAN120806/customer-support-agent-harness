@@ -26,7 +26,8 @@ customer's data.
   a person.
 - **Support staff answer in the admin panel:** each support person signs in
   with their own name, staff ID and password, takes a waiting ticket and chats
-  with the customer. If the customer is still in the chat, the reply appears
+  with the customer. The ticket shows who the customer is (name, customer ID,
+  city) and their orders, each one a click away. If the customer is still in the chat, the reply appears
   there straight away; otherwise they see it under "Your tickets" next time.
   "End chat" closes the ticket, and the overview shows who handled how many.
 - **Built-in safety checks:** every reply is checked before the customer sees

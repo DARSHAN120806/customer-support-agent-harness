@@ -122,6 +122,7 @@ export function Tickets({ person, onOpenConversation }: Props) {
                   <tr>
                     <th>Ticket</th>
                     <th>Created</th>
+                    <th>Customer</th>
                     <th>Reason</th>
                     <th>Order</th>
                     <th>Summary</th>
@@ -138,6 +139,10 @@ export function Tickets({ person, onOpenConversation }: Props) {
                         <Tag>{t.ticket_id}</Tag>
                       </td>
                       <td className="nowrap ad-muted">{dateTime(t.created_at)}</td>
+                      <td className="nowrap">
+                        {t.customer_name ?? '—'}
+                        {t.customer_id && <span className="ad-muted ad-mono"> · {t.customer_id}</span>}
+                      </td>
                       <td className="nowrap">{REASON_LABEL[t.reason] ?? t.reason}</td>
                       <td className="nowrap">{t.order_id ? <Tag>{t.order_id}</Tag> : '—'}</td>
                       <td className="ad-summary">{t.summary}</td>

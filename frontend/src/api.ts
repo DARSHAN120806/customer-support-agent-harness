@@ -178,12 +178,16 @@ export type Ticket = {
   messages?: (TicketMessage & { staff_id?: string })[]
   // Whether the customer still has this chat open, so replies reach them live.
   live?: boolean
+  customer_name?: string | null
+  customer_id?: string | null
 }
 
 export type TicketDetail = {
   ticket: Ticket
   // The customer's chat with the assistant before the hand-over.
   chat: { role: 'customer' | 'assistant'; text: string }[]
+  // Who the ticket is from, with their orders (email masked).
+  customer?: { name: string; customer_id: string; city?: string; email: string; orders: OrderSummary[] } | null
 }
 
 export type TeamRow = {

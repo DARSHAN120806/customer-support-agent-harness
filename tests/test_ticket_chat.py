@@ -317,3 +317,18 @@ def test_the_ticket_chat_needs_a_panel_sign_in(setup):
         assert client.post(path).status_code == 401
     assert client.post(f"/api/tickets/{ticket_id}/messages", json={"text": "x"}).status_code == 401
     assert client.get(f"/api/tickets/{ticket_id}").status_code == 401
+
+
+def test_the_person_answering_sees_who_the_customer_is_and_their_orders(setup):
+    client, _, _ = setup
+    _, ticket_id = customer_asks_for_a_person(client)
+    asha = staff(client, ASHA.email)
+
+    detail = client.get(f"/api/tickets/{ticket_id}", headers=asha).json()
+
+    customer = detail["customer"]
+    assert (customer["name"], customer["customer_id"], customer["city"]) == ("Priya Nair", "C001", "Austin, TX")
+    assert [o["order_id"] for o in customer["orders"]] == ["JL-10231", "JL-10198"]  # newest first
+    assert customer["email"] == "[EMAIL]" and PRIYA not in json.dumps(detail)
+    (listed,) = client.get("/api/tickets", headers=asha).json()
+    assert (listed["customer_name"], listed["customer_id"]) == ("Priya Nair", "C001")
