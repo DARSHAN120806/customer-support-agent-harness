@@ -157,3 +157,25 @@ describe('the customer under Your orders', () => {
     expect(line).toHaveTextContent('Return of Linen Napkins (Set of 4) · Approved · ₹1,151 to Original payment (Visa)')
   })
 })
+
+describe('getting from a request to its ticket', () => {
+  it('opens the ticket from the request, where the customer can be answered', async () => {
+    const detail = {
+      ticket: {
+        ticket_id: 'TCK-20261121-BBB222', created_at: '2026-11-21T09:00:00+00:00', status: 'open', conversation_id: null,
+        customer_email: '[EMAIL]', reason: 'return_request', order_id: 'JL-10231', summary: 'Return request.', assigned_to: null, messages: [],
+      },
+      chat: [],
+      customer: null,
+    }
+    const { user } = await openRequestsAsAsha({
+      'GET /api/admin/refund-requests': () => ({ body: [WAITING] }),
+      'GET /api/tickets/TCK-20261121-BBB222': () => ({ body: detail }),
+    })
+    await user.click(await screen.findByRole('button', { name: 'Open' }))
+    await user.click(await screen.findByRole('button', { name: 'Open ticket TCK-20261121-BBB222' }))
+
+    const view = await screen.findByRole('region', { name: 'Ticket TCK-20261121-BBB222' })
+    expect(within(view).getByRole('button', { name: 'Take ticket' })).toBeInTheDocument()
+  })
+})

@@ -7,10 +7,11 @@ import { CHART, prefersReducedMotion } from './chart'
 
 type Props = {
   onOpenTickets: () => void
-  onOpenConversation: (conversationId: string) => void
+  // Opens the ticket itself, with the reply box (the replay is linked from there).
+  onOpenTicket: (ticketId: string) => void
 }
 
-export function Overview({ onOpenTickets, onOpenConversation }: Props) {
+export function Overview({ onOpenTickets, onOpenTicket }: Props) {
   const [stats, setStats] = useState<Stats | null>(null)
   const [tickets, setTickets] = useState<Ticket[] | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -139,11 +140,9 @@ export function Overview({ onOpenTickets, onOpenConversation }: Props) {
                   {REASON_LABEL[t.reason] ?? t.reason}
                   <span className="ad-muted"> · {dateTime(t.created_at)}</span>
                 </span>
-                {t.conversation_id && (
-                  <button type="button" className="ad-link" onClick={() => onOpenConversation(t.conversation_id!)}>
-                    View chat
-                  </button>
-                )}
+                <button type="button" className="ad-link" onClick={() => onOpenTicket(t.ticket_id)}>
+                  Open
+                </button>
               </li>
             ))}
           </ul>

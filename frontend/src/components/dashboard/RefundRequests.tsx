@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { ApiError, dashboardApi, type RefundRequest } from '../../api'
 import { dateTime } from '../../format'
 import { rupees } from '../shop/cart'
-import { Tag } from '../shop/Tag'
+import { Tag, TagButton } from '../shop/Tag'
 
 type Show = 'waiting' | 'decided' | 'all'
 
@@ -23,7 +23,7 @@ const what = (r: RefundRequest) =>
 
 // Refund and return requests from the chat. The shop's rules approve the
 // simple ones themselves; the rest wait here for a person to decide.
-export function RefundRequests() {
+export function RefundRequests({ onOpenTicket }: { onOpenTicket?: (ticketId: string) => void }) {
   const [requests, setRequests] = useState<RefundRequest[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [show, setShow] = useState<Show>('waiting')
@@ -41,6 +41,7 @@ export function RefundRequests() {
       <RequestView
         request={opened}
         onBack={() => setOpen(null)}
+        onOpenTicket={onOpenTicket}
         onDecided={(changed) => setRequests((all) => (all ?? []).map((r) => (r.request_id === changed.request_id ? changed : r)))}
       />
     )
@@ -135,10 +136,11 @@ export function RefundRequests() {
 type ViewProps = {
   request: RefundRequest
   onBack: () => void
+  onOpenTicket?: (ticketId: string) => void
   onDecided: (request: RefundRequest) => void
 }
 
-function RequestView({ request: r, onBack, onDecided }: ViewProps) {
+function RequestView({ request: r, onBack, onOpenTicket, onDecided }: ViewProps) {
   const [fee, setFee] = useState('')
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
@@ -204,7 +206,17 @@ function RequestView({ request: r, onBack, onDecided }: ViewProps) {
               </div>
               <div>
                 <dt>Ticket</dt>
-                <dd>{r.ticket_id ? <Tag>{r.ticket_id}</Tag> : 'None'}</dd>
+                <dd>
+                  {!r.ticket_id ? (
+                    'None'
+                  ) : onOpenTicket ? (
+                    <TagButton label={`Open ticket ${r.ticket_id}`} onClick={() => onOpenTicket(r.ticket_id!)}>
+                      {r.ticket_id}
+                    </TagButton>
+                  ) : (
+                    <Tag>{r.ticket_id}</Tag>
+                  )}
+                </dd>
               </div>
             </dl>
             {r.details && (

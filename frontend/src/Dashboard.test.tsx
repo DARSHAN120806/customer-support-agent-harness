@@ -212,12 +212,27 @@ describe('tickets', () => {
     expect(screen.getByText('1 of 2 tickets')).toBeInTheDocument()
   })
 
-  it('opens the conversation behind a ticket', async () => {
-    fakeApi()
+  it('opens a ticket from the overview, where it can be answered', async () => {
+    // Found 21 Nov 2026: "View chat" here led to the read-only replay, with no
+    // way to answer the customer. "Open" now opens the ticket itself.
+    const detail = { ticket: { ...TICKETS[0], assigned_to: null, messages: [] }, chat: [], customer: null }
+    fakeApi({ '/api/tickets/TCK-20261120-AAA111': detail })
     const user = await openDashboard()
 
-    // From the overview's recent tickets.
-    await user.click(await screen.findByRole('button', { name: 'View chat' }))
+    const recent = await screen.findByRole('heading', { name: 'Recent tickets' })
+    const row = within(recent.closest('section')!).getByText('TCK-20261120-AAA111').closest('li')!
+    await user.click(within(row).getByRole('button', { name: 'Open' }))
+
+    const view = await screen.findByRole('region', { name: 'Ticket TCK-20261120-AAA111' })
+    expect(within(view).getByRole('button', { name: 'Take ticket' })).toBeInTheDocument()
+  })
+
+  it('opens the conversation behind a ticket, and leads back to the ticket', async () => {
+    const detail = { ticket: { ...TICKETS[0], assigned_to: null, messages: [] }, chat: [], customer: null }
+    fakeApi({ '/api/tickets/TCK-20261120-AAA111': detail })
+    const user = await openDashboard()
+    await user.click(screen.getByRole('button', { name: 'Conversations' }))
+    await user.click((await screen.findAllByRole('button', { name: 'Replay' }))[0])
 
     expect(await screen.findByRole('region', { name: 'Conversation replay' })).toBeInTheDocument()
     // The ticket number is highlighted, so the sentence is split into pieces;
@@ -226,6 +241,11 @@ describe('tickets', () => {
       (_, element) => element?.tagName === 'P' && element.textContent === 'Your ticket is TCK-20261120-AAA111.',
     )
     expect(reply.querySelector('.ticket-ref')).toHaveTextContent('TCK-20261120-AAA111')
+
+    // The replay is read only, and says where to answer.
+    expect(screen.getByText(/This replay is read only/)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'TCK-20261120-AAA111' }))
+    expect(await screen.findByRole('region', { name: 'Ticket TCK-20261120-AAA111' })).toBeInTheDocument()
   })
 
   it('says so when there are no tickets yet', async () => {

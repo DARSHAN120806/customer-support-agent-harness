@@ -14,6 +14,7 @@ from __future__ import annotations
 import calendar
 import re
 from dataclasses import dataclass
+from datetime import date
 from typing import Any
 
 from .prompts import AI_NOT_HUMAN_REPLY, IDENTITY_REPLY
@@ -450,6 +451,48 @@ def find_ungrounded_figures(reply: str, sources: str) -> list[str]:
     return ungrounded
 
 
+def date_worked_out_in_head(reply: str, sources: str) -> tuple[str, dict[str, Any]] | None:
+    """A calculate_date call that confirms a date the model worked out itself.
+
+    Added 21 Nov 2026: the model often writes a correct deadline, such as "your
+    warranty runs until 18 September 2027", without calling calculate_date, and
+    the figure check then blocks a good answer. If a date in the reply is exactly
+    a full date from the sources plus a period from the sources (18 September
+    2026 + "1 year"), the harness runs the tool itself before the rewrite, so the
+    date is checked by the tool and becomes a source. A date that is not such a
+    sum gets no help and is still blocked.
+    """
+    from .tools.support_tools import add_to_date  # here, to avoid an import loop
+
+    source_days = {
+        date(year, month, day)
+        for year, month, day in _dates(sources)
+        if year is not None and _real_date(year, month, day)
+    }
+    steps = {"year": "add_years", "month": "add_months", "week": "add_days", "day": "add_days"}
+    periods = {(number, unit) for number, unit in _periods(sources) if unit in steps}
+    source_set = set(_dates(sources))
+    for year, month, day in _dates(reply):
+        if (year, month, day) in source_set:
+            continue
+        for start in sorted(source_days):
+            for number, unit in sorted(periods):
+                amount = number * 7 if unit == "week" else number
+                field = steps[unit]
+                result = add_to_date(start, **{field.removeprefix("add_"): amount})
+                if (result.month, result.day) == (month, day) and (year is None or result.year == year):
+                    return ("calculate_date", {"start_date": start.isoformat(), field: amount})
+    return None
+
+
+def _real_date(year: int, month: int, day: int) -> bool:
+    try:
+        date(year, month, day)
+    except ValueError:
+        return False
+    return True
+
+
 def _dates(text: str) -> list[tuple[int | None, int, int]]:
     """Every calendar date in the text as (year, month, day). The year is None
     when the text does not give one, as in "7 December"."""
@@ -645,6 +688,9 @@ def check_reply(
     if sources is not None:
         ungrounded = find_ungrounded_figures(reply, sources)
         if ungrounded:
+            # A deadline worked out correctly but without the tool: the harness
+            # checks it with calculate_date itself before the rewrite.
+            date_call = date_worked_out_in_head(reply, sources)
             violations.append(
                 Violation(
                     "ungrounded_figure",
@@ -658,7 +704,14 @@ def check_reply(
                         "appear in the tool results. For a deadline, call calculate_date "
                         "and quote the date it returns. List amounts as the policy states "
                         "them instead of calculating a total."
+                        + (
+                            " The date has now been worked out with calculate_date (see its "
+                            "result in the conversation); quote that result."
+                            if date_call
+                            else ""
+                        )
                     ),
+                    run_tool=date_call,
                 )
             )
 

@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ApiError, dashboardApi, type PanelPerson, type Ticket } from '../../api'
 import { REASON_LABEL, dateTime, statusLabel } from '../../format'
-import { Tag } from '../shop/Tag'
+import { Tag, TagButton } from '../shop/Tag'
 import { TicketView } from './TicketView'
 
 type Props = {
   person: PanelPerson
+  // Open this ticket straight away (from the Overview or a conversation replay).
+  openFirst?: string | null
   onOpenConversation: (conversationId: string) => void
 }
 
@@ -13,13 +15,13 @@ type Show = 'waiting' | 'mine' | 'all'
 
 // Every ticket the assistant or the harness created, newest first. Support
 // staff take a waiting ticket and answer the customer from here.
-export function Tickets({ person, onOpenConversation }: Props) {
+export function Tickets({ person, openFirst = null, onOpenConversation }: Props) {
   const [tickets, setTickets] = useState<Ticket[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [show, setShow] = useState<Show>('waiting')
   const [reason, setReason] = useState('all')
   const [search, setSearch] = useState('')
-  const [open, setOpen] = useState<string | null>(null)
+  const [open, setOpen] = useState<string | null>(openFirst)
 
   function load() {
     dashboardApi.tickets().then(setTickets).catch((e: ApiError) => setError(e.message))
@@ -136,7 +138,9 @@ export function Tickets({ person, onOpenConversation }: Props) {
                   {shown.map((t) => (
                     <tr key={t.ticket_id}>
                       <td>
-                        <Tag>{t.ticket_id}</Tag>
+                        <TagButton label={`Open ticket ${t.ticket_id}`} onClick={() => setOpen(t.ticket_id)}>
+                          {t.ticket_id}
+                        </TagButton>
                       </td>
                       <td className="nowrap ad-muted">{dateTime(t.created_at)}</td>
                       <td className="nowrap">

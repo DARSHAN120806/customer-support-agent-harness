@@ -71,6 +71,7 @@ from typing import Any, Callable
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
 
 from .. import event_log
@@ -289,6 +290,20 @@ def create_app(
             raise HTTPException(error.status, str(error)) from error
 
     # --- Health and sign-in -------------------------------------------------------
+
+    # This server is the API, not the website. Someone who opens it in a browser
+    # (http://localhost:8000/ or /dashboard) is sent to the website instead of
+    # seeing "Not Found" (found 21 Nov 2026 when testing the admin panel).
+    web_app = (allowed_origins or DEFAULT_ALLOWED_ORIGINS)[0]
+
+    @app.get("/", include_in_schema=False)
+    def to_the_shop() -> RedirectResponse:
+        return RedirectResponse(web_app)
+
+    @app.get("/dashboard", include_in_schema=False)
+    @app.get("/admin", include_in_schema=False)
+    def to_the_admin_panel() -> RedirectResponse:
+        return RedirectResponse(f"{web_app}/#/dashboard")
 
     @app.get("/api/health")
     def health() -> dict[str, Any]:

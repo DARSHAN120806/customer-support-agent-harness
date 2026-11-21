@@ -84,9 +84,11 @@ export function ConversationList({ onOpen }: ListProps) {
 type ReplayProps = {
   conversationId: string
   onBack: () => void
+  // Opens a ticket from this conversation, where staff can answer the customer.
+  onOpenTicket?: (ticketId: string) => void
 }
 
-export function ConversationReplay({ conversationId, onBack }: ReplayProps) {
+export function ConversationReplay({ conversationId, onBack, onOpenTicket }: ReplayProps) {
   const [events, setEvents] = useState<HarnessEvent[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   // Which reply the panel describes; null means "the newest one".
@@ -98,6 +100,10 @@ export function ConversationReplay({ conversationId, onBack }: ReplayProps) {
 
   const { start, turns } = groupTurns(events ?? [])
   const shownTurn = turns.find((t) => t.number === selected) ?? turns.at(-1)
+  // Tickets created in this conversation, oldest first, each once.
+  const ticketIds = [
+    ...new Set((events ?? []).filter((e) => e.event === 'ticket_created' && e.ticket_id).map((e) => String(e.ticket_id))),
+  ]
 
   return (
     <section aria-label="Conversation replay">
@@ -116,6 +122,19 @@ export function ConversationReplay({ conversationId, onBack }: ReplayProps) {
         )}
       </header>
       {error && <p className="ad-error" role="alert">{error}</p>}
+      {onOpenTicket && ticketIds.length > 0 && (
+        <p className="ad-note">
+          This replay is read only. To answer the customer, open the ticket:{' '}
+          {ticketIds.map((id, n) => (
+            <span key={id}>
+              {n > 0 && ', '}
+              <button type="button" className="ad-link" onClick={() => onOpenTicket(id)}>
+                {id}
+              </button>
+            </span>
+          ))}
+        </p>
+      )}
       {!events && !error && <p className="ad-muted">Loading…</p>}
       {events && turns.length === 0 && <p className="ad-empty">No messages in this conversation</p>}
 

@@ -103,7 +103,8 @@ describe('a support person in the admin panel', () => {
     expect(within(table).getByText('Waiting')).toBeInTheDocument()
     expect(within(table).getByText('in the chat')).toBeInTheDocument()
 
-    await user.click(within(table).getByRole('button', { name: 'Open' }))
+    // The ticket number opens it too, for narrow windows where the Open column is out of view.
+    await user.click(within(table).getByRole('button', { name: 'Open ticket TCK-20261121-AAA111' }))
     const view = await screen.findByRole('region', { name: 'Ticket TCK-20261121-AAA111' })
     expect(within(view).getByText('Can I speak to a person?')).toBeInTheDocument()
     expect(within(view).getByText(/In the chat now/)).toBeInTheDocument()

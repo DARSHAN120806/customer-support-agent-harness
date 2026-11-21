@@ -35,15 +35,24 @@ type Props = {
 export function Dashboard({ person, onSignOut }: Props) {
   const [section, setSection] = useState<Section>('overview')
   const [openConversation, setOpenConversation] = useState<string | null>(null)
+  // A ticket to open straight away in the Tickets section, with its reply box.
+  const [ticketToOpen, setTicketToOpen] = useState<string | null>(null)
 
   function go(next: Section) {
     setSection(next)
     setOpenConversation(null)
+    setTicketToOpen(null)
   }
 
   function showConversation(id: string) {
     setSection('conversations')
     setOpenConversation(id)
+  }
+
+  function showTicket(id: string) {
+    setSection('tickets')
+    setOpenConversation(null)
+    setTicketToOpen(id)
   }
 
   return (
@@ -77,12 +86,14 @@ export function Dashboard({ person, onSignOut }: Props) {
 
       <main className="ad-main">
         <h1 className="visually-hidden">Support dashboard</h1>
-        {section === 'overview' && <Overview onOpenTickets={() => go('tickets')} onOpenConversation={showConversation} />}
-        {section === 'tickets' && <Tickets person={person} onOpenConversation={showConversation} />}
-        {section === 'refunds' && <RefundRequests />}
+        {section === 'overview' && <Overview onOpenTickets={() => go('tickets')} onOpenTicket={showTicket} />}
+        {section === 'tickets' && (
+          <Tickets key={ticketToOpen ?? 'list'} person={person} openFirst={ticketToOpen} onOpenConversation={showConversation} />
+        )}
+        {section === 'refunds' && <RefundRequests onOpenTicket={showTicket} />}
         {section === 'conversations' &&
           (openConversation ? (
-            <ConversationReplay conversationId={openConversation} onBack={() => setOpenConversation(null)} />
+            <ConversationReplay conversationId={openConversation} onBack={() => setOpenConversation(null)} onOpenTicket={showTicket} />
           ) : (
             <ConversationList onOpen={setOpenConversation} />
           ))}

@@ -1407,3 +1407,27 @@
   outline: 2px solid var(--jl-accent);
   outline-offset: 2px;
 }
+
+/* A ticket number that opens the ticket (Tickets table, refund requests). */
+.tag-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.tag-button:hover .parcel-tag {
+  border-color: var(--jl-accent);
+  color: var(--jl-accent);
+}
+
+.tag-button:focus-visible {
+  outline: 2px solid var(--jl-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* The "read only, open the ticket" line above a conversation replay. */
+section[aria-label='Conversation replay'] > .ad-note {
+  margin: 0 0 16px;
+}
