@@ -142,6 +142,8 @@ export const api = {
   products: () => request<Product[]>('/products'),
   myTickets: (sessionId: string) =>
     request<CustomerTicket[]>(`/sessions/${encodeURIComponent(sessionId)}/tickets`),
+  myRefundRequests: (sessionId: string) =>
+    request<MyRefundRequest[]>(`/sessions/${encodeURIComponent(sessionId)}/refund-requests`),
   signOut: (sessionId: string) =>
     request<void>(`/sessions/${encodeURIComponent(sessionId)}`, { method: 'DELETE' }),
   sendMessage: (sessionId: string, text: string) =>
@@ -321,6 +323,57 @@ export type DocumentDetail = Omit<DocumentSummary, 'sections'> & {
 
 export type DocumentSaved = { document: DocumentDetail; warnings: string[] }
 
+// A refund or return request started in the chat (Stage R2/R3). Amounts are
+// exact rupee strings such as "4931.00".
+export type RefundMoney = {
+  item_refund: string
+  shipping_refunded: string
+  return_fee: string
+  restocking_fee?: string
+  net_refund: string
+  refunded_to: string
+  free_return_label: boolean
+}
+
+export type RefundStatus = 'approved' | 'waiting_for_staff' | 'approved_by_staff' | 'denied_by_staff'
+
+export type RefundRequest = {
+  request_id: string
+  created_at: string
+  status: RefundStatus
+  status_words: string
+  order_id: string
+  reason: string
+  reason_words: string
+  items: { name: string; quantity: number }[]
+  money: RefundMoney | null
+  why_staff: string[]
+  notes: string[]
+  ticket_id: string | null
+  details: string
+  customer_name: string | null
+  customer_id: string | null
+  decided_by?: { name: string; staff_id: string }
+  decided_at?: string
+  staff_note?: string
+}
+
+// The same request as its customer sees it.
+export type MyRefundRequest = {
+  request_id: string
+  created_at: string
+  order_id: string
+  items: { name: string; quantity: number }[]
+  reason: string
+  status: RefundStatus
+  status_words: string
+  net_refund: string | null
+  refunded_to: string | null
+  ticket_id: string | null
+  decided_by: string | null
+  staff_note: string | null
+}
+
 export type OrderRow = OrderSummary & { customer_name: string; records: number }
 
 export type OrderDetail = {
@@ -351,6 +404,11 @@ export const dashboardApi = {
       method: 'POST',
       body: JSON.stringify({ version_id: versionId, version }),
     }),
+  refundRequests: () => asAdmin<RefundRequest[]>('/admin/refund-requests'),
+  approveRequest: (id: string, body: { restocking_fee?: number; note?: string }) =>
+    asAdmin<RefundRequest>(`/admin/refund-requests/${encodeURIComponent(id)}/approve`, { method: 'POST', body: JSON.stringify(body) }),
+  denyRequest: (id: string, note: string) =>
+    asAdmin<RefundRequest>(`/admin/refund-requests/${encodeURIComponent(id)}/deny`, { method: 'POST', body: JSON.stringify({ note }) }),
   orders: (q: string) => asAdmin<{ total: number; orders: OrderRow[] }>(`/admin/orders?q=${encodeURIComponent(q)}`),
   order: (id: string) => asAdmin<OrderDetail>(`/admin/orders/${encodeURIComponent(id)}`),
   model: () => asAdmin<ModelView>('/admin/model'),

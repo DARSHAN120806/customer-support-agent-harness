@@ -81,10 +81,13 @@ from ..model_settings import apply as apply_saved
 from ..model_settings import load_saved, public_view, save
 from ..prompts import SHOP_NAME, fallback_reply
 from ..providers import create_embedder, create_provider
+from ..refund_requests import requests_next_to
 from ..retry import ServiceError
 from .accounts import ADMIN, PANEL_ROLES, Account, AccountStore, AdminSessions, SignInLimiter
 from .documents import DocumentError, DocumentStore
 from .model_admin import ModelForm, candidate_settings, check_connection, problems, same_search, to_saved
+from .refund_admin import RefundDecisionError, admin_view, customer_view, decide
+from .refund_admin import customer_message as refund_message
 from .sessions import ChatSession, SessionBusy, SessionStore
 from .stats import overview
 from .ticket_chat import TicketChatError, customer_message, end, first_name, staff_message, take, team
@@ -133,6 +136,12 @@ ORDERS_SHOWN = 50
 
 class Message(BaseModel):
     text: str = Field(min_length=1, max_length=MAX_MESSAGE_LENGTH)
+
+
+class RefundDecisionBody(BaseModel):
+    note: str = Field("", max_length=1000)
+    # Only when approving a change of mind: up to 20% of the items, in rupees.
+    restocking_fee: float = Field(0, ge=0)
 
 
 @dataclass
@@ -190,6 +199,8 @@ def create_app(
         if value
     }
     orders_by_id = {o["order_id"]: (o, c) for c in customers.values() for o in c["orders"]}
+    # Refund and return requests from the chat, kept next to the tickets.
+    refund_requests = requests_next_to(resources.tickets.path)
     if accounts is None:
         accounts = AccountStore.load(settings.accounts_file)
     limiter = limiter or SignInLimiter()
@@ -601,6 +612,57 @@ def create_app(
             "order": order,
             "customer": {"name": customer["name"], "email": event_log.EMAIL_MASK, "city": customer.get("city")},
         }
+
+    # --- Refund and return requests (Stage R3) -----------------------------------
+
+    @app.get("/api/admin/refund-requests", dependencies=panel_only)
+    def list_refund_requests() -> list[dict[str, Any]]:
+        """Every request from the chat, newest first. Emails are masked."""
+        return [
+            admin_view(r, customers.get(str(r.get("customer_email", "")).lower()))
+            for r in reversed(refund_requests.all())
+        ]
+
+    def decide_request(request_id: str, person: Account, approve: bool, body: RefundDecisionBody) -> dict[str, Any]:
+        try:
+            record = decide(
+                refund_requests, resources.tickets, request_id, person,
+                approve=approve, note=body.note, restocking_fee=body.restocking_fee,
+            )
+        except RefundDecisionError as error:
+            raise HTTPException(error.status, str(error)) from error
+        # If the customer's chat window from that conversation is still open,
+        # they see the decision there straight away.
+        email = str(record.get("customer_email", "")).lower()
+        session = sessions.find(
+            lambda s: s.context.logger.conversation_id == record.get("conversation_id")
+            and s.customer["email"].lower() == email
+        ) if record.get("conversation_id") else None
+        if session is not None:
+            session.transcript.append(
+                {"role": "staff", "text": refund_message(record), "name": first_name(person.name or "Admin")}
+            )
+        return admin_view(record, customers.get(email))
+
+    @app.post("/api/admin/refund-requests/{request_id}/approve")
+    def approve_request(
+        request_id: str, body: RefundDecisionBody, person: Account = Depends(panel_person)
+    ) -> dict[str, Any]:
+        return decide_request(request_id, person, True, body)
+
+    @app.post("/api/admin/refund-requests/{request_id}/deny")
+    def deny_request(
+        request_id: str, body: RefundDecisionBody, person: Account = Depends(panel_person)
+    ) -> dict[str, Any]:
+        return decide_request(request_id, person, False, body)
+
+    @app.get("/api/sessions/{session_id}/refund-requests")
+    def my_refund_requests(session_id: str) -> list[dict[str, Any]]:
+        """The signed-in customer's own requests, newest first."""
+        session = session_or_404(session_id)
+        email = session.customer["email"].lower()
+        mine = [r for r in refund_requests.all() if str(r.get("customer_email", "")).lower() == email]
+        return [customer_view(r) for r in reversed(mine)]
 
     @app.get("/api/stats", dependencies=panel_only)
     def stats() -> dict[str, Any]:

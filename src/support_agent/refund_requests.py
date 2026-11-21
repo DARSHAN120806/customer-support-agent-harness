@@ -137,6 +137,12 @@ class RefundRequestStore:
         return records
 
 
+def requests_next_to(tickets_file: Path) -> RefundRequestStore:
+    """The requests file kept next to the tickets file. The chat tool and the
+    admin panel both use this, so they always read and write the same file."""
+    return RefundRequestStore(tickets_file.parent / "refund_requests.jsonl")
+
+
 def with_earlier_requests(order: dict[str, Any], earlier: list[dict[str, Any]]) -> dict[str, Any]:
     """The order as the rules should see it: requests made in the chat count
     like the returns already on the order, so the same items cannot be asked

@@ -68,7 +68,7 @@ describe('a support person in the admin panel', () => {
     await openPanelAsAsha({})
 
     const nav = screen.getByRole('navigation', { name: 'Admin sections' })
-    expect(within(nav).getAllByRole('button').map((b) => b.textContent)).toEqual(['Overview', 'Tickets', 'Conversations', 'Orders'])
+    expect(within(nav).getAllByRole('button').map((b) => b.textContent)).toEqual(['Overview', 'Tickets', 'Refund requests', 'Conversations', 'Orders'])
     expect(screen.getByText(/Signed in as/)).toHaveTextContent('Signed in as Asha Rao · JLS-101')
   })
 

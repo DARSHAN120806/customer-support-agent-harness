@@ -1368,3 +1368,42 @@
     transition: none !important;
   }
 }
+
+/* Refund requests (Stage R3) */
+.ad-money li.total {
+  font-weight: 600;
+}
+
+.ad-reasons {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+.ad-reasons li + li {
+  margin-top: 4px;
+}
+
+.ad-decision {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.ad-field textarea {
+  min-height: 64px;
+  padding: 8px 12px;
+  border: 1px solid var(--jl-field-line);
+  border-radius: var(--jl-radius-control);
+  background: var(--jl-card);
+  color: var(--jl-text);
+  font: inherit;
+  font-size: 14px;
+  resize: vertical;
+}
+
+.ad-field input:focus-visible,
+.ad-field textarea:focus-visible {
+  outline: 2px solid var(--jl-accent);
+  outline-offset: 2px;
+}

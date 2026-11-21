@@ -6,16 +6,18 @@ import { Evaluations } from './Evaluations'
 import { ModelSettings } from './ModelSettings'
 import { Orders } from './Orders'
 import { Overview } from './Overview'
+import { RefundRequests } from './RefundRequests'
 import { Tickets } from './Tickets'
 
-type Section = 'overview' | 'tickets' | 'conversations' | 'evaluations' | 'documents' | 'orders' | 'model'
+type Section = 'overview' | 'tickets' | 'refunds' | 'conversations' | 'evaluations' | 'documents' | 'orders' | 'model'
 
 // Support staff see what they need to answer tickets; the admin sees everything.
-const STAFF_SECTIONS: Section[] = ['overview', 'tickets', 'conversations', 'orders']
+const STAFF_SECTIONS: Section[] = ['overview', 'tickets', 'refunds', 'conversations', 'orders']
 
 const SECTIONS: { id: Section; label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'tickets', label: 'Tickets' },
+  { id: 'refunds', label: 'Refund requests' },
   { id: 'conversations', label: 'Conversations' },
   { id: 'evaluations', label: 'Evaluations' },
   { id: 'documents', label: 'Documents' },
@@ -77,6 +79,7 @@ export function Dashboard({ person, onSignOut }: Props) {
         <h1 className="visually-hidden">Support dashboard</h1>
         {section === 'overview' && <Overview onOpenTickets={() => go('tickets')} onOpenConversation={showConversation} />}
         {section === 'tickets' && <Tickets person={person} onOpenConversation={showConversation} />}
+        {section === 'refunds' && <RefundRequests />}
         {section === 'conversations' &&
           (openConversation ? (
             <ConversationReplay conversationId={openConversation} onBack={() => setOpenConversation(null)} />

@@ -1,18 +1,20 @@
 // "Your orders" and "Your tickets" on the shop page: the signed-in customer's
 // own orders, and their support tickets from the shop's records and from chat.
 import { useState, type FormEvent } from 'react'
-import type { CustomerTicket, OrderSummary } from '../../api'
+import type { CustomerTicket, MyRefundRequest, OrderSummary } from '../../api'
 import { rupees } from './cart'
 import { sentence, shortDate } from './dates'
 import { Tag } from './Tag'
 
 type OrdersProps = {
   orders: OrderSummary[]
+  // Returns and refunds asked for in the chat.
+  requests?: MyRefundRequest[]
   // Opens the chat with a question about this order.
   onAsk: (orderId: string) => void
 }
 
-export function YourOrders({ orders, onAsk }: OrdersProps) {
+export function YourOrders({ orders, requests = [], onAsk }: OrdersProps) {
   const newestFirst = [...orders].sort((a, b) => b.placed_on.localeCompare(a.placed_on))
   return (
     <section className="account-block" id="orders" aria-labelledby="orders-title">
@@ -29,6 +31,11 @@ export function YourOrders({ orders, onAsk }: OrdersProps) {
                 <p className="row-meta">
                   Placed {shortDate(order.placed_on)} · {sentence(order.status)}
                 </p>
+                {requests
+                  .filter((r) => r.order_id === order.order_id)
+                  .map((r) => (
+                    <RequestLine key={r.request_id} request={r} />
+                  ))}
                 <button type="button" className="row-link" onClick={() => onAsk(order.order_id)}>
                   Ask about this order
                 </button>
@@ -39,6 +46,31 @@ export function YourOrders({ orders, onAsk }: OrdersProps) {
         </ul>
       )}
     </section>
+  )
+}
+
+// One return or refund request under its order: what, where it stands, and
+// how much, in the customer's words.
+function RequestLine({ request: r }: { request: MyRefundRequest }) {
+  const items = r.items.map((i) => (i.quantity > 1 ? `${i.name} ×${i.quantity}` : i.name)).join(', ')
+  const pending = r.status === 'waiting_for_staff'
+  const refused = r.status === 'denied_by_staff'
+  return (
+    <div className="request-line" aria-label={`Request ${r.request_id}`}>
+      <p className="row-meta">
+        {items ? `Return of ${items}` : r.reason} · <span className={pending ? 'ticket-status open' : 'ticket-status'}>{r.status_words}</span>
+        {r.net_refund && !refused && (
+          <>
+            {' '}
+            · {rupees(Number(r.net_refund))} to {r.refunded_to}
+          </>
+        )}
+      </p>
+      <p className="row-meta request-id">
+        <span className="request-number">{r.request_id}</span>
+        {r.staff_note && <> · {r.decided_by ?? 'Our team'}: {r.staff_note}</>}
+      </p>
+    </div>
   )
 }
 

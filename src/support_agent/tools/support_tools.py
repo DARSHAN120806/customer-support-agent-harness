@@ -24,7 +24,7 @@ from ..event_log import EventLogger, NullLogger
 from ..knowledge_base import KnowledgeBase
 from ..orders import OrderStore, normalize_email, normalize_order_id
 from ..prompts import SUPPORT_EMAIL
-from ..refund_requests import RefundRequestStore
+from ..refund_requests import RefundRequestStore, requests_next_to
 from ..retry import RetryPolicy, ServiceError, call_with_retry
 from ..tickets import ESCALATION_REASONS, TicketError, TicketStore
 from .refund_tool import make_refund_tool
@@ -109,7 +109,7 @@ def build_tool_registry(
 ) -> ToolRegistry:
     today = today or date.today()
     # Requests are kept next to the tickets unless a file is given.
-    requests = refund_requests or RefundRequestStore(tickets.path.parent / "refund_requests.jsonl")
+    requests = refund_requests or requests_next_to(tickets.path)
     registry = ToolRegistry()
     registry.register(make_search_tool(session, knowledge_base))
     registry.register(make_order_tool(session, orders))

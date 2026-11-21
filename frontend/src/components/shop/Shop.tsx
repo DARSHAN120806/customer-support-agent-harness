@@ -1,7 +1,7 @@
 // The page a customer sees after signing in: the shop's products, a cart that
 // can never check out, and their own orders and support tickets.
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
-import { api, ApiError, type CustomerTicket, type Product, type Session } from '../../api'
+import { api, ApiError, type CustomerTicket, type MyRefundRequest, type Product, type Session } from '../../api'
 import { YourOrders, YourTickets } from './Account'
 import { useCart } from './cart'
 import { CartPanel } from './CartPanel'
@@ -24,6 +24,7 @@ export function Shop({ session, onSignOut, onSessionExpired }: Props) {
   const [productsError, setProductsError] = useState<string | null>(null)
   const [tickets, setTickets] = useState<CustomerTicket[] | null>(null)
   const [ticketsError, setTicketsError] = useState<string | null>(null)
+  const [requests, setRequests] = useState<MyRefundRequest[]>([])
   const [category, setCategory] = useState(ALL)
   const [cartOpen, setCartOpen] = useState(false)
   const cart = useCart(session.customer.email)
@@ -52,13 +53,22 @@ export function Shop({ session, onSignOut, onSessionExpired }: Props) {
       .catch((e: ApiError) => (e.status === 404 ? expiredRef.current() : setTicketsError(e.message)))
   }, [session.session_id])
 
+  // Refund and return requests from the chat, shown under "Your orders".
+  const loadRequests = useCallback(() => {
+    api
+      .myRefundRequests(session.session_id)
+      .then((found) => setRequests(Array.isArray(found) ? found : []))
+      .catch(() => setRequests([])) // the orders still show without them
+  }, [session.session_id])
+
   useEffect(() => {
     api
       .products()
       .then(setProducts)
       .catch((e: ApiError) => setProductsError(e.message))
     loadTickets()
-  }, [loadTickets])
+    loadRequests()
+  }, [loadTickets, loadRequests])
 
   const categories = useMemo(() => {
     const counts = new Map<string, number>()
@@ -130,7 +140,7 @@ export function Shop({ session, onSignOut, onSessionExpired }: Props) {
         </section>
 
         <div className="account">
-          <YourOrders orders={session.orders} onAsk={(id) => askAbout(`What's the status of my order ${id}?`)} />
+          <YourOrders orders={session.orders} requests={requests} onAsk={(id) => askAbout(`What's the status of my order ${id}?`)} />
           <YourTickets
             tickets={tickets}
             error={ticketsError}
@@ -147,7 +157,11 @@ export function Shop({ session, onSignOut, onSessionExpired }: Props) {
         open={chatOpen}
         onOpenChange={setChatOpen}
         question={question}
-        onTicketCreated={loadTickets}
+        onTicketCreated={() => {
+          loadTickets()
+          loadRequests()
+        }}
+        onReplied={loadRequests}
         onSessionExpired={onSessionExpired}
       />
 

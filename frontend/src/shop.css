@@ -697,3 +697,19 @@
     transition: none !important;
   }
 }
+
+/* A return or refund request under its order (Stage R3). */
+.request-line {
+  margin-top: 8px;
+  padding-left: 12px;
+  border-left: 2px solid var(--jl-hairline);
+}
+
+.request-line .ticket-status {
+  font-size: inherit;
+}
+
+.request-number {
+  font-family: var(--jl-mono);
+  font-size: 12px;
+}

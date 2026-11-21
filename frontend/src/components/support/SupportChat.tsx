@@ -19,6 +19,8 @@ type Props = {
   question: { text: string; id: number } | null
   onTicketCreated: () => void
   onSessionExpired: () => void
+  // Called after every reply, for example so the page can show a new refund request.
+  onReplied?: () => void
 }
 
 type Entry = TranscriptEntry & { isError?: boolean }
@@ -28,7 +30,7 @@ const CHECK_MS = 3000
 
 const SUGGESTIONS = ['What is your return policy?', 'How much is express shipping?', 'I want to talk to a person']
 
-export function SupportChat({ session, open, onOpenChange, question, onTicketCreated, onSessionExpired }: Props) {
+export function SupportChat({ session, open, onOpenChange, question, onTicketCreated, onSessionExpired, onReplied }: Props) {
   const [entries, setEntries] = useState<Entry[]>(session.transcript)
   const [draft, setDraft] = useState('')
   const [waiting, setWaiting] = useState(false)
@@ -128,6 +130,7 @@ export function SupportChat({ session, open, onOpenChange, question, onTicketCre
         setEntries((current) => [...current, { role: 'assistant', text, ticket_ids: reply.new_ticket_ids }])
       }
       if (reply.new_ticket_ids.length > 0) onTicketCreated()
+      onReplied?.()
     } catch (e) {
       const error = e as ApiError
       if (error.status === 404) {
