@@ -30,6 +30,13 @@ customer's data.
   and the safety checks that fired; every ticket; and a step-by-step replay of
   any conversation showing what happened behind the scenes for each reply.
   Customers never see these details.
+- **Edit the shop documents in the admin panel:** change the shipping, returns,
+  refunds, warranty and FAQ texts, prices and stock. Each save is checked (no
+  customer details, sections short enough for the search, the product table
+  still readable), the search is updated straight away, and every earlier
+  version can be viewed and restored. Nothing needs to be "trained".
+- **Look up any order in the admin panel:** search by order ID, customer or
+  item and see everything on it, from tracking to refunds and past tickets.
 - **Choose the model in the admin panel:** switch between Amazon Bedrock, the
   Anthropic API, or any OpenAI-compatible service (OpenAI, OpenRouter, Groq),
   including **local models through Ollama or LM Studio**. Test the connection

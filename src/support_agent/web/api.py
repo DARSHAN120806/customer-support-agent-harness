@@ -27,6 +27,13 @@ Admin only (header "Authorization: Bearer <admin token>"):
     POST   /admin/model/test               try a model choice with tiny requests
     PUT    /admin/model                    save a model choice; new chats use it
     DELETE /admin/model                    forget the saved choice, go back to .env
+    GET    /admin/documents                the shop documents
+    GET    /admin/documents/{name}         one document, its sections and earlier versions
+    PUT    /admin/documents/{name}         save a document (checked, then re-indexed)
+    GET    /admin/documents/{name}/history/{id}  an earlier version's text
+    POST   /admin/documents/{name}/restore put an earlier version back
+    GET    /admin/orders?q=...             find orders by order ID, customer or item
+    GET    /admin/orders/{order_id}        one order with all its records
     GET    /tickets                        support dashboard: tickets (emails masked)
     GET    /conversations                  support dashboard: logged conversations
     GET    /conversations/{id}             every event of one conversation
@@ -64,6 +71,7 @@ from ..prompts import SHOP_NAME, fallback_reply
 from ..providers import create_embedder, create_provider
 from ..retry import ServiceError
 from .accounts import ADMIN, AccountStore, AdminSessions, SignInLimiter
+from .documents import DocumentError, DocumentStore
 from .model_admin import ModelForm, candidate_settings, check_connection, problems, same_search, to_saved
 from .sessions import ChatSession, SessionBusy, SessionStore
 from .stats import overview
@@ -96,6 +104,20 @@ class SignIn(BaseModel):
     password: str = Field(min_length=1, max_length=200)
 
 
+class DocumentEdit(BaseModel):
+    text: str = Field(max_length=250_000)
+    # The fingerprint of the text the editor started from (see documents.version_of).
+    version: str = Field(min_length=1, max_length=64)
+
+
+class DocumentRestore(BaseModel):
+    version_id: str = Field(min_length=1, max_length=40)
+    version: str = Field(min_length=1, max_length=64)
+
+
+ORDERS_SHOWN = 50
+
+
 class Message(BaseModel):
     text: str = Field(min_length=1, max_length=MAX_MESSAGE_LENGTH)
 
@@ -120,6 +142,7 @@ def create_app(
     limiter: SignInLimiter | None = None,
     provider_factory: Callable[[Settings], Any] = create_provider,
     embedder_factory: Callable[[Settings], Any] = create_embedder,
+    documents: DocumentStore | None = None,
 ) -> FastAPI:
     """Build the web app. With no arguments it reads .env (plus any model chosen
     in the admin panel) and connects to the real services; tests pass in a fake
@@ -139,7 +162,21 @@ def create_app(
     live = LiveModel(settings, resources, saved)
 
     customers = _load_customers(settings.orders_file)
-    products = [p.to_dict() for p in load_catalogue(settings.knowledge_base_dir)]
+    catalogue = {"products": [p.to_dict() for p in load_catalogue(settings.knowledge_base_dir)]}
+    # Earlier versions of the documents are kept next to the other private files.
+    documents = documents or DocumentStore(
+        settings.knowledge_base_dir, base_settings.model_settings_file.parent / "document_history"
+    )
+    # Values that must never be added to a shop document: every customer can
+    # search those documents.
+    private_values = {
+        value
+        for customer in customers.values()
+        for value in [customer["email"], *(o["order_id"] for o in customer["orders"]),
+                      *(o.get("tracking_number") or "" for o in customer["orders"])]
+        if value
+    }
+    orders_by_id = {o["order_id"]: (o, c) for c in customers.values() for o in c["orders"]}
     if accounts is None:
         accounts = AccountStore.load(settings.accounts_file)
     limiter = limiter or SignInLimiter()
@@ -147,6 +184,7 @@ def create_app(
     sessions = SessionStore()
     app = FastAPI(title=f"{SHOP_NAME} support API", version="1.0")
     app.state.sessions = sessions  # reachable from tests
+    app.state.live = live
     app.add_middleware(
         CORSMiddleware,
         allow_origins=allowed_origins or DEFAULT_ALLOWED_ORIGINS,
@@ -177,7 +215,7 @@ def create_app(
 
     @app.get("/api/products")
     def list_products() -> list[dict[str, Any]]:
-        return products
+        return catalogue["products"]
 
     @app.post("/api/sessions", status_code=201)
     def sign_in(body: SignIn) -> dict[str, Any]:
@@ -314,6 +352,93 @@ def create_app(
         switch_to(base_settings, None)
         base_settings.model_settings_file.unlink(missing_ok=True)
         return public_view(live.settings, None)
+
+    # --- Shop documents (admin) ------------------------------------------------------
+
+    def reindex_or_undo(name: str, old_text: str) -> None:
+        """Rebuild the search from the saved documents. If that fails, put the
+        old text back, so the documents and the search never disagree."""
+        try:
+            knowledge_base = build_knowledge_base(live.settings, embedder_factory(live.settings))
+        except (ConfigError, ServiceError) as error:
+            documents.write_back(name, old_text)
+            raise HTTPException(400, f"Nothing was changed: the search could not read the new text ({error}).") from error
+        live.resources = dataclasses.replace(live.resources, knowledge_base=knowledge_base)
+        catalogue["products"] = [p.to_dict() for p in load_catalogue(settings.knowledge_base_dir)]
+
+    def save_document(name: str, text: str, version: str) -> dict[str, Any]:
+        try:
+            problems_found, warnings = documents.check(name, text, private_values)
+            if problems_found:
+                raise HTTPException(400, "\n".join(problems_found))
+            old_text = documents.read(name)["text"]
+            documents.save(name, text, version)
+        except DocumentError as error:
+            raise HTTPException(error.status, str(error)) from error
+        reindex_or_undo(name, old_text)
+        return {"document": documents.read(name), "warnings": warnings}
+
+    def document_or_404(action: Callable[[], Any]) -> Any:
+        try:
+            return action()
+        except DocumentError as error:
+            raise HTTPException(error.status, str(error)) from error
+
+    @app.get("/api/admin/documents", dependencies=admin_only)
+    def list_documents() -> list[dict[str, Any]]:
+        return documents.list()
+
+    @app.get("/api/admin/documents/{name}", dependencies=admin_only)
+    def get_document(name: str) -> dict[str, Any]:
+        return document_or_404(lambda: documents.read(name))
+
+    @app.put("/api/admin/documents/{name}", dependencies=admin_only)
+    def put_document(name: str, body: DocumentEdit) -> dict[str, Any]:
+        return save_document(name, body.text, body.version)
+
+    @app.get("/api/admin/documents/{name}/history/{version_id}", dependencies=admin_only)
+    def get_document_version(name: str, version_id: str) -> dict[str, Any]:
+        return {"text": document_or_404(lambda: documents.history_text(name, version_id))}
+
+    @app.post("/api/admin/documents/{name}/restore", dependencies=admin_only)
+    def restore_document(name: str, body: DocumentRestore) -> dict[str, Any]:
+        text = document_or_404(lambda: documents.history_text(name, body.version_id))
+        return save_document(name, text, body.version)
+
+    # --- Orders (admin, read only) ----------------------------------------------------
+
+    @app.get("/api/admin/orders", dependencies=admin_only)
+    def find_orders(q: str = Query("", max_length=100)) -> dict[str, Any]:
+        needle = q.strip().lower()
+        found = [
+            (o, c) for o, c in orders_by_id.values()
+            if not needle
+            or needle in o["order_id"].lower()
+            or needle in c["name"].lower()
+            or needle == c["email"].lower()
+            or any(needle in item["name"].lower() for item in o["items"])
+        ]
+        found.sort(key=lambda pair: pair[0]["placed_on"], reverse=True)
+        return {
+            "total": len(found),
+            "orders": [
+                {**_order_summary(o), "customer_name": c["name"], "records": _record_count(o)}
+                for o, c in found[:ORDERS_SHOWN]
+            ],
+        }
+
+    @app.get("/api/admin/orders/{order_id}", dependencies=admin_only)
+    def get_order(order_id: str) -> dict[str, Any]:
+        pair = orders_by_id.get(order_id.strip().upper())
+        if pair is None:
+            raise HTTPException(404, "No such order.")
+        order, customer = pair
+        # The order records hold no emails, so the admin sees them as they are,
+        # with tracking numbers and times. The customer's email stays masked.
+        return {
+            "order": order,
+            "customer": {"name": customer["name"], "email": event_log.EMAIL_MASK, "city": customer.get("city")},
+        }
 
     @app.get("/api/stats", dependencies=admin_only)
     def stats() -> dict[str, Any]:
@@ -456,6 +581,17 @@ def _chat_ticket(ticket: dict[str, Any]) -> dict[str, Any]:
         "order_id": ticket.get("order_id"),
         "source": "chat",
     }
+
+
+# The kinds of records an order can carry (refunds, returns, tickets, ...).
+RECORD_KEYS = (
+    "past_support_tickets", "refunds", "returns", "warranty_claims", "address_change_requests",
+    "carrier_investigations", "refund_disputes", "damage_reports",
+)
+
+
+def _record_count(order: dict[str, Any]) -> int:
+    return sum(len(order.get(key) or []) for key in RECORD_KEYS)
 
 
 def _read_json(path: Path) -> dict[str, Any] | None:

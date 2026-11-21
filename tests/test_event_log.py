@@ -396,3 +396,12 @@ def test_the_ticket_file_keeps_the_real_email_for_the_support_team(
 
     assert tickets.all()[0]["customer_email"] == PRIYA
     assert not ANY_EMAIL.search(settings.log_file.read_text(encoding="utf-8"))
+
+
+def test_a_date_with_a_time_is_kept_and_phone_numbers_are_still_hidden():
+    from support_agent.event_log import mask_text
+
+    assert mask_text("Created 2026-06-21 10:39") == "Created 2026-06-21 10:39"
+    assert mask_text("at 2026-06-21T10:39:00") == "at 2026-06-21T10:39:00"
+    assert mask_text("call 555-123-4567 on 2026-06-21 10:39") == "call [PHONE] on 2026-06-21 10:39"
+    assert mask_text("(555) 123-4567") == "[PHONE]" and mask_text("+1 212 555 0100") == "[PHONE]"

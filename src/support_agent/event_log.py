@@ -59,6 +59,9 @@ _EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+")
 # middle of a word or code, so order IDs (JL-10231), tracking numbers
 # (TRK7002317785), and ticket numbers (TCK-20261113-A8C008) are left alone.
 _DIGIT_RUN = re.compile(r"(?<![\w-])\+?\(?\d[\d \t().-]{6,}\d(?![\w-]*[A-Za-z])")
+# A date, optionally followed by the hour: "2026-06-21" or "2026-06-21 10"
+# (from "2026-06-21 10:39"). Dates and times are kept, never taken for phones.
+_DATE_TIME = re.compile(r"\d{4}-\d{2}-\d{2}(?:[ T]\d{1,2})?")
 _STREET_WORDS = (
     "Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Court|Ct|Way|Place|Pl|"
     "Terrace|Close|Crescent|Square|Highway|Hwy|Parkway|Pkwy"
@@ -90,6 +93,8 @@ def mask_text(text: str) -> str:
 
 def _mask_digit_run(match: re.Match[str]) -> str:
     text = match.group(0)
+    if _DATE_TIME.fullmatch(text.strip()):
+        return text
     digits = sum(character.isdigit() for character in text)
     # Dates such as 2026-11-07 have 8 digits and are kept. Phone numbers have 10
     # to 15 (or start with "+"). Anything longer could be a card or account number.

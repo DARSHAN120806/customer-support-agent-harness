@@ -255,8 +255,44 @@ export type ConnectionCheck = {
 
 export type ConnectionResult = { chat: ConnectionCheck; search: ConnectionCheck }
 
+// A shop document, as the admin panel edits it.
+export type DocumentSummary = { name: string; title: string; sections: number; chars: number; updated_at: string }
+
+export type DocumentDetail = Omit<DocumentSummary, 'sections'> & {
+  text: string
+  // A fingerprint of the text, sent back on save to notice someone else's save.
+  version: string
+  sections: { heading: string; chars: number }[]
+  protected: string[]
+  history: { id: string; saved_at: string; chars: number }[]
+}
+
+export type DocumentSaved = { document: DocumentDetail; warnings: string[] }
+
+export type OrderRow = OrderSummary & { customer_name: string; records: number }
+
+export type OrderDetail = {
+  order: Record<string, unknown> & { order_id: string; items: { name: string; quantity: number; unit_price: number }[] }
+  customer: { name: string; email: string; city?: string }
+}
+
+const docPath = (name: string) => `/admin/documents/${encodeURIComponent(name)}`
+
 export const dashboardApi = {
   stats: () => asAdmin<Stats>('/stats'),
+  documents: () => asAdmin<DocumentSummary[]>('/admin/documents'),
+  document: (name: string) => asAdmin<DocumentDetail>(docPath(name)),
+  saveDocument: (name: string, text: string, version: string) =>
+    asAdmin<DocumentSaved>(docPath(name), { method: 'PUT', body: JSON.stringify({ text, version }) }),
+  documentVersion: (name: string, id: string) =>
+    asAdmin<{ text: string }>(`${docPath(name)}/history/${encodeURIComponent(id)}`),
+  restoreDocument: (name: string, versionId: string, version: string) =>
+    asAdmin<DocumentSaved>(`${docPath(name)}/restore`, {
+      method: 'POST',
+      body: JSON.stringify({ version_id: versionId, version }),
+    }),
+  orders: (q: string) => asAdmin<{ total: number; orders: OrderRow[] }>(`/admin/orders?q=${encodeURIComponent(q)}`),
+  order: (id: string) => asAdmin<OrderDetail>(`/admin/orders/${encodeURIComponent(id)}`),
   model: () => asAdmin<ModelView>('/admin/model'),
   testModel: (form: ModelForm) =>
     asAdmin<ConnectionResult>('/admin/model/test', { method: 'POST', body: JSON.stringify(form) }),

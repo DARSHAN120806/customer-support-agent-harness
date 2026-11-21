@@ -620,6 +620,7 @@
 .ad-facts dd {
   margin: 2px 0 0;
   font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere; /* long tracking numbers wrap instead of running on */
 }
 
 .ad-checks {
@@ -928,6 +929,166 @@
   font-weight: 500;
 }
 
+/* --- Documents ------------------------------------------------------------------------ */
+
+.ad-lines {
+  white-space: pre-line;
+}
+
+.ad-docs {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+}
+
+.ad-doc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin .ad-doc {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--jl-radius-control);
+  background: none;
+  color: var(--jl-text);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--jl-fast) var(--jl-ease);
+}
+
+.admin .ad-doc:hover {
+  background: rgba(31, 27, 22, 0.04);
+}
+
+.admin .ad-doc.active {
+  border-color: var(--jl-hairline);
+  background: var(--jl-card);
+}
+
+.admin .ad-doc .ad-mono {
+  font-size: 12px;
+}
+
+.ad-doc-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  align-items: start;
+  gap: 16px;
+}
+
+.ad-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ad-editor textarea {
+  width: 100%;
+  min-height: 60vh;
+  padding: 12px;
+  border: 1px solid var(--jl-field-line);
+  border-radius: var(--jl-radius-control);
+  background: var(--jl-card);
+  color: var(--jl-text);
+  font-family: var(--jl-mono);
+  font-size: 13px;
+  line-height: 20px;
+  resize: vertical;
+}
+
+.ad-editor textarea:focus-visible {
+  outline: 2px solid var(--jl-accent);
+  outline-offset: 2px;
+}
+
+.ad-doc-side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ad-outline {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+}
+
+.ad-outline li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--jl-hairline);
+}
+
+.ad-outline .ad-flag {
+  display: block;
+  width: fit-content;
+  margin: 4px 0 0;
+}
+
+.ad-long {
+  color: var(--jl-negative);
+}
+
+.ad-warnings {
+  margin: 0;
+  padding: 8px 12px 8px 28px;
+  border-radius: var(--jl-radius-control);
+  background: var(--jl-raised);
+  color: var(--jl-text-2);
+}
+
+.ad-earlier {
+  grid-column: 1 / -1;
+}
+
+.ad-earlier pre {
+  max-height: 360px;
+  overflow: auto;
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid var(--jl-hairline);
+  border-radius: var(--jl-radius-control);
+  background: var(--jl-page);
+  font-family: var(--jl-mono);
+  font-size: 12px;
+  line-height: 18px;
+  white-space: pre-wrap;
+}
+
+/* --- Orders ------------------------------------------------------------------------- */
+
+.ad-records {
+  margin-top: 16px;
+}
+
+.ad-record {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px 16px;
+  margin: 12px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--jl-hairline);
+}
+
+.ad-record dt {
+  color: var(--jl-text-3);
+  font-size: 12px;
+}
+
+.ad-record dd {
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+}
+
 /* --- Smaller screens ------------------------------------------------------------------- */
 
 @media (max-width: 1100px) {
@@ -937,7 +1098,8 @@
 
   .ad-grid,
   .ad-two,
-  .ad-replay {
+  .ad-replay,
+  .ad-doc-main {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -1007,8 +1169,14 @@
   }
 
   .ad-pair,
-  .ad-results li {
+  .ad-results li,
+  .ad-docs {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ad-doc-list {
+    flex-direction: row;
+    overflow-x: auto;
   }
 
   .ad-figure {
