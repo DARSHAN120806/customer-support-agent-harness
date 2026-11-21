@@ -1,16 +1,18 @@
 import { useState } from 'react'
 import { ConversationList, ConversationReplay } from './Conversations'
 import { Evaluations } from './Evaluations'
+import { ModelSettings } from './ModelSettings'
 import { Overview } from './Overview'
 import { Tickets } from './Tickets'
 
-type Section = 'overview' | 'tickets' | 'conversations' | 'evaluations'
+type Section = 'overview' | 'tickets' | 'conversations' | 'evaluations' | 'model'
 
 const SECTIONS: { id: Section; label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'tickets', label: 'Tickets' },
   { id: 'conversations', label: 'Conversations' },
   { id: 'evaluations', label: 'Evaluations' },
+  { id: 'model', label: 'Model' },
 ]
 
 type Props = {
@@ -69,6 +71,7 @@ export function Dashboard({ onSignOut }: Props) {
             <ConversationList onOpen={setOpenConversation} />
           ))}
         {section === 'evaluations' && <Evaluations />}
+        {section === 'model' && <ModelSettings />}
       </main>
     </div>
   )

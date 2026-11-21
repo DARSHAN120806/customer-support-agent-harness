@@ -30,6 +30,11 @@ customer's data.
   and the safety checks that fired; every ticket; and a step-by-step replay of
   any conversation showing what happened behind the scenes for each reply.
   Customers never see these details.
+- **Choose the model in the admin panel:** switch between Amazon Bedrock, the
+  Anthropic API, or any OpenAI-compatible service (OpenAI, OpenRouter, Groq),
+  including **local models through Ollama or LM Studio**. Test the connection
+  first, then save; new chats use the new model. The document search model can
+  be switched the same way, so the shop can run fully on your own computer.
 - **Private logs:** every step is recorded, with emails, phone numbers, and
   addresses hidden.
 - **Terminal chat:** you can also chat with the assistant from the command line.
@@ -102,6 +107,15 @@ Then open http://localhost:5173 and sign in with an email and password from
 `private/test_passwords.csv`. Customers go to the shop page, where **Chat with
 us** at the bottom right opens the chat. The admin account (`admin@juniperlane.example`) goes to the
 support dashboard.
+
+**Using a different model**
+
+Sign in as the admin and open **Model** in the sidebar. To use a local model,
+install [Ollama](https://ollama.com), download a model that can use tools (for
+example `ollama pull llama3.1`), then choose **OpenAI-compatible**, click
+**Ollama**, type the model name and press **Test connection**. Smaller local
+models are often weaker at using tools, and the test tells you if a model
+cannot.
 
 **Or chat in the terminal instead**
 

@@ -730,6 +730,204 @@
   white-space: pre-wrap;
 }
 
+/* --- Model settings ------------------------------------------------------------------- */
+
+.ad-in-use {
+  margin-bottom: 16px;
+  color: var(--jl-text-2);
+}
+
+.ad-in-use strong {
+  color: var(--jl-text);
+  font-weight: 500;
+}
+
+.ad-model-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 720px;
+}
+
+.ad-model-form fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.ad-model-form legend {
+  float: left;
+  width: 100%;
+  padding: 0;
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 500;
+}
+
+.ad-model-form legend + .ad-help {
+  margin-top: -12px !important;
+}
+
+.ad-help {
+  font-size: 13px;
+}
+
+.ad-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--jl-radius-control);
+  background: var(--jl-raised);
+  align-self: flex-start;
+}
+
+.admin .ad-choice button {
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  color: var(--jl-text-2);
+  cursor: pointer;
+  transition: background-color var(--jl-fast) var(--jl-ease), color var(--jl-fast) var(--jl-ease);
+}
+
+.admin .ad-choice button:hover {
+  color: var(--jl-text);
+}
+
+.admin .ad-choice button.selected {
+  border-color: var(--jl-hairline);
+  background: var(--jl-card);
+  color: var(--jl-text);
+  font-weight: 500;
+}
+
+.ad-presets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  font-size: 13px;
+}
+
+.ad-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  color: var(--jl-text-2);
+  font-size: 13px;
+}
+
+.ad-field input {
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--jl-field-line);
+  border-radius: var(--jl-radius-control);
+  background: var(--jl-card);
+  color: var(--jl-text);
+  font: inherit;
+  font-size: 14px;
+}
+
+.ad-field input::placeholder {
+  color: var(--jl-text-3);
+}
+
+.ad-hint {
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.ad-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ad-pair + .ad-help {
+  margin-top: -8px !important;
+}
+
+.ad-notice {
+  padding: 8px 12px;
+  border-radius: var(--jl-radius-control);
+  background: var(--jl-raised);
+  color: var(--jl-text-2);
+}
+
+.ad-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin .ad-button {
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--jl-field-line);
+  border-radius: var(--jl-radius-control);
+  background: var(--jl-card);
+  color: var(--jl-text);
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color var(--jl-fast) var(--jl-ease),
+    transform var(--jl-fast) var(--jl-ease);
+}
+
+.admin .ad-button:hover:not(:disabled) {
+  background: var(--jl-raised);
+}
+
+.admin .ad-button.primary {
+  border-color: var(--jl-accent);
+  background: var(--jl-accent);
+  color: #fff;
+}
+
+.admin .ad-button.primary:hover:not(:disabled) {
+  background: var(--jl-accent-hover);
+}
+
+.admin .ad-button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.admin .ad-button:disabled,
+.admin .ad-link:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ad-results ul {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+}
+
+.ad-results li {
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr);
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--jl-hairline);
+  color: var(--jl-text-2);
+}
+
+.ad-results li.bad {
+  color: var(--jl-negative);
+}
+
+.ad-results-label {
+  color: var(--jl-text);
+  font-weight: 500;
+}
+
 /* --- Smaller screens ------------------------------------------------------------------- */
 
 @media (max-width: 1100px) {
@@ -806,6 +1004,11 @@
   .ad-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
+  }
+
+  .ad-pair,
+  .ad-results li {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .ad-figure {

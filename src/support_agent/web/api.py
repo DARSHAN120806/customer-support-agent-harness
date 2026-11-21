@@ -23,6 +23,10 @@ Endpoints (all under /api):
 Admin only (header "Authorization: Bearer <admin token>"):
 
     GET    /stats                          numbers for the admin overview
+    GET    /admin/model                    the chat and search models in use (keys hidden)
+    POST   /admin/model/test               try a model choice with tiny requests
+    PUT    /admin/model                    save a model choice; new chats use it
+    DELETE /admin/model                    forget the saved choice, go back to .env
     GET    /tickets                        support dashboard: tickets (emails masked)
     GET    /conversations                  support dashboard: logged conversations
     GET    /conversations/{id}             every event of one conversation
@@ -37,23 +41,30 @@ live in memory, so do not put it on the internet as it is.
 
 from __future__ import annotations
 
+import dataclasses
 import json
 import re
+from dataclasses import dataclass
 from collections import defaultdict
 from datetime import date
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from .. import event_log
-from ..app import Resources, create_agent, load_resources
+from ..app import Resources, build_knowledge_base, create_agent, load_resources
 from ..catalogue import load_catalogue
 from ..config import PROJECT_ROOT, ConfigError, Settings
+from ..model_settings import apply as apply_saved
+from ..model_settings import load_saved, public_view, save
 from ..prompts import SHOP_NAME, fallback_reply
+from ..providers import create_embedder, create_provider
+from ..retry import ServiceError
 from .accounts import ADMIN, AccountStore, AdminSessions, SignInLimiter
+from .model_admin import ModelForm, candidate_settings, check_connection, problems, same_search, to_saved
 from .sessions import ChatSession, SessionBusy, SessionStore
 from .stats import overview
 
@@ -89,6 +100,16 @@ class Message(BaseModel):
     text: str = Field(min_length=1, max_length=MAX_MESSAGE_LENGTH)
 
 
+@dataclass
+class LiveModel:
+    """The model in use right now. Saving a new choice in the admin panel swaps
+    these, so the next sign-in gets the new model; open chats keep theirs."""
+
+    settings: Settings
+    resources: Resources
+    saved: dict[str, Any] | None
+
+
 def create_app(
     settings: Settings | None = None,
     resources: Resources | None = None,
@@ -97,16 +118,25 @@ def create_app(
     allowed_origins: list[str] | None = None,
     accounts: AccountStore | None = None,
     limiter: SignInLimiter | None = None,
+    provider_factory: Callable[[Settings], Any] = create_provider,
+    embedder_factory: Callable[[Settings], Any] = create_embedder,
 ) -> FastAPI:
-    """Build the web app. With no arguments it reads .env and connects to the
-    real services; tests pass in a fake model and fake data instead."""
+    """Build the web app. With no arguments it reads .env (plus any model chosen
+    in the admin panel) and connects to the real services; tests pass in a fake
+    model and fake data instead."""
+    saved = None
     if settings is None:
         from dotenv import load_dotenv
 
         load_dotenv(PROJECT_ROOT / ".env")
-        settings = Settings.from_env()
+        base_settings = Settings.from_env()
+        saved = load_saved(base_settings.model_settings_file)
+        settings = apply_saved(base_settings, saved) if saved else base_settings
+    else:
+        base_settings = settings
     if resources is None:
         resources = load_resources(settings)
+    live = LiveModel(settings, resources, saved)
 
     customers = _load_customers(settings.orders_file)
     products = [p.to_dict() for p in load_catalogue(settings.knowledge_base_dir)]
@@ -120,7 +150,7 @@ def create_app(
     app.add_middleware(
         CORSMiddleware,
         allow_origins=allowed_origins or DEFAULT_ALLOWED_ORIGINS,
-        allow_methods=["GET", "POST", "DELETE"],
+        allow_methods=["GET", "POST", "PUT", "DELETE"],
         allow_headers=["Content-Type", "Authorization"],
     )
 
@@ -143,7 +173,7 @@ def create_app(
 
     @app.get("/api/health")
     def health() -> dict[str, Any]:
-        return {"status": "ok", "shop": SHOP_NAME, "provider": settings.provider, "model": settings.model}
+        return {"status": "ok", "shop": SHOP_NAME, "provider": live.settings.provider, "model": live.settings.model}
 
     @app.get("/api/products")
     def list_products() -> list[dict[str, Any]]:
@@ -166,7 +196,7 @@ def create_app(
             raise HTTPException(401, WRONG_SIGN_IN)
 
         def make(session_id: str) -> ChatSession:
-            agent, context = create_agent(settings, resources, customer["email"], today=today)
+            agent, context = create_agent(live.settings, live.resources, customer["email"], today=today)
             return ChatSession(session_id, agent, context, customer)
 
         session = sessions.add(make)
@@ -239,6 +269,51 @@ def create_app(
         return {"reply": result.reply, "outcome": result.outcome, "new_ticket_ids": new_tickets}
 
     # --- Support dashboard ----------------------------------------------------------
+
+    # --- Model settings (admin) ------------------------------------------------------
+
+    def switch_to(new_settings: Settings, new_saved: dict[str, Any] | None) -> None:
+        """Build the new model (and search index, if the search model changed)
+        first; only if that works is anything switched. Open chats are untouched."""
+        try:
+            provider = provider_factory(new_settings)
+            knowledge_base = live.resources.knowledge_base
+            if not same_search(new_settings, live.settings):
+                knowledge_base = build_knowledge_base(new_settings, embedder_factory(new_settings))
+        except (ConfigError, ServiceError) as error:
+            raise HTTPException(400, f"Nothing was changed: {error}") from error
+        live.settings = new_settings
+        live.resources = dataclasses.replace(live.resources, provider=provider, knowledge_base=knowledge_base)
+        live.saved = new_saved
+
+    def checked(form: ModelForm) -> tuple[dict[str, Any], dict[str, Any], Settings]:
+        found = problems(form)
+        if found:
+            raise HTTPException(400, " ".join(found))
+        chat, search = to_saved(form, live.saved)
+        return chat, search, candidate_settings(base_settings, chat, search)
+
+    @app.get("/api/admin/model", dependencies=admin_only)
+    def get_model() -> dict[str, Any]:
+        return public_view(live.settings, live.saved)
+
+    @app.post("/api/admin/model/test", dependencies=admin_only)
+    def test_model(form: ModelForm) -> dict[str, Any]:
+        _, _, candidate = checked(form)
+        return check_connection(candidate, provider_factory, embedder_factory)
+
+    @app.put("/api/admin/model", dependencies=admin_only)
+    def save_model(form: ModelForm) -> dict[str, Any]:
+        chat, search, candidate = checked(form)
+        switch_to(candidate, {"chat": chat, "search": search})
+        live.saved = save(base_settings.model_settings_file, chat, search)
+        return public_view(live.settings, live.saved)
+
+    @app.delete("/api/admin/model", dependencies=admin_only)
+    def reset_model() -> dict[str, Any]:
+        switch_to(base_settings, None)
+        base_settings.model_settings_file.unlink(missing_ok=True)
+        return public_view(live.settings, None)
 
     @app.get("/api/stats", dependencies=admin_only)
     def stats() -> dict[str, Any]:

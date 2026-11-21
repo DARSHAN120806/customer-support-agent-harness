@@ -117,6 +117,16 @@ HIDDEN_TECH_TERMS = [
     "Gemini",
     "Mistral",
     "DeepSeek",
+    # Names that models run through the admin panel's other services may use.
+    # "Gemma" and "Phi" are left out on purpose: they are also people's names
+    # and an ordinary word, and would stop the assistant greeting a customer.
+    "Qwen",
+    "Ollama",
+    "LM Studio",
+    "Groq",
+    "Grok",
+    "OpenRouter",
+    "Meta AI",
     "LLM",
     "large language model",
     "language model",

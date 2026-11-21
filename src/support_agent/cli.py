@@ -13,7 +13,8 @@ from dotenv import load_dotenv
 
 from . import event_log
 from .app import create_agent, load_resources
-from .config import PROJECT_ROOT, ConfigError, Settings
+from .config import PROJECT_ROOT, ConfigError
+from .model_settings import load_settings
 from .prompts import SHOP_NAME, fallback_reply
 from .retry import ServiceError
 
@@ -37,7 +38,8 @@ def main(argv: list[str] | None = None) -> int:
     load_dotenv(PROJECT_ROOT / ".env")
 
     try:
-        settings = Settings.from_env()
+        # .env, with any model chosen in the admin panel on top.
+        settings = load_settings()
         print("Loading the shop's documents...")
         resources = load_resources(settings)
     except ConfigError as error:

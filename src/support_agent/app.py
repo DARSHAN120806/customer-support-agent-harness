@@ -6,17 +6,17 @@ through this module, so they are guaranteed to use the same setup.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import date
 
 from . import event_log
 from .agent import Agent
 from .config import ConfigError, Settings
-from .embeddings import TitanEmbedder
 from .knowledge_base import KnowledgeBase
 from .orders import OrderStore
 from .prompts import SUPPORT_EMAIL, build_system_prompt
-from .providers import ModelProvider, create_provider
+from .providers import ModelProvider, create_embedder, create_provider
 from .retry import RetryPolicy
 from .safety import (
     EMAIL_PATTERN,
@@ -41,28 +41,34 @@ class Resources:
     tickets: TicketStore
 
 
-def load_resources(settings: Settings) -> Resources:
-    if not settings.aws_region:
-        raise ConfigError(
-            "AWS_REGION is not set. The knowledge base search uses Amazon Titan "
-            "embeddings through Bedrock, so it needs AWS_REGION and AWS sign-in details."
-        )
-    embedder = TitanEmbedder(
-        settings.aws_region, settings.embedding_model, settings.request_timeout_seconds
-    )
+def embeddings_cache_path(settings: Settings, embedder_name: str):
+    """Each search model keeps its own saved index, so switching between them
+    does not re-send every document. Titan keeps the original file name."""
+    if settings.embedding_provider == "titan":
+        return settings.cache_dir / "knowledge_base_embeddings.json"
+    slug = re.sub(r"[^a-z0-9]+", "-", embedder_name.lower()).strip("-")
+    return settings.cache_dir / f"knowledge_base_embeddings-{slug}.json"
+
+
+def build_knowledge_base(settings: Settings, embedder) -> KnowledgeBase:
+    """Read the shop documents and index them with the given search model."""
     # Problems with the shop's own data files are reported in plain words
     # instead of as a Python error trace.
     try:
-        knowledge_base = KnowledgeBase.build(
+        return KnowledgeBase.build(
             settings.knowledge_base_dir,
             embedder,
-            cache_path=settings.cache_dir / "knowledge_base_embeddings.json",
+            cache_path=embeddings_cache_path(settings, embedder.name),
             retry_policy=RetryPolicy(max_attempts=settings.max_attempts),
         )
     except (OSError, ValueError) as error:
         raise ConfigError(
             f"The shop documents in {settings.knowledge_base_dir} could not be loaded: {error}"
         ) from error
+
+
+def load_resources(settings: Settings) -> Resources:
+    knowledge_base = build_knowledge_base(settings, create_embedder(settings))
     try:
         orders = OrderStore(settings.orders_file)
     except (OSError, ValueError, KeyError, TypeError) as error:

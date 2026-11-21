@@ -8,7 +8,7 @@ reads the non-secret settings that control how the agent behaves.
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -23,7 +23,12 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_MODELS = {
     "bedrock": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
     "anthropic": "claude-haiku-5-5",
+    # Any service that speaks the OpenAI format (OpenAI, OpenRouter, Groq, or a
+    # local model through Ollama or LM Studio). It has no default: the model
+    # name and the service's web address must be given.
+    "openai_compatible": "",
 }
+EMBEDDING_PROVIDERS = ("titan", "openai_compatible")
 DEFAULT_PROVIDER = "bedrock"
 
 DEFAULT_EMBEDDING_MODEL = "amazon.titan-embed-text-v2:0"
@@ -68,6 +73,17 @@ class Settings:
     cache_dir: Path
     # Sign-in accounts for the web app (made by scripts/create_test_passwords.py).
     accounts_file: Path = PROJECT_ROOT / "private" / "accounts.json"
+    # For an OpenAI-compatible model: the service's web address, and its key if
+    # it needs one (local models usually do not). repr=False keeps the key out
+    # of anything that prints the settings, such as an error message.
+    api_base_url: str | None = None
+    api_key: str | None = field(default=None, repr=False)
+    # The search model: Amazon Titan, or an OpenAI-compatible embedding model.
+    embedding_provider: str = "titan"
+    embedding_base_url: str | None = None
+    embedding_api_key: str | None = field(default=None, repr=False)
+    # Model choices saved from the admin panel. They override the .env file.
+    model_settings_file: Path = PROJECT_ROOT / "private" / "model_settings.json"
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -88,6 +104,17 @@ class Settings:
         ):
             raise ConfigError(
                 "ANTHROPIC_API_KEY is not set. Copy .env.example to .env and paste your key there."
+            )
+        if provider == "openai_compatible" and not (_get("SUPPORT_AGENT_BASE_URL") and _get("SUPPORT_AGENT_MODEL")):
+            raise ConfigError(
+                "For an OpenAI-compatible model, set both SUPPORT_AGENT_BASE_URL (for example "
+                "http://localhost:11434/v1 for Ollama) and SUPPORT_AGENT_MODEL."
+            )
+        embedding_provider = (_get("SUPPORT_AGENT_EMBEDDING_PROVIDER") or "titan").lower()
+        if embedding_provider not in EMBEDDING_PROVIDERS:
+            raise ConfigError(
+                f"SUPPORT_AGENT_EMBEDDING_PROVIDER is '{embedding_provider}', but the supported "
+                f"values are: {', '.join(EMBEDDING_PROVIDERS)}."
             )
 
         return cls(
@@ -124,6 +151,14 @@ class Settings:
             cache_dir=PROJECT_ROOT / ".cache",
             accounts_file=Path(
                 _get("SUPPORT_AGENT_ACCOUNTS_FILE") or PROJECT_ROOT / "private" / "accounts.json"
+            ),
+            api_base_url=_get("SUPPORT_AGENT_BASE_URL") or None,
+            api_key=_get("SUPPORT_AGENT_API_KEY") or None,
+            embedding_provider=embedding_provider,
+            embedding_base_url=_get("SUPPORT_AGENT_EMBEDDING_BASE_URL") or None,
+            embedding_api_key=_get("SUPPORT_AGENT_EMBEDDING_API_KEY") or None,
+            model_settings_file=Path(
+                _get("SUPPORT_AGENT_MODEL_SETTINGS_FILE") or PROJECT_ROOT / "private" / "model_settings.json"
             ),
         )
 

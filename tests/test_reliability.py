@@ -542,7 +542,7 @@ def test_a_bad_orders_file_is_explained_in_plain_words(
     orders_file = tmp_path / "orders.json"
     if orders_text is not None:
         orders_file.write_text(orders_text, encoding="utf-8")
-    monkeypatch.setattr("support_agent.app.TitanEmbedder", lambda *args, **kwargs: FakeEmbedder())
+    monkeypatch.setattr("support_agent.app.create_embedder", lambda *args, **kwargs: FakeEmbedder())
     broken = dataclasses.replace(settings, orders_file=orders_file)
 
     with pytest.raises(ConfigError, match=expected):
@@ -550,7 +550,7 @@ def test_a_bad_orders_file_is_explained_in_plain_words(
 
 
 def test_an_empty_documents_folder_is_explained_in_plain_words(settings, monkeypatch, tmp_path):
-    monkeypatch.setattr("support_agent.app.TitanEmbedder", lambda *args, **kwargs: FakeEmbedder())
+    monkeypatch.setattr("support_agent.app.create_embedder", lambda *args, **kwargs: FakeEmbedder())
     empty = tmp_path / "no_docs"
     empty.mkdir()
 

@@ -30,7 +30,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from support_agent.app import load_resources
-from support_agent.config import PROJECT_ROOT, ConfigError, Settings
+from support_agent.model_settings import load_settings
+from support_agent.config import PROJECT_ROOT, ConfigError
 from support_agent.evaluation import (
     CaseFileError,
     VIOLATION_TYPES,
@@ -113,7 +114,8 @@ def main(argv: list[str] | None = None) -> int:
 
     load_dotenv(PROJECT_ROOT / ".env")
     try:
-        settings = Settings.from_env()
+        # .env, with any model chosen in the admin panel on top.
+        settings = load_settings()
     except ConfigError as error:
         print(f"Configuration problem: {error}", file=sys.stderr)
         return 2

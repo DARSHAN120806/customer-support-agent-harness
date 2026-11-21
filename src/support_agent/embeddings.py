@@ -96,3 +96,47 @@ class TitanEmbedder:
             raise
         except Exception as error:
             raise to_service_error(error) from error
+
+
+class OpenAICompatibleEmbedder:
+    """Embeddings from any service that speaks the OpenAI format: OpenAI itself,
+    or a local model through Ollama (for example "nomic-embed-text") or LM Studio.
+
+    Our search scores sections by multiplying vectors, which assumes each vector
+    has length 1. Titan guarantees that; other models may not, so every vector
+    is scaled to length 1 here.
+    """
+
+    def __init__(self, client, model: str) -> None:
+        self._client = client
+        self._model = model
+        # Identifies the model, so cached embeddings from another model are not reused.
+        self.name = f"openai-compatible/{model}"
+
+    def embed(self, text: str) -> list[float]:
+        import openai
+
+        try:
+            response = self._client.embeddings.create(model=self._model, input=text)
+            vector = [float(x) for x in response.data[0].embedding]
+        except openai.APIError as error:
+            from .providers.openai_compatible import to_service_error as model_error
+
+            problem = model_error(error)
+            raise ServiceError(
+                str(problem).replace("model service", "embedding service"),
+                service="embeddings",
+                kind=problem.kind,
+                retryable=problem.retryable,
+            ) from error
+        except (AttributeError, IndexError, TypeError, ValueError) as error:
+            raise ServiceError(
+                "The embedding service gave an answer that could not be read.",
+                service="embeddings",
+                kind="bad_response",
+                retryable=False,
+            ) from error
+        length = sum(x * x for x in vector) ** 0.5
+        if not vector or length == 0:
+            raise ServiceError("The embedding service sent an empty vector.", service="embeddings", kind="bad_response", retryable=False)
+        return [x / length for x in vector]

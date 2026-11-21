@@ -211,8 +211,58 @@ export type Stats = {
   days: { date: string; messages: number; tickets: number }[]
 }
 
+// The model settings, as the admin panel sees them. Keys never come back:
+// only a hint such as "…abcd" when one is saved.
+export type ChatModel = {
+  provider: 'bedrock' | 'anthropic' | 'openai_compatible'
+  model: string
+  base_url: string | null
+  aws_region: string | null
+  input_price: number
+  output_price: number
+  key_hint: string | null
+}
+
+export type SearchModel = {
+  provider: 'titan' | 'openai_compatible'
+  model: string
+  base_url: string | null
+  key_hint: string | null
+}
+
+export type ModelView = {
+  chat: ChatModel
+  search: SearchModel
+  source: 'admin panel' | '.env'
+  saved_at: string | null
+  providers: { chat: Record<string, string>; search: Record<string, string> }
+}
+
+// What the form sends. An empty key keeps the key saved before.
+export type ModelForm = {
+  chat: Omit<ChatModel, 'key_hint'> & { api_key: string }
+  search: Omit<SearchModel, 'key_hint'> & { api_key: string }
+}
+
+export type ConnectionCheck = {
+  ok: boolean
+  ms: number
+  error?: string
+  reply?: string
+  tools_ok?: boolean
+  dimensions?: number
+}
+
+export type ConnectionResult = { chat: ConnectionCheck; search: ConnectionCheck }
+
 export const dashboardApi = {
   stats: () => asAdmin<Stats>('/stats'),
+  model: () => asAdmin<ModelView>('/admin/model'),
+  testModel: (form: ModelForm) =>
+    asAdmin<ConnectionResult>('/admin/model/test', { method: 'POST', body: JSON.stringify(form) }),
+  saveModel: (form: ModelForm) =>
+    asAdmin<ModelView>('/admin/model', { method: 'PUT', body: JSON.stringify(form) }),
+  resetModel: () => asAdmin<ModelView>('/admin/model', { method: 'DELETE' }),
   tickets: () => asAdmin<Ticket[]>('/tickets'),
   conversations: () => asAdmin<ConversationSummary[]>('/conversations?limit=200'),
   conversation: (id: string) => asAdmin<HarnessEvent[]>(`/conversations/${encodeURIComponent(id)}`),
