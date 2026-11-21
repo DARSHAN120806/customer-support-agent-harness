@@ -217,3 +217,31 @@ def test_the_whole_conversation_reaches_the_customer_with_the_rules_numbers(monk
     events = [json.loads(line) for line in (tmp_path / "logs" / "agent.jsonl").read_text(encoding="utf-8").splitlines()]
     (logged,) = [e for e in events if e["event"] == "refund_request"]
     assert logged["outcome"] == "approve" and logged["net_refund"] == "1151.00"
+
+
+# Found in the Stage R4 run: offers and questions are not claims, and
+# "already"/"now" approvals are.
+@pytest.mark.parametrize(
+    ("reply", "is_claim"),
+    [
+        ("I can process a refund request for you once you tell me why.", False),
+        ("Before I can process a refund, could you tell me what is wrong?", False),
+        ("Shall I process your refund?", False),
+        ("I cannot issue a refund for this order.", False),
+        ("Your refund was sent on 12 October.", False),
+        ("Your refund has not been approved.", False),
+        ("I can refund you right now.", True),
+        ("I'll process your refund now.", True),
+        ("Your return is already approved.", True),
+        ("Great, your refund has now been approved and is on its way.", True),
+    ],
+)
+def test_offers_and_questions_are_not_claims_but_approvals_are(reply, is_claim):
+    assert claims_refund(reply, "") is is_claim
+
+
+def test_the_prompt_hands_parcel_investigations_to_the_team():
+    from support_agent.prompts import build_system_prompt
+
+    prompt = build_system_prompt()
+    assert "investigations into lost" in prompt and "don't tell the customer to contact the carrier" in prompt

@@ -61,7 +61,7 @@ def test_the_cases_file_is_valid_and_covers_every_group():
     assert len(cases) >= 20
     counts = Counter(case.category for case in cases)
     assert set(counts) == set(CATEGORIES)
-    assert counts == {"easy": 9, "tricky": 13, "angry": 4, "refund": 4, "attack": 11}
+    assert counts == {"easy": 9, "tricky": 13, "angry": 4, "refund": 9, "attack": 13}  # +7 refund cases in Stage R4
 
 
 def test_every_case_uses_a_real_customer_and_real_order_ids(orders):

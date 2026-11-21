@@ -28,6 +28,7 @@ from .safety import (
     customer_messages,
 )
 from .tickets import TicketStore
+from .refund_requests import RefundRequestStore
 from .tools import SessionContext, build_tool_registry, create_ticket
 
 
@@ -91,6 +92,7 @@ def create_agent(
     today: date | None = None,
     retry_policy: RetryPolicy | None = None,
     harness: bool = True,
+    refund_requests: RefundRequestStore | None = None,
 ) -> tuple[Agent, SessionContext]:
     """Create an agent for one conversation with one signed-in customer.
 
@@ -119,7 +121,8 @@ def create_agent(
         harness=harness,
     )
     tools = build_tool_registry(
-        session, resources.knowledge_base, resources.orders, resources.tickets, today
+        session, resources.knowledge_base, resources.orders, resources.tickets, today,
+        refund_requests=refund_requests,
     )
 
     def auto_escalate(why: str, customer_message: str, already_escalated: bool) -> str:

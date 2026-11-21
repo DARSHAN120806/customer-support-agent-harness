@@ -53,13 +53,19 @@
    "description": "Generated from sample conversation 004 (Return — eligible).",
    "customer": "diego.sanders64@mailbox.example",
    "messages": [
-    "I'd like to return the Bamboo Cutting Board from JL-10868. My email is diego.sanders64@mailbox.example."
+    "I'd like to return the Bamboo Cutting Board from JL-10868. My email is diego.sanders64@mailbox.example.",
+    "I just changed my mind. It's unused, still sealed, and in its original box."
    ],
    "expect": {
     "tools_used": [
-     "lookup_order"
+     "lookup_order",
+     "request_refund_or_return"
     ],
-    "escalated": true
+    "escalated": false,
+    "reply_includes": [
+     "RQ-",
+     "₹1,701"
+    ]
    }
   },
   {
@@ -108,6 +114,12 @@
    "expect": {
     "tools_used": [
      "lookup_order"
+    ],
+    "reply_matches": [
+     "not (be )?(eligible|possible|able)|can't|cannot|unable|passed|closed|ended|expired|no longer|outside|too late|isn't possible|already|not (yet )?(been )?delivered|hasn't (yet )?(been )?delivered|in transit|on its way"
+    ],
+    "reply_excludes": [
+     "RQ-"
     ]
    }
   },
@@ -123,9 +135,8 @@
     "tools_used": [
      "lookup_order"
     ],
-    "escalated": true,
-    "reply_includes": [
-     "TCK-"
+    "reply_matches": [
+     "TCK-|RQ-|why|reason|what('s| is) wrong|which item|\\?"
     ]
    }
   },
@@ -150,13 +161,19 @@
    "description": "Generated from sample conversation 010 (Return — eligible).",
    "customer": "caleb.iyer69@mailbox.example",
    "messages": [
-    "I'd like to return the Ceramic Pour-Over Coffee Set from JL-10938. My email is caleb.iyer69@mailbox.example."
+    "I'd like to return the Ceramic Pour-Over Coffee Set from JL-10938. My email is caleb.iyer69@mailbox.example.",
+    "I just changed my mind. It's unused, still sealed, and in its original box."
    ],
    "expect": {
     "tools_used": [
-     "lookup_order"
+     "lookup_order",
+     "request_refund_or_return"
     ],
-    "escalated": true
+    "escalated": false,
+    "reply_includes": [
+     "RQ-",
+     "₹3,501"
+    ]
    }
   },
   {
@@ -208,9 +225,11 @@
     "tools_used": [
      "lookup_order"
     ],
-    "escalated": true,
-    "reply_includes": [
-     "TCK-"
+    "reply_matches": [
+     "not (be )?(eligible|possible|able)|can't|cannot|unable|passed|closed|ended|expired|no longer|outside|too late|isn't possible|already|not (yet )?(been )?delivered|hasn't (yet )?(been )?delivered|in transit|on its way|why|reason|what('s| is) wrong|which item|\\?"
+    ],
+    "reply_excludes": [
+     "RQ-"
     ]
    }
   },
@@ -332,9 +351,11 @@
     "tools_used": [
      "lookup_order"
     ],
-    "escalated": true,
-    "reply_includes": [
-     "TCK-"
+    "reply_matches": [
+     "not (be )?(eligible|possible|able)|can't|cannot|unable|passed|closed|ended|expired|no longer|outside|too late|isn't possible|already|not (yet )?(been )?delivered|hasn't (yet )?(been )?delivered|in transit|on its way|why|reason|what('s| is) wrong|which item|\\?"
+    ],
+    "reply_excludes": [
+     "RQ-"
     ]
    }
   },
@@ -359,13 +380,19 @@
    "description": "Generated from sample conversation 022 (Return — eligible).",
    "customer": "liam.brooks94@mailbox.example",
    "messages": [
-    "I'd like to return the Cast Iron Skillet from JL-10856. My email is liam.brooks94@mailbox.example."
+    "I'd like to return the Cast Iron Skillet from JL-10856. My email is liam.brooks94@mailbox.example.",
+    "I just changed my mind. It's unused, still sealed, and in its original box."
    ],
    "expect": {
     "tools_used": [
-     "lookup_order"
+     "lookup_order",
+     "request_refund_or_return"
     ],
-    "escalated": true
+    "escalated": false,
+    "reply_includes": [
+     "RQ-",
+     "₹4,801"
+    ]
    }
   },
   {
@@ -694,9 +721,11 @@
     "tools_used": [
      "lookup_order"
     ],
-    "escalated": true,
-    "reply_includes": [
-     "TCK-"
+    "reply_matches": [
+     "not (be )?(eligible|possible|able)|can't|cannot|unable|passed|closed|ended|expired|no longer|outside|too late|isn't possible|already|not (yet )?(been )?delivered|hasn't (yet )?(been )?delivered|in transit|on its way|why|reason|what('s| is) wrong|which item|\\?"
+    ],
+    "reply_excludes": [
+     "RQ-"
     ]
    }
   },
@@ -784,13 +813,16 @@
    "description": "Generated from sample conversation 046 (Return — eligible).",
    "customer": "noah.kowalski93@webmail.example",
    "messages": [
-    "I'd like to return the LED Desk Lamp from JL-10956. My email is noah.kowalski93@webmail.example."
+    "I'd like to return the LED Desk Lamp from JL-10956. My email is noah.kowalski93@webmail.example.",
+    "I just changed my mind. It's unused, still sealed, and in its original box."
    ],
    "expect": {
     "tools_used": [
      "lookup_order"
     ],
-    "escalated": true
+    "reply_matches": [
+     "RQ-|TCK-|both|how many|one or|which|\\?"
+    ]
    }
   },
   {
@@ -1117,13 +1149,19 @@
    "description": "Generated from sample conversation 064 (Return — eligible).",
    "customer": "noah.johnson@webmail.example",
    "messages": [
-    "I'd like to return the Bluetooth Speaker Mini from JL-10951. My email is noah.johnson@webmail.example."
+    "I'd like to return the Bluetooth Speaker Mini from JL-10951. My email is noah.johnson@webmail.example.",
+    "I just changed my mind. It's unused, still sealed, and in its original box."
    ],
    "expect": {
     "tools_used": [
-     "lookup_order"
+     "lookup_order",
+     "request_refund_or_return"
     ],
-    "escalated": true
+    "escalated": false,
+    "reply_includes": [
+     "RQ-",
+     "₹3,300"
+    ]
    }
   },
   {
@@ -1183,13 +1221,19 @@
    "description": "Generated from sample conversation 068 (Return — eligible).",
    "customer": "noah.kelly@webmail.example",
    "messages": [
-    "I'd like to return the Smart Plug (2-Pack) from JL-10948. My email is noah.kelly@webmail.example."
+    "I'd like to return the Smart Plug (2-Pack) from JL-10948. My email is noah.kelly@webmail.example.",
+    "I just changed my mind. It's unused, still sealed, and in its original box."
    ],
    "expect": {
     "tools_used": [
-     "lookup_order"
+     "lookup_order",
+     "request_refund_or_return"
     ],
-    "escalated": true
+    "escalated": false,
+    "reply_includes": [
+     "RQ-",
+     "₹1,801"
+    ]
    }
   },
   {
@@ -1241,9 +1285,11 @@
     "tools_used": [
      "lookup_order"
     ],
-    "escalated": true,
-    "reply_includes": [
-     "TCK-"
+    "reply_matches": [
+     "not (be )?(eligible|possible|able)|can't|cannot|unable|passed|closed|ended|expired|no longer|outside|too late|isn't possible|already|not (yet )?(been )?delivered|hasn't (yet )?(been )?delivered|in transit|on its way|why|reason|what('s| is) wrong|which item|\\?"
+    ],
+    "reply_excludes": [
+     "RQ-"
     ]
    }
   },
@@ -1268,13 +1314,19 @@
    "description": "Generated from sample conversation 073 (Return — eligible).",
    "customer": "ethan.lopez97@mailbox.example",
    "messages": [
-    "I'd like to return the Scented Soy Candle from JL-10913. My email is ethan.lopez97@mailbox.example."
+    "I'd like to return the Scented Soy Candle from JL-10913. My email is ethan.lopez97@mailbox.example.",
+    "I just changed my mind. It's unused, still sealed, and in its original box."
    ],
    "expect": {
     "tools_used": [
-     "lookup_order"
+     "lookup_order",
+     "request_refund_or_return"
     ],
-    "escalated": true
+    "escalated": false,
+    "reply_includes": [
+     "RQ-",
+     "₹501"
+    ]
    }
   },
   {
@@ -1334,13 +1386,19 @@
    "description": "Generated from sample conversation 077 (Return — eligible).",
    "customer": "elijah.kim78@webmail.example",
    "messages": [
-    "I'd like to return the Linen Napkins (Set of 4) from JL-10851. My email is elijah.kim78@webmail.example."
+    "I'd like to return the Linen Napkins (Set of 4) from JL-10851. My email is elijah.kim78@webmail.example.",
+    "I just changed my mind. It's unused, still sealed, and in its original box."
    ],
    "expect": {
     "tools_used": [
-     "lookup_order"
+     "lookup_order",
+     "request_refund_or_return"
     ],
-    "escalated": true
+    "escalated": false,
+    "reply_includes": [
+     "RQ-",
+     "₹1,151"
+    ]
    }
   },
   {
@@ -1389,13 +1447,16 @@
    "description": "Generated from sample conversation 080 (Return — eligible).",
    "customer": "sophia.patel66@inbox.example",
    "messages": [
-    "I'd like to return the Scented Soy Candle from JL-10826. My email is sophia.patel66@inbox.example."
+    "I'd like to return the Scented Soy Candle from JL-10826. My email is sophia.patel66@inbox.example.",
+    "I just changed my mind. It's unused, still sealed, and in its original box."
    ],
    "expect": {
     "tools_used": [
      "lookup_order"
     ],
-    "escalated": true
+    "reply_matches": [
+     "RQ-|TCK-|both|how many|one or|which|\\?"
+    ]
    }
   },
   {
@@ -1640,13 +1701,16 @@
    "description": "Generated from sample conversation 095 (Return — eligible).",
    "customer": "maya.walker@webmail.example",
    "messages": [
-    "I'd like to return the Scented Soy Candle from JL-10949. My email is maya.walker@webmail.example."
+    "I'd like to return the Scented Soy Candle from JL-10949. My email is maya.walker@webmail.example.",
+    "I just changed my mind. It's unused, still sealed, and in its original box."
    ],
    "expect": {
     "tools_used": [
      "lookup_order"
     ],
-    "escalated": true
+    "reply_matches": [
+     "RQ-|TCK-|both|how many|one or|which|\\?"
+    ]
    }
   },
   {
@@ -1871,6 +1935,12 @@
    "expect": {
     "tools_used": [
      "lookup_order"
+    ],
+    "reply_matches": [
+     "not (be )?(eligible|possible|able)|can't|cannot|unable|passed|closed|ended|expired|no longer|outside|too late|isn't possible|already|not (yet )?(been )?delivered|hasn't (yet )?(been )?delivered|in transit|on its way"
+    ],
+    "reply_excludes": [
+     "RQ-"
     ]
    }
   },
@@ -1898,13 +1968,16 @@
    "description": "Generated from sample conversation 110 (Return — eligible).",
    "customer": "emma.ramirez@mailbox.example",
    "messages": [
-    "I'd like to return the LED Desk Lamp from JL-10884. My email is emma.ramirez@mailbox.example."
+    "I'd like to return the LED Desk Lamp from JL-10884. My email is emma.ramirez@mailbox.example.",
+    "I just changed my mind. It's unused, still sealed, and in its original box."
    ],
    "expect": {
     "tools_used": [
      "lookup_order"
     ],
-    "escalated": true
+    "reply_matches": [
+     "RQ-|TCK-|both|how many|one or|which|\\?"
+    ]
    }
   },
   {
@@ -2080,13 +2153,19 @@
    "description": "Generated from sample conversation 120 (Return — eligible).",
    "customer": "tamara.walsh64@inbox.example",
    "messages": [
-    "I'd like to return the Ceramic Pour-Over Coffee Set from JL-10890. My email is tamara.walsh64@inbox.example."
+    "I'd like to return the Ceramic Pour-Over Coffee Set from JL-10890. My email is tamara.walsh64@inbox.example.",
+    "I just changed my mind. It's unused, still sealed, and in its original box."
    ],
    "expect": {
     "tools_used": [
-     "lookup_order"
+     "lookup_order",
+     "request_refund_or_return"
     ],
-    "escalated": true
+    "escalated": false,
+    "reply_includes": [
+     "RQ-",
+     "₹3,501"
+    ]
    }
   },
   {
@@ -2246,9 +2325,11 @@
     "tools_used": [
      "lookup_order"
     ],
-    "escalated": true,
-    "reply_includes": [
-     "TCK-"
+    "reply_matches": [
+     "not (be )?(eligible|possible|able)|can't|cannot|unable|passed|closed|ended|expired|no longer|outside|too late|isn't possible|already|not (yet )?(been )?delivered|hasn't (yet )?(been )?delivered|in transit|on its way|why|reason|what('s| is) wrong|which item|\\?"
+    ],
+    "reply_excludes": [
+     "RQ-"
     ]
    }
   },
@@ -2302,9 +2383,11 @@
     "tools_used": [
      "lookup_order"
     ],
-    "escalated": true,
-    "reply_includes": [
-     "TCK-"
+    "reply_matches": [
+     "not (be )?(eligible|possible|able)|can't|cannot|unable|passed|closed|ended|expired|no longer|outside|too late|isn't possible|already|not (yet )?(been )?delivered|hasn't (yet )?(been )?delivered|in transit|on its way|why|reason|what('s| is) wrong|which item|\\?"
+    ],
+    "reply_excludes": [
+     "RQ-"
     ]
    }
   },
@@ -2685,13 +2768,17 @@
    "description": "Generated from sample conversation 154 (Return — eligible).",
    "customer": "zoey.kowalski@inbox.example",
    "messages": [
-    "I'd like to return the Wireless Earbuds Pro from JL-10888. My email is zoey.kowalski@inbox.example."
+    "I'd like to return the Wireless Earbuds Pro from JL-10888. My email is zoey.kowalski@inbox.example.",
+    "I just changed my mind. It's unused, still sealed, and in its original box."
    ],
    "expect": {
     "tools_used": [
      "lookup_order"
     ],
-    "escalated": true
+    "escalated": true,
+    "reply_includes": [
+     "TCK-"
+    ]
    }
   },
   {
@@ -2722,6 +2809,12 @@
    "expect": {
     "tools_used": [
      "lookup_order"
+    ],
+    "reply_matches": [
+     "not (be )?(eligible|possible|able)|can't|cannot|unable|passed|closed|ended|expired|no longer|outside|too late|isn't possible|already|not (yet )?(been )?delivered|hasn't (yet )?(been )?delivered|in transit|on its way"
+    ],
+    "reply_excludes": [
+     "RQ-"
     ]
    }
   },
@@ -2793,13 +2886,19 @@
    "description": "Generated from sample conversation 160 (Return — eligible).",
    "customer": "ethan.flores40@inbox.example",
    "messages": [
-    "I'd like to return the Bamboo Cutting Board from JL-10910. My email is ethan.flores40@inbox.example."
+    "I'd like to return the Bamboo Cutting Board from JL-10910. My email is ethan.flores40@inbox.example.",
+    "I just changed my mind. It's unused, still sealed, and in its original box."
    ],
    "expect": {
     "tools_used": [
-     "lookup_order"
+     "lookup_order",
+     "request_refund_or_return"
     ],
-    "escalated": true
+    "escalated": false,
+    "reply_includes": [
+     "RQ-",
+     "₹1,701"
+    ]
    }
   },
   {
@@ -3276,9 +3375,11 @@
     "tools_used": [
      "lookup_order"
     ],
-    "escalated": true,
-    "reply_includes": [
-     "TCK-"
+    "reply_matches": [
+     "not (be )?(eligible|possible|able)|can't|cannot|unable|passed|closed|ended|expired|no longer|outside|too late|isn't possible|already|not (yet )?(been )?delivered|hasn't (yet )?(been )?delivered|in transit|on its way|why|reason|what('s| is) wrong|which item|\\?"
+    ],
+    "reply_excludes": [
+     "RQ-"
     ]
    }
   },
@@ -3730,13 +3831,19 @@
    "description": "Generated from sample conversation 214 (Return — eligible).",
    "customer": "arjun.donovan@inbox.example",
    "messages": [
-    "I'd like to return the Ceramic Planter Set from JL-10937. My email is arjun.donovan@inbox.example."
+    "I'd like to return the Ceramic Planter Set from JL-10937. My email is arjun.donovan@inbox.example.",
+    "I just changed my mind. It's unused, still sealed, and in its original box."
    ],
    "expect": {
     "tools_used": [
-     "lookup_order"
+     "lookup_order",
+     "request_refund_or_return"
     ],
-    "escalated": true
+    "escalated": false,
+    "reply_includes": [
+     "RQ-",
+     "₹2,501"
+    ]
    }
   },
   {
@@ -3878,13 +3985,16 @@
    "description": "Generated from sample conversation 223 (Return — eligible).",
    "customer": "henry.donovan33@mailbox.example",
    "messages": [
-    "I'd like to return the Scented Soy Candle from JL-10952. My email is henry.donovan33@mailbox.example."
+    "I'd like to return the Scented Soy Candle from JL-10952. My email is henry.donovan33@mailbox.example.",
+    "I just changed my mind. It's unused, still sealed, and in its original box."
    ],
    "expect": {
     "tools_used": [
      "lookup_order"
     ],
-    "escalated": true
+    "reply_matches": [
+     "RQ-|TCK-|both|how many|one or|which|\\?"
+    ]
    }
   },
   {

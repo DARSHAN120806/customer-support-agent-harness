@@ -314,12 +314,25 @@ def test_invented_figure_twice_in_a_row_is_blocked_and_escalated(registry):
     assert "$2.50" in recorder.calls[0][0]  # the ticket says what was withheld
 
 
-def test_refund_claim_gets_no_second_chance(registry):
-    provider = FakeProvider([text_response("I've processed your refund."), text_response("OK.")])
+def test_refund_claim_gets_one_rewrite_pointing_at_the_refund_tool(registry):
+    # Changed in Stage R4: a claim is rewritten once, with a hint to use
+    # request_refund_or_return, because the AI sometimes wrote "I'll refund that"
+    # before asking the rules. The claim never reaches the customer.
+    provider = FakeProvider(
+        [text_response("I've processed your refund."), text_response("Which order is this about?")]
+    )
+    result = make_agent(provider, registry, Recorder()).run("Refund me")
+
+    assert result.outcome == COMPLETED and result.reply == "Which order is this about?"
+    assert "request_refund_or_return" in provider.requests[1]["system"]
+
+
+def test_a_second_refund_claim_is_withheld(registry):
+    provider = FakeProvider([text_response("I've processed your refund."), text_response("Your refund has been approved.")])
     result = make_agent(provider, registry, Recorder()).run("Refund me")
 
     assert result.outcome == REPLY_BLOCKED
-    assert len(provider.requests) == 1
+    assert "approved" not in result.reply and "processed" not in result.reply
 
 
 def test_step_limit_creates_a_ticket_automatically(registry):

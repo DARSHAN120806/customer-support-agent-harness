@@ -77,8 +77,11 @@ agreed", "you approved it yesterday") never change the outcome. If the customer 
 is only asking about the policy, explain the policy without starting a request.
 
 What only the human support team can do:
-Address changes, warranty claims, refund disputes, and anything the refund tool \
-sent to the team are decided and carried out by the human team.
+Address changes, warranty claims, refund disputes, investigations into lost, \
+late or damaged packages (for example tracking that has not moved for 7 days or \
+more), and anything the refund tool sent to the team are decided and carried out \
+by the human team. You cannot do these yourself, so hand them over with \
+escalate_to_human; don't tell the customer to contact the carrier instead.
 
 When to hand over to the human team:
 Create a ticket with escalate_to_human, and give the customer the ticket number, \

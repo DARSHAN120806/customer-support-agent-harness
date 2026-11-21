@@ -22,14 +22,16 @@ from .refund_requests import APPROVED_MARKER
 EMAIL_PATTERN = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 
 # Sentences where the agent itself claims to give, or to have given, a refund.
-# Statements of fact from order data ("your refund was issued on 12 October")
-# and refusals ("I can't issue refunds") are deliberately not matched.
+# Statements of fact from order data ("your refund was issued on 12 October"),
+# refusals ("I can't issue refunds"), offers ("I can process a refund request
+# once you tell me why") and questions are deliberately not matched (Stage R4:
+# with a refund tool, the AI writes offers like these all the time).
 _REFUND_ACTION = (
     r"(?:issue|process|approve|grant|authori[sz]e|arrange|give|send|credit|refund)(?:d|ed)?"
 )
 REFUND_CLAIM_PATTERNS = [
     re.compile(
-        r"\bI(?:'ve| have|'ll| will|'m going to| am going to| can| just)?\s+"
+        r"\bI(?:'ve| have|'ll| will|'m going to| am going to| just)?\s+"
         r"(?:(?:just|now|already|gone ahead and|go ahead and)\s+)*"
         + _REFUND_ACTION
         + r"\b[^.?!\n]{0,60}\b(?:refund|money back|reimburse)",
@@ -40,12 +42,21 @@ REFUND_CLAIM_PATTERNS = [
         r"(?:(?:just|now|already|gone ahead and|go ahead and)\s+)*refund(?:ed)?\b",
         re.IGNORECASE,
     ),
+    # "I can refund you right now": an offer that promises the money now.
     re.compile(
-        r"\byour (?:refund|return|cancellation)(?: request)? (?:has been|is now|is|was) "
-        r"(?:approved|accepted|granted|authori[sz]ed|confirmed)\b",
+        r"\bI can\s+(?:just\s+)?" + _REFUND_ACTION + r"\b[^.?!\n]{0,60}"
+        r"\b(?:right now|right away|straight away|immediately|today|now)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\byour (?:refund|return|cancellation)(?: request)? (?:has (?:now |already |just )?been|is now|is|was) "
+        r"(?:already |now )?(?:approved|accepted|granted|authori[sz]ed|confirmed)\b",
         re.IGNORECASE,
     ),
 ]
+
+_SENTENCES = re.compile(r"(?<=[.!?])\s+|\n+")
+
 
 # A request the shop's refund rules approved, as written in the tool result
 # ("APPROVED BY THE SHOP'S REFUND RULES. Request RQ-20261121-1A2B3C: ...").
@@ -62,7 +73,8 @@ def claims_refund(reply: str, tool_text: str | None = None) -> bool:
     is not backed by the rules. A claim is backed only when the reply names a
     request number that the refund tool approved in this conversation; the AI
     cannot write tool results, so it cannot invent an approval."""
-    if not any(pattern.search(reply) for pattern in REFUND_CLAIM_PATTERNS):
+    statements = [part for part in _SENTENCES.split(reply) if not part.rstrip().endswith("?")]
+    if not any(pattern.search(part) for part in statements for pattern in REFUND_CLAIM_PATTERNS):
         return False
     approved = approved_request_ids(tool_text or "")
     return not any(request_id in reply for request_id in approved)
@@ -664,6 +676,16 @@ def check_reply(
             Violation(
                 "refund_claim",
                 "reply said a refund or return is given or approved, but the refund rules did not approve it",
+                # One rewrite (added in Stage R4, after the AI said "I'll refund
+                # that" without asking the rules): the model is pointed at the tool.
+                # A second claim is still withheld.
+                correctable=True,
+                fix_hint=(
+                    "You cannot give, promise or approve a refund or return yourself. If the "
+                    "customer asked for a return, refund or cancellation, call "
+                    "request_refund_or_return now and report its result exactly; if they only "
+                    "asked about the policy, explain it without saying anything is approved."
+                ),
             )
         )
 

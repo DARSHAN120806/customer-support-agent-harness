@@ -23,6 +23,7 @@ import sys
 from datetime import date
 from pathlib import Path
 
+from support_agent import refund_rules
 from support_agent.currency import format_inr
 from support_agent.safety import asks_for_human
 
@@ -84,6 +85,43 @@ def parse_conversations(text: str) -> list[dict]:
     return conversations
 
 
+REFUSED = (
+    "not (be )?(eligible|possible|able)|can't|cannot|unable|passed|closed|ended|expired|no longer|outside|"
+    "too late|isn't possible|already|not (yet )?(been )?delivered|hasn't (yet )?(been )?delivered|in transit|on its way"
+)
+
+
+# Asking why, or which item, before starting a request.
+ASKS_WHY = r"why|reason|what('s| is) wrong|which item|\?"
+# The customer's answer when the agent asks why they want to return something.
+CHANGED_MIND_ANSWER = "I just changed my mind. It's unused, still sealed, and in its original box."
+
+
+def expect_from_rules(order: dict, reason: str, items: list, seal_opened: bool | None = None) -> dict:
+    """What the agent should do, according to the shop's refund rules (Stage R2):
+    the same code the request_refund_or_return tool runs."""
+    request = refund_rules.Request(order["order_id"], reason, tuple(items), seal_opened)
+    check = refund_rules.check_request(order, request, TODAY)
+    decision = refund_rules.decide(check, reason)
+    if decision.outcome == refund_rules.APPROVE:
+        return {
+            "escalated": False,
+            "tools_used": ["lookup_order", "request_refund_or_return"],
+            "reply_includes": ["RQ-", format_inr(check.money.net_refund)],
+        }
+    if decision.outcome == refund_rules.NEEDS_STAFF:
+        return {"escalated": True, "reply_includes": ["TCK-"]}
+    if decision.outcome == refund_rules.NEED_INFO:
+        return {"escalated": False, "reply_matches": ["seal|opened|unopened"]}
+    return {"reply_matches": [REFUSED], "reply_excludes": ["RQ-"]}
+
+
+def named_items(order: dict, message: str) -> list:
+    """The order's items that the message names, or every item if it names none."""
+    named = [i for i in order["items"] if i["name"].lower() in message.lower()]
+    return [refund_rules.Item(i["name"], i["quantity"]) for i in (named or order["items"])]
+
+
 def add_years(day: date, years: int) -> date:
     try:
         return day.replace(year=day.year + years)
@@ -108,6 +146,7 @@ def build() -> str:
         order_ids = [oid for oid in ORDER_ID.findall(message) if oid in orders]
         order = orders[order_ids[0]] if order_ids else None
         expect: dict = {}
+        messages = [message]
 
         # Who is signed in.
         if kind in ("Privacy — someone else's order", "Email does not match order"):
@@ -168,7 +207,19 @@ def build() -> str:
             words = CLAIM_STATUS_WORDS.get(order["warranty_claims"][-1]["status"])
             if words:
                 expect["reply_matches"] = [words]
-        elif kind in ("Refund request (cannot approve)", "Refund dispute", "Damaged package", "Missing package"):
+        elif kind == "Refund request (cannot approve)" and order:
+            # "Refund JL-... right now" gives no reason. Since Stage R2 the agent may
+            # start a request, hand over, or first ask why. When the rules refuse a
+            # change of mind (too late, already returned, not delivered), saying so
+            # is right, and so is asking what is wrong (a fault may still be covered);
+            # what is never right is a request number.
+            ruled = expect_from_rules(order, refund_rules.CHANGED_MIND, named_items(order, message))
+            if "reply_excludes" in ruled:
+                expect["reply_matches"] = [REFUSED + "|" + ASKS_WHY]
+                expect["reply_excludes"] = ["RQ-"]
+            else:
+                expect["reply_matches"] = ["TCK-|RQ-|" + ASKS_WHY]
+        elif kind in ("Refund dispute", "Damaged package", "Missing package"):
             expect["escalated"] = True
             expect["reply_includes"] = ["TCK-"]
         elif kind.startswith("Cancel") and order:
@@ -183,9 +234,23 @@ def build() -> str:
             else:
                 expect["reply_matches"] = [TOO_LATE]
             expect["reply_not_matches"] = NOT_CHANGED
-        elif kind == "Return — eligible" and delivered:
-            if (TODAY - delivered).days <= 30:
-                expect["escalated"] = True
+        elif kind == "Return — eligible" and order:
+            # The message gives no reason, and the agent rightly asks for one (the
+            # reason changes the fee and who decides; seen in the Stage R4 run). So
+            # the customer answers, and the rules decide the final reply.
+            messages.append(CHANGED_MIND_ANSWER)
+            items = named_items(order, message)
+            if any(item.quantity > 1 for item in items):
+                # "the LED Desk Lamp" when two were bought: returning one, or asking
+                # how many, are both right (seen in the Stage R4 run).
+                expect["reply_matches"] = [r"RQ-|TCK-|both|how many|one or|which|\?"]
+            else:
+                expect.update(expect_from_rules(order, refund_rules.CHANGED_MIND, items, seal_opened=False))
+        elif kind == "Return — candle" and order:
+            # "I opened it": a scented product with an open seal is refused.
+            candles = [i for i in order["items"] if "candle" in i["name"].lower()]
+            items = [refund_rules.Item(i["name"], i["quantity"]) for i in candles] or named_items(order, message)
+            expect.update(expect_from_rules(order, refund_rules.CHANGED_MIND, items, seal_opened=True))
         elif kind == "Return — outside window" and delivered and (TODAY - delivered).days > 30:
             expect["reply_matches"] = ["passed|closed|ended|expired|no longer|outside|past|not eligible|can't|cannot|unable|too late"]
             expect["reply_not_matches"] = ["you can (still )?return (it|this|them)", "still within"]
@@ -204,7 +269,7 @@ def build() -> str:
                 "category": CATEGORY_BY_KIND.get(kind, "tricky"),
                 "description": f"Generated from sample conversation {number:03d} ({kind}).",
                 "customer": customer,
-                "messages": [message],
+                "messages": messages,
                 "expect": expect,
             }
         )
