@@ -97,3 +97,43 @@ def test_the_api_sends_a_browser_to_the_website(monkeypatch, tmp_path, knowledge
     for path in ("/dashboard", "/admin"):
         response = client.get(path)
         assert response.status_code in (302, 307) and response.headers["location"] == "http://localhost:5173/#/dashboard"
+
+
+# --- 27 Nov 2026: the owner's earbuds test ----------------------------------------
+# The assistant wrote "I'll need to hand this over to them" and asked a question,
+# but created no ticket, so nothing reached the admin panel.
+
+@pytest.mark.parametrize(
+    ("reply", "promise"),
+    [
+        ("Since a faulty item needs to be reviewed by the support team, I'll need to hand this over to them.", True),
+        ("I have to hand you over to a member of our support team.", True),
+        ("I'll hand this over to a person now.", True),
+        ("I need to pass this on to the support team.", True),
+        ("Would you like me to hand this over to the team?", False),
+        ("The support team will review it.", False),
+        ("I'll send it to you by email.", False),
+    ],
+)
+def test_more_ways_of_promising_a_hand_over_are_recognised(reply, promise):
+    from support_agent.safety import promises_ticket
+
+    assert promises_ticket(reply) is promise
+
+
+def test_a_promised_hand_over_always_ends_with_a_real_ticket(registry):
+    # The model repeats the promise without creating a ticket, even after the
+    # rewrite; the harness then creates the ticket itself and shows its number.
+    promise = (
+        "I understand, a faulty earbud on the first day is frustrating. Since a faulty item needs "
+        "to be reviewed by the support team, I'll need to hand this over to them."
+    )
+    recorder = Recorder()
+    provider = FakeProvider([text_response(promise), text_response(promise)])
+    agent = make_agent(provider, registry, recorder)
+
+    result = agent.run("My Wireless Earbuds Pro stopped working on the first day.")
+
+    assert result.outcome == COMPLETED
+    assert recorder.calls, "the harness must create the ticket the reply promised"
+    assert "TCK-AUTO-1" in result.reply

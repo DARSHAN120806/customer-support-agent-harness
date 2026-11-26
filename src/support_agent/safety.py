@@ -250,10 +250,15 @@ _TICKET_PROMISE = re.compile(
     r"(?:(?:now|just|already|also|go ahead and|gone ahead and)\s+)*"
     r"(?:creat|rais|open|log|submit|fil|start)\w*\s+(?:a|an|the|your|this)?\s*"
     r"(?:support\s+|new\s+)?(?:ticket|case|request)\b"
-    r"|\b(?:I(?:'ll| will|'m| am|'ve| have)|let me|I need to|I'm going to|I am going to)\s+"
+    r"|\b(?:I(?:'ll| will|'m| am|'ve| have)?|let me|I need to|I'm going to|I am going to)\s+"
     r"(?:(?:now|just|already|also|go ahead and|gone ahead and)\s+)*"
+    # "I'll need to hand this over" (added 27 Nov 2026: the owner's earbuds test said
+    # this and created no ticket).
+    r"(?:(?:need|have|want)\s+to\s+)?"
     r"(?:pass\w*|hand\w*|escalat\w*|forward\w*|send\w*|refer\w*)\s+"
-    r"(?:this|it|that|your\s+\w+(?:\s+\w+)?)\s+(?:on\s+|over\s+)?to\s+(?:our|the)\s+(?:human\s+|support\s+)*(?:support\s+)?team\b",
+    r"(?:this|it|that|you|your\s+\w+(?:\s+\w+)?)\s+(?:on\s+|over\s+)?to\s+"
+    r"(?:(?:our|the)\s+(?:human\s+|support\s+)*(?:support\s+)?team\b"
+    r"|them\b|someone\b|a\s+(?:person|colleague|team\s+member|member\s+of\s+(?:our|the)\s+(?:support\s+)?team)\b)",
     re.IGNORECASE,
 )
 
