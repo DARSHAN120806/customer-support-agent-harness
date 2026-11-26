@@ -132,6 +132,53 @@
   color: var(--jl-text);
 }
 
+/* The Expand / Shrink and Close buttons, side by side. */
+.sc-head-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* --- Full page (the Expand button) ------------------------------------------------
+   The chat covers the page. Messages and the box to write in sit in one centred
+   column, so long answers stay easy to read on a wide screen. */
+.sc-panel.expanded {
+  inset: 0;
+  width: auto;
+  height: 100dvh;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  animation: none;
+  --sc-column: max(20px, calc((100% - 760px) / 2));
+}
+
+.sc-panel.expanded .sc-head,
+.sc-panel.expanded .sc-composer {
+  padding-left: var(--sc-column);
+  padding-right: var(--sc-column);
+}
+
+.sc-panel.expanded .sc-head {
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+.sc-panel.expanded .sc-head h2 {
+  font-size: 17px;
+  line-height: 24px;
+}
+
+.sc-panel.expanded .sc-messages {
+  padding-left: var(--sc-column);
+  padding-right: var(--sc-column);
+}
+
+.sc-panel.expanded .sc-composer {
+  padding-top: 16px;
+  padding-bottom: 20px;
+}
+
 /* --- Messages ------------------------------------------------------------------ */
 
 .sc-messages {
@@ -420,6 +467,11 @@
 
   .sc-bubble {
     max-width: 90%;
+  }
+
+  /* Phones always show the chat full screen, so there is nothing to expand. */
+  .sc-panel .sc-size {
+    display: none;
   }
 }
 

@@ -12,7 +12,8 @@ customer to a real support person.
 - **Shop page:** customers sign in and see the products (priced in Indian rupees), a cart, their orders
   and their support tickets.
 - **Support chat:** a "Chat with us" button answers questions about orders,
-  shipping, returns, refunds and warranties.
+  shipping, returns, refunds and warranties. It opens beside the shop, and
+  "Expand" makes it fill the whole page.
 - **Privacy:** each customer can see only their own orders.
 - **Safety checks:** every reply is checked before the customer sees it.
 - **Returns and refunds in the chat:** the assistant collects the details and the

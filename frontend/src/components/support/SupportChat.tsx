@@ -28,6 +28,10 @@ type Entry = TranscriptEntry & { isError?: boolean }
 // How often the window checks for messages from the support team.
 const CHECK_MS = 3000
 
+// Whether the chat fills the whole page (the "Expand" button), remembered for
+// this browser tab like the open/closed state.
+const EXPANDED_KEY = 'juniper-lane-chat-expanded'
+
 const SUGGESTIONS = ['What is your return policy?', 'How much is express shipping?', 'I want to talk to a person']
 
 export function SupportChat({ session, open, onOpenChange, question, onTicketCreated, onSessionExpired, onReplied }: Props) {
@@ -43,6 +47,24 @@ export function SupportChat({ session, open, onOpenChange, question, onTicketCre
   // while the window was closed.
   const [handoff, setHandoff] = useState<Handoff>(session.handoff ?? null)
   const [unread, setUnread] = useState(0)
+  const [expanded, setExpanded] = useState(() => sessionStorage.getItem(EXPANDED_KEY) === 'yes')
+
+  function toggleExpanded() {
+    const next = !expanded
+    setExpanded(next)
+    sessionStorage.setItem(EXPANDED_KEY, next ? 'yes' : 'no')
+    inputRef.current?.focus()
+  }
+
+  // While the chat fills the page, the shop behind it does not scroll.
+  useEffect(() => {
+    if (!(open && expanded)) return
+    const before = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = before
+    }
+  }, [open, expanded])
   // How many chat lines the server has; the check asks only for newer ones.
   const known = useRef(session.transcript.length)
   const openRef = useRef(open)
@@ -171,7 +193,14 @@ export function SupportChat({ session, open, onOpenChange, question, onTicketCre
         </button>
       )}
 
-      <section className="sc-panel" role="dialog" aria-modal="false" aria-label={session.assistant_name} hidden={!open} onKeyDown={onKeyDown}>
+      <section
+        className={expanded ? 'sc-panel expanded' : 'sc-panel'}
+        role="dialog"
+        aria-modal={expanded}
+        aria-label={session.assistant_name}
+        hidden={!open}
+        onKeyDown={onKeyDown}
+      >
         <header className="sc-head">
           <div>
             <h2>{handoff ? `${handoff.name} from the support team` : session.assistant_name}</h2>
@@ -185,9 +214,14 @@ export function SupportChat({ session, open, onOpenChange, question, onTicketCre
               </p>
             )}
           </div>
-          <button type="button" className="sc-close" onClick={() => onOpenChange(false)}>
-            Close
-          </button>
+          <div className="sc-head-actions">
+            <button type="button" className="sc-close sc-size" onClick={toggleExpanded}>
+              {expanded ? 'Shrink' : 'Expand'}
+            </button>
+            <button type="button" className="sc-close" onClick={() => onOpenChange(false)}>
+              Close
+            </button>
+          </div>
         </header>
 
         <div className="sc-messages" role="log" aria-live="polite" ref={listRef}>
