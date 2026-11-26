@@ -57,8 +57,8 @@ def test_generated_cases_match_their_sources():
 
 
 def test_all_imported_customers_and_orders_are_present(data):
-    assert len(data["customers"]) == 8 + 772
-    assert len(data["orders"]) == 16 + 1000
+    assert len(data["customers"]) == 8 + 772 + 1  # +1: the owner's demo customer (owner_demo.json)
+    assert len(data["orders"]) == 16 + 1000 + 3  # +3: the owner's demo orders
 
 
 def test_ids_are_unique_and_every_order_has_a_real_owner(data):
@@ -211,3 +211,17 @@ def test_privacy_cases_sign_in_as_someone_other_than_the_owner(data):
         order_id = re.search(r"JL-\d{5}", case.messages[0]).group(0)
         assert case.customer != owner_of(data, order_id), case.id
         assert case.expect["reply_excludes"], case.id
+
+
+def test_the_owners_demo_customer_has_three_recent_orders():
+    # data/source/owner_demo.json, added 26 Nov 2026 for the owner's screenshots.
+    from support_agent.orders import OrderStore
+
+    store = OrderStore(ORDERS_FILE) if "ORDERS_FILE" in globals() else OrderStore(Path(__file__).resolve().parents[1] / "data" / "orders.json")
+    email = "darshan.palkar@example.com"
+    found = {oid: store.get_order_for_customer(oid, email) for oid in ("JL-11017", "JL-11018", "JL-11019")}
+    assert all(found.values())
+    assert found["JL-11017"]["status"] == "delivered" and found["JL-11018"]["status"] == "shipped"
+    assert found["JL-11019"]["total"] == 2349.0
+    # Nobody else can see them.
+    assert store.get_order_for_customer("JL-11017", "priya.nair@example.com") is None

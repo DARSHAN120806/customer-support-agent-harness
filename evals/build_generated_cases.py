@@ -133,6 +133,11 @@ def build() -> str:
     data = json.loads(ORDERS.read_text(encoding="utf-8"))
     email_by_customer = {c["customer_id"]: c["email"] for c in data["customers"]}
     known_emails = set(email_by_customer.values())
+    # The owner's demo customer (data/source/owner_demo.json) is for screenshots and
+    # takes no part in the generated cases, so adding it changes none of them.
+    demo_file = ROOT / "data" / "source" / "owner_demo.json"
+    if demo_file.exists():
+        known_emails -= {c["email"] for c in json.loads(demo_file.read_text(encoding="utf-8"))["customers"]}
     orders = {o["order_id"]: o for o in data["orders"]}
     owner = {oid: email_by_customer[o["customer_id"]] for oid, o in orders.items()}
     # Customers with no orders mentioned anywhere, used when a message names no email.

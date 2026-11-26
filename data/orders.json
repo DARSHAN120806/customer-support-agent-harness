@@ -6224,6 +6224,12 @@
    "city": "Indianapolis, IN",
    "account_created": "2023-08-08",
    "newsletter": false
+  },
+  {
+   "customer_id": "C0781",
+   "name": "Darshan Palkar",
+   "email": "darshan.palkar@example.com",
+   "city": "Pune, MH"
   }
  ],
  "orders": [
@@ -51172,6 +51178,80 @@
      "summary": "RF-30056: Disagrees with ₹699 return shipping fee"
     }
    ]
+  },
+  {
+   "order_id": "JL-11017",
+   "customer_id": "C0781",
+   "placed_on": "2026-11-24",
+   "status": "delivered",
+   "items": [
+    {
+     "name": "Wireless Earbuds Pro",
+     "category": "electronics",
+     "quantity": 1,
+     "unit_price": 7900.0
+    }
+   ],
+   "subtotal": 7900.0,
+   "shipping_method": "standard",
+   "shipping_cost": 0.0,
+   "total": 7900.0,
+   "payment_method": "Visa",
+   "tracking_number": "TRK7011017401",
+   "dispatched_on": "2026-11-24",
+   "delivered_on": "2026-11-25"
+  },
+  {
+   "order_id": "JL-11018",
+   "customer_id": "C0781",
+   "placed_on": "2026-11-25",
+   "status": "shipped",
+   "items": [
+    {
+     "name": "Ceramic Pour-Over Coffee Set",
+     "category": "homeware",
+     "quantity": 1,
+     "unit_price": 4200.0
+    },
+    {
+     "name": "Scented Soy Candle",
+     "category": "homeware",
+     "quantity": 1,
+     "unit_price": 1200.0
+    }
+   ],
+   "subtotal": 5400.0,
+   "shipping_method": "standard",
+   "shipping_cost": 0.0,
+   "total": 5400.0,
+   "payment_method": "Mastercard",
+   "tracking_number": "TRK7011018402",
+   "dispatched_on": "2026-11-25",
+   "delivered_on": null,
+   "last_tracking_update": "2026-11-25",
+   "estimated_delivery": "2026-11-28"
+  },
+  {
+   "order_id": "JL-11019",
+   "customer_id": "C0781",
+   "placed_on": "2026-11-24",
+   "status": "delivered",
+   "items": [
+    {
+     "name": "Linen Napkins (Set of 4)",
+     "category": "homeware",
+     "quantity": 1,
+     "unit_price": 1850.0
+    }
+   ],
+   "subtotal": 1850.0,
+   "shipping_method": "standard",
+   "shipping_cost": 499.0,
+   "total": 2349.0,
+   "payment_method": "PayPal",
+   "tracking_number": "TRK7011019403",
+   "dispatched_on": "2026-11-24",
+   "delivered_on": "2026-11-25"
   }
  ]
 }

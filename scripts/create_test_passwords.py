@@ -80,8 +80,8 @@ def write_files(accounts_file: Path, passwords_file: Path, rows: list[dict[str, 
 
 
 def add_missing(accounts_file: Path, passwords_file: Path, scrypt_n: int) -> int:
-    """Keep every existing account and password; add any staff (or admin
-    details) that are missing."""
+    """Keep every existing account and password; add any customers, staff (or
+    admin details) that are missing, for example a customer added to the data."""
     data = json.loads(accounts_file.read_text(encoding="utf-8"))
     hashes = {a["email"]: a["password_hash"] for a in data["accounts"]}
     roles = {a["email"]: a["role"] for a in data["accounts"]}
@@ -93,6 +93,17 @@ def add_missing(accounts_file: Path, passwords_file: Path, scrypt_n: int) -> int
         rows.setdefault(email, {"email": email, "name": "", "role": roles[email], "staff_id": "", "password": ""})
 
     added = []
+    # Customers in the shop data who have no account yet (added 26 Nov 2026 for
+    # the owner's demo customer in data/source/owner_demo.json).
+    orders_file = ROOT / "data" / "orders.json"
+    if orders_file.exists():
+        for customer in json.loads(orders_file.read_text(encoding="utf-8"))["customers"]:
+            email = customer["email"].lower()
+            if email not in rows:
+                password = new_password()
+                hashes[email] = hash_password(password, n=scrypt_n)
+                rows[email] = {"email": email, "name": customer["name"], "role": CUSTOMER, "staff_id": "", "password": password}
+                added.append(email)
     for email, name, role, staff_id in [ADMIN_PERSON, *STAFF_PEOPLE]:
         row = rows.get(email)
         if row is None:

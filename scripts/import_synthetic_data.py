@@ -5,6 +5,7 @@
 
 Reads:
     data/source/base_orders.json              the original 8 customers and 16 orders
+    data/source/owner_demo.json               the owner's demo customer and orders (added last)
     data/source/synthetic_extension/*.md      the uploaded records (tables)
 
 Writes:
@@ -400,6 +401,26 @@ def build() -> tuple[str, str]:
             unlinked_tickets.append(row)
 
     all_orders = list(base["orders"]) + [drop_none(orders[k]) for k in sorted(orders)]
+
+    # The owner's own demo customer and orders (data/source/owner_demo.json), added
+    # last so no other customer number changes.
+    demo_file = SOURCE / "owner_demo.json"
+    if demo_file.exists():
+        demo = json.loads(demo_file.read_text(encoding="utf-8"))
+        taken_emails = {c["email"] for c in customers}
+        taken_ids = {c["customer_id"] for c in customers}
+        for customer in demo["customers"]:
+            if customer["email"] in taken_emails or customer["customer_id"] in taken_ids:
+                raise ValueError(f"demo customer {customer['email']} clashes with an existing one")
+            customers.append(customer)
+        taken_orders = {o["order_id"] for o in all_orders}
+        for order in demo["orders"]:
+            if order["order_id"] in taken_orders:
+                raise ValueError(f"demo order {order['order_id']} is used twice")
+            computed = round(sum(i["quantity"] * i["unit_price"] for i in order["items"]), 2)
+            if computed != order["subtotal"] or round(order["subtotal"] + order["shipping_cost"], 2) != order["total"]:
+                raise ValueError(f"demo order {order['order_id']}: amounts do not add up")
+            all_orders.append(order)
     data = {
         "_note": (
             "Fictional data for the Juniper Lane Goods support agent. All people, emails, and "
