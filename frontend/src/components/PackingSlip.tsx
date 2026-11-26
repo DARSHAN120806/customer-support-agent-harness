@@ -1,15 +1,14 @@
 // A packing slip drawn in code: the one "moment" on the sign-in page. It shows
 // real products and prices from the shop's catalogue (company_overview.md), not
-// a real customer's order, so it gives nothing away about anyone.
+// a real customer's order, so it gives nothing away about anyone. Prices are in
+// rupees, like the rest of the shop (they were left in dollars until 26 Nov 2026).
+import { rupees } from './shop/cart'
 
 const ITEMS = [
-  { name: 'Ceramic Pour-Over Coffee Set', price: 42 },
-  { name: 'Wool Throw Blanket', price: 68 },
-  { name: 'Bamboo Cutting Board', price: 24 },
+  { name: 'Ceramic Pour-Over Coffee Set', price: 4200 },
+  { name: 'Wool Throw Blanket', price: 6800 },
+  { name: 'Bamboo Cutting Board', price: 2400 },
 ]
-
-const money = (amount: number) =>
-  amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
 
 export function PackingSlip() {
   const subtotal = ITEMS.reduce((sum, item) => sum + item.price, 0)
@@ -33,7 +32,7 @@ export function PackingSlip() {
             <tr key={item.name}>
               <td>{item.name}</td>
               <td>1</td>
-              <td>{money(item.price)}</td>
+              <td>{rupees(item.price)}</td>
             </tr>
           ))}
         </tbody>
@@ -44,7 +43,7 @@ export function PackingSlip() {
           </tr>
           <tr className="slip-total">
             <td colSpan={2}>Total</td>
-            <td>{money(subtotal)}</td>
+            <td>{rupees(subtotal)}</td>
           </tr>
         </tfoot>
       </table>
